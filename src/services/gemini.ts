@@ -181,3 +181,51 @@ Return ONLY valid JSON, no markdown, no explanation.`;
   // If we exhausted all retries
   throw lastError || new Error('Failed to convert text to tasks after multiple attempts');
 }
+
+export async function transcribeAudio(audioBlob: Blob): Promise<string> {
+  // Convert audio blob to base64
+  const toBase64 = (blob: Blob) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read audio file'));
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1] || '';
+      resolve(base64);
+    };
+    reader.readAsDataURL(blob);
+  });
+
+  const base64Data = await toBase64(audioBlob);
+
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) throw new Error('Gemini API key not found. Please add VITE_GEMINI_API_KEY to your .env file');
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: "Transcribe this audio to text. Only return the transcribed text, nothing else." },
+              { inline_data: { mime_type: (audioBlob as any).type || 'audio/webm', data: base64Data } }
+            ]
+          }
+        ],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+      })
+    }
+  );
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'Failed to transcribe audio');
+  }
+
+  const data: any = await response.json();
+  const transcribedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (!transcribedText) throw new Error('No transcription returned from Gemini');
+  return transcribedText;
+}

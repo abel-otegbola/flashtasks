@@ -1,5 +1,6 @@
 import { Microphone2, Pause } from "@solar-icons/react";
 import { useState, useRef, useEffect } from "react";
+import { transcribeAudio } from "../../services/gemini";
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -50,69 +51,9 @@ function VoiceInput({ onTranscript, disabled = false }: VoiceInputProps) {
 
   const processAudioWithGemini = async (audioBlob: Blob) => {
     setIsProcessing(true);
-    
     try {
-      // Convert audio blob to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      
-      reader.onloadend = async () => {
-        const base64Audio = reader.result as string;
-        const base64Data = base64Audio.split(',')[1];
-
-        // Get API key from environment variable
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        
-        if (!apiKey) {
-          throw new Error('Gemini API key not found. Please add VITE_GEMINI_API_KEY to your .env file');
-        }
-
-        // Call Gemini API
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    {
-                      text: "Transcribe this audio to text. Only return the transcribed text, nothing else."
-                    },
-                    {
-                      inline_data: {
-                        mime_type: 'audio/webm',
-                        data: base64Data
-                      }
-                    }
-                  ]
-                }
-              ],
-              generationConfig: {
-                temperature: 0.1,
-                maxOutputTokens: 2048,
-              }
-            })
-          }
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error?.message || 'Failed to transcribe audio');
-        }
-
-        const data = await response.json();
-        const transcribedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        
-        if (transcribedText) {
-          onTranscript(transcribedText);
-        } else {
-          throw new Error('No transcription returned from Gemini');
-        }
-      };
+      const text = await transcribeAudio(audioBlob);
+      onTranscript(text);
     } catch (error) {
       console.error('Error processing audio with Gemini:', error);
       alert(error instanceof Error ? error.message : 'Failed to transcribe audio. Please try again.');

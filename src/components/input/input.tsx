@@ -1,6 +1,5 @@
 'use client'
 import { Eye, EyeClosed } from "@solar-icons/react";
-import { Field } from "formik";
 import { ReactNode, InputHTMLAttributes, useState } from "react";
 
 interface inputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -31,7 +30,7 @@ export default function Input({ className, disabled, label, name, value, type, o
                 ${label ? "mt-1" : ""}
             `}>
                 <span className={`${!focus ? "opacity-[0.4]": "text-primary"} ${leftIcon ? "pl-2" : ""}`}>{ leftIcon }</span>
-                <Field
+                <input
                     className={`p-[4px] w-full outline-none bg-transparent rounded
                         ${className} 
                         ${disabled ? "opacity-[0.25]" : ""}

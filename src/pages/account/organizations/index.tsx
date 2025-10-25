@@ -4,6 +4,7 @@ import { useOrganizations } from '../../../context/organizationContext';
 import Button from '../../../components/button/button';
 import Input from '../../../components/input/input';
 import CreateOrganizationModal from '../../../components/modals/createOrganizationModal';
+import EditOrganizationModal from '../../../components/modals/editOrganizationModal';
 import { Formik } from 'formik';
 import { createOrganizationSchema } from '../../../schema/organizationSchema';
 
@@ -11,6 +12,8 @@ export default function OrganizationsPage() {
   const { organizations, currentOrg, selectOrganization, addTeam, removeTeam } = useOrganizations();
   const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [selectedOrg, setSelectedOrg] = useState<any>(null);
 
   const handleAddTeam = async () => {
     if (!teamName || !currentOrg) return;
@@ -33,7 +36,7 @@ export default function OrganizationsPage() {
               <button 
                 key={org.$id} 
                 className={`p-3 text-start flex items-center gap-2 rounded-lg border ${currentOrg?.$id === org.$id ? 'border-primary bg-bg-gray-100' : 'border-border-gray-100'}`}
-                onClick={() => selectOrganization(org.$id)} 
+                onClick={() => { selectOrganization(org.$id); setSelectedOrg(org); }} 
               >
                 <span className="w-12 h-12 flex items-center justify-center bg-primary/10 text-primary rounded-full font-bold">{org.name.charAt(0).toUpperCase()}</span>
                 <div className="flex flex-col gap-2 text-start justify-start">
@@ -55,6 +58,9 @@ export default function OrganizationsPage() {
                 <div>
                   <h2 className="font-semibold">{currentOrg.name}</h2>
                   <div className="text-xs text-gray-500">{currentOrg.description}</div>
+                </div>
+                <div>
+                  <Button size="small" onClick={() => { setSelectedOrg(currentOrg); setShowEdit(true); }}>Edit</Button>
                 </div>
               </div>
 
@@ -95,6 +101,7 @@ export default function OrganizationsPage() {
         </div>
       </div>
     <CreateOrganizationModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
+    <EditOrganizationModal isOpen={showEdit} onClose={() => setShowEdit(false)} org={selectedOrg} />
   </div>
   )
 }

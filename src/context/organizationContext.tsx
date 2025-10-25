@@ -15,6 +15,9 @@ type OrganizationContextValues = {
   addTeam: (payload: CreateTeamPayload) => Promise<Team>;
   removeTeam: (orgId: string, teamId: string) => Promise<boolean>;
   addMemberToOrg: (orgId: string, member: OrgMember) => Promise<boolean>;
+  updateOrganization: (orgId: string, data: Partial<any>) => Promise<Organization>;
+  removeMemberFromOrg: (orgId: string, memberId: string) => Promise<boolean>;
+  updateTeamMembers: (orgId: string, teamId: string, memberIds: string[]) => Promise<boolean>;
 }
 
 const OrganizationContext = createContext({} as OrganizationContextValues);
@@ -40,46 +43,21 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         const res = await databases.listDocuments(
           DATABASE_ID,
           ORG_COLLECTION_ID,
-          [Query.limit(100)]
+          [
+              Query.select(["*", "teams.*", "members.*"]),
+              Query.equal('ownerEmail', user?.email) || Query.equal('members.email', user?.email),
+          ]
         );
-
-        // Try to fetch full documents for nested fields (members/teams) — listDocuments may omit nested shapes in some setups
-        const docsRaw = res.documents || [];
-        const fullDocs = await Promise.all(docsRaw.map(async (d: any) => {
-          try {
-            return await databases.getDocument(DATABASE_ID, ORG_COLLECTION_ID, d.$id);
-          } catch (e) {
-            // fallback to the list document if getDocument fails
-            return d;
-          }
-        }));
-
-        // Map Appwrite documents to our Organization shape (assume stored fields align)
-        const docs = fullDocs.map((d: any) => ({
-          $id: d.$id,
-          name: d.name,
-          ownerEmail: d.ownerEmail || d.owner?.email,
-          slug: d.slug,
-          description: d.description,
-          members: d.members || [],
-          teams: d.teams || [],
-          createdAt: d.$createdAt,
-        } as Organization));
-
-        // Filter organizations where user is a member (by email or $id) or is the ownerEmail
-        const filtered = docs.filter(o => {
-          const userEmail = (user as any)?.email;
-          const userId = (user as any)?.$id || (user as any)?.userId;
-          // check ownerEmail first
-          if (o.ownerEmail && userEmail && o.ownerEmail === userEmail) return true;
-          // then check members array
-          return (o.members || []).some((m: any) => {
-            if (!m) return false;
-            return (userEmail && m.email === userEmail) || (userId && (m.$id === userId || m.$id === userId));
-          });
-        });
-        setOrganizations(filtered);
-        if (filtered.length > 0) setCurrentOrg(filtered[0]);
+        
+        if (!res.documents) {
+          setOrganizations([]);
+          setCurrentOrg(null);
+          return;
+        }
+        else {
+          setOrganizations(res.documents as unknown as Organization[]);
+          setCurrentOrg(res.documents[0] as unknown as Organization);
+        }
       } catch (err) {
         console.error('Error loading organizations', err);
         toast.error('Failed to load organizations');
@@ -155,6 +133,35 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error('Error creating organization', err);
       toast.error('Failed to create organization');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateOrganization = async (orgId: string, data: Partial<any>) => {
+    setLoading(true);
+    try {
+      const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, data);
+
+      const updatedOrg: Organization = {
+        $id: updated.$id,
+        name: updated.name,
+        slug: updated.slug,
+        description: updated.description,
+        members: updated.members || [],
+        teams: updated.teams || [],
+        createdAt: updated.$createdAt,
+      };
+
+      setOrganizations(prev => prev.map(o => o.$id === updatedOrg.$id ? updatedOrg : o));
+      if (currentOrg?.$id === orgId) setCurrentOrg(updatedOrg);
+      try { await (await import('../services/indexer')).indexOrganization('update', updatedOrg); } catch {};
+      toast.success('Organization updated');
+      return updatedOrg;
+    } catch (err) {
+      console.error('Error updating organization', err);
+      toast.error('Failed to update organization');
       throw err;
     } finally {
       setLoading(false);
@@ -266,8 +273,74 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const removeMemberFromOrg = async (orgId: string, memberId: string) => {
+    setLoading(true);
+    try {
+      const org = organizations.find(o => o.$id === orgId);
+      if (!org) return false;
+      const newMembers = (org.members || []).filter(m => m.$id !== memberId);
+
+      const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, { members: newMembers });
+
+      const updatedOrg: Organization = {
+        $id: updated.$id,
+        name: updated.name,
+        slug: updated.slug,
+        description: updated.description,
+        members: updated.members || [],
+        teams: updated.teams || [],
+        createdAt: updated.$createdAt,
+      };
+
+      setOrganizations(prev => prev.map(o => o.$id === updatedOrg.$id ? updatedOrg : o));
+      if (currentOrg?.$id === orgId) setCurrentOrg(updatedOrg);
+      toast.success('Member removed');
+      try { await (await import('../services/indexer')).indexOrganization('update', updatedOrg); } catch {};
+      return true;
+    } catch (err) {
+      console.error('Error removing member', err);
+      toast.error('Failed to remove member');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateTeamMembers = async (orgId: string, teamId: string, memberIds: string[]) => {
+    setLoading(true);
+    try {
+      const org = organizations.find(o => o.$id === orgId);
+      if (!org) throw new Error('Organization not found');
+
+      const newTeams = (org.teams || []).map(t => t.$id === teamId ? { ...t, members: memberIds } : t);
+      const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, { teams: newTeams });
+
+      const updatedOrg: Organization = {
+        $id: updated.$id,
+        name: updated.name,
+        slug: updated.slug,
+        description: updated.description,
+        members: updated.members || [],
+        teams: updated.teams || [],
+        createdAt: updated.$createdAt,
+      };
+
+      setOrganizations(prev => prev.map(o => o.$id === updatedOrg.$id ? updatedOrg : o));
+      if (currentOrg?.$id === orgId) setCurrentOrg(updatedOrg);
+      toast.success('Team updated');
+      try { await (await import('../services/indexer')).indexOrganization('update', updatedOrg); } catch {};
+      return true;
+    } catch (err) {
+      console.error('Error updating team members', err);
+      toast.error('Failed to update team');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <OrganizationContext.Provider value={{ organizations, currentOrg, loading, createOrganization, selectOrganization, addTeam, removeTeam, addMemberToOrg }}>
+    <OrganizationContext.Provider value={{ organizations, currentOrg, loading, createOrganization, selectOrganization, addTeam, removeTeam, addMemberToOrg, updateOrganization, removeMemberFromOrg, updateTeamMembers }}>
       {children}
     </OrganizationContext.Provider>
   );

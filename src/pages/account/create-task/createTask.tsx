@@ -4,8 +4,8 @@ import { Formik } from "formik";
 import Button from "../../../components/button/button";
 import { ArrowRight } from "@solar-icons/react";
 import VoiceInput from "../../../components/voiceInput/voiceInput";
-import { useState } from "react";
-import { convertTextToTasks } from "../../../services/gemini";
+import { useRef, useState } from "react";
+import { convertTextToTasks, transcribeAudio } from "../../../services/gemini";
 import { todo } from "../../../interface/todo";
 import { useOrganizations } from '../../../context/organizationContext';
 import { useTasks } from "../../../context/tasksContext";
@@ -23,6 +23,29 @@ function CreateTask() {
   const handleTranscript = (text: string) => {
     // Append the transcribed text to existing text
     setInputText(prev => prev ? `${prev} ${text}` : text)
+  }
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const text = await transcribeAudio(file);
+      handleTranscript(text);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to transcribe uploaded audio');
+    } finally {
+      setIsUploading(false);
+      // reset input so same file can be uploaded again
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   }
 
   const handleGenerateTasks = async () => {
@@ -115,7 +138,20 @@ function CreateTask() {
                 )
             }
             </Formik>
-          <VoiceInput onTranscript={handleTranscript} />
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <VoiceInput onTranscript={handleTranscript} />
+              <button
+                type="button"
+                onClick={handleUploadClick}
+                disabled={isUploading}
+                className={`px-3 py-2 rounded-md border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50 text-sm ${isUploading ? 'opacity-60' : ''}`}
+              >
+                {isUploading ? 'Transcribing...' : 'Upload audio'}
+              </button>
+            </div>
+            <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleFileChange} />
+          </div>
         </div>
 
         <div className="flex justify-between items-end">

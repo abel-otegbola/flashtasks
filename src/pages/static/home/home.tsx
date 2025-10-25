@@ -1,11 +1,13 @@
 import { MedalRibbon, Microphone2, ChartSquare, Lightning, Magnet, CheckCircle, ArrowRight, UsersGroupRounded } from "@solar-icons/react"
 import HeroCheckIcon from "../../../assets/icons/heroCheck"
+import useTheme from '../../../customHooks/useTheme'
 import { useUser } from '../../../context/authContext'
 import BlurReveal from "../../../components/animations/blurReveal"
 import Button from "../../../components/button/button"
 
 function Home() {
   const { user } = useUser();
+  const theme = useTheme();
   return (
     <main className="w-full dark:bg-dark dark:text-gray-100">
       {/* Hero Section */}
@@ -40,7 +42,7 @@ function Home() {
           </button>
         </div>
 
-        <img src="/Tasks - create.png" width={729} height={529} alt="hero" className="shadow-2xl rounded-lg" />
+  <img src={`/hero-img-${theme === 'dark' ? 'dark' : 'light'}.webp`} width={729} height={529} alt="hero" className="shadow-2xl rounded-lg" />
         
         <div className="py-4 flex flex-col items-center gap-4 md:w-[55%] text-center mb-12">
           <BlurReveal preset="zoom">
@@ -58,7 +60,6 @@ function Home() {
       {/* Features Section */}
       <section id="features" className="md:p-[80px] p-4 py-[60px] flex flex-col gap-12">
         <div className="text-center max-w-3xl mx-auto">
-          <BlurReveal preset="zoom">
             <span className="text-primary uppercase font-semibold tracking-wide text-[14px]">Features</span>
             <h2 className="md:text-[40px] text-[28px] font-bold mt-4 mb-6">
               Automate task follow-ups and reclaim quality time
@@ -66,7 +67,6 @@ function Home() {
             <p className="text-gray dark:text-gray-300 md:text-[18px]">
               Convert voice into prioritized action in seconds—automate task capture, assignment, and deadlines so your team can focus on impactful work instead of admin.
             </p>
-          </BlurReveal>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
@@ -108,14 +108,12 @@ function Home() {
               benefit: "Complete 25% more tasks per sprint"
             }
           ].map((feature, index) => (
-            <BlurReveal key={index} preset="zoom">
               <div className="p-6 rounded-2xl border border-border-gray-100 dark:border-gray-700 bg-bg-gray-100 dark:bg-dark-bg-secondary/50 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="mb-4">{feature.icon}</div>
                 <h3 className="text-[20px] font-bold mb-3">{feature.title}</h3>
                 <p className="text-gray dark:text-gray-300 mb-4">{feature.description}</p>
-                <p className="text-[14px] text-primary font-medium">✓ {feature.benefit}</p>
+                <p className="text-[14px] text-gray-300/[0.4] font-medium">✓ {feature.benefit}</p>
               </div>
-            </BlurReveal>
           ))}
         </div>
       </section>
@@ -124,7 +122,6 @@ function Home() {
       <section id="how-it-works" className="md:p-[80px] p-4 py-[60px] bg-bg-gray-100 dark:bg-dark-bg/50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <BlurReveal preset="zoom">
               <span className="uppercase font-bold tracking-wide text-[14px] px-6 py-3 rounded-lg border border-gray-100 shadow-sm">How It Works</span>
               <h2 className="md:text-[40px] text-[28px] font-semibold mt-4 mb-6">
                 Three simple steps to move from chaotic meetings to focused action.
@@ -132,33 +129,29 @@ function Home() {
               <p className="text-gray dark:text-gray-300 md:text-[18px]">
                 No complex setup. No learning curve. Just effortless productivity.
               </p>
-            </BlurReveal>
           </div>
 
           <div className="grid md:grid-cols-3 gap-2">
             {[
               {
-                step: "step-1-light",
+                id: 'step-1',
                 title: "Record or Speak",
                 description: "Upload meeting recordings or use voice input to capture your thoughts, discussions, and ideas naturally.",
-                image: "placeholder"
               },
               {
-                step: "step-2-light",
+                id: 'step-2',
                 title: "AI Processes Everything",
                 description: "Google Gemini analyzes the content, identifies action items, extracts key insights, and structures everything intelligently.",
-                image: "placeholder"
               },
               {
-                step: "step-3-light",
+                id: 'step-3',
                 title: "Get Actionable Tasks",
                 description: "Receive organized tasks with priorities, deadlines, and recommendations. Search, track, and optimize your workflow instantly.",
-                image: "placeholder"
               }
             ].map((step, index) => (
               <BlurReveal key={index} preset="zoom">
                 <div className="flex flex-col gap-6">
-                  <img src={`/${step.step}.png`} alt={step.title} className="w-full" />
+                  <img src={`/${step.id}-${theme === 'dark' ? 'dark' : 'light'}.webp`} alt={step.title} className="w-full" />
                 </div>
               </BlurReveal>
             ))}
