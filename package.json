@@ -21,6 +21,8 @@
     "react-calendar": "^6.0.0",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",
+  "qs": "^6.11.0",
+  "php-serialize": "^3.0.0",
     "react-router-dom": "^7.9.4",
     "recharts": "^3.3.0",
     "yup": "^1.7.1"

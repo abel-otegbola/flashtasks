@@ -78,7 +78,6 @@ export default function AddTaskModal({
     }
   }, [task, mode, isOpen]);
 
-  if (!isOpen) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -104,6 +103,8 @@ export default function AddTaskModal({
       setForm(prev => ({ ...prev, organizationId: currentOrg.$id }));
     }
   }, [currentOrg, mode, task]);
+
+  if (!isOpen) return null;
 
   const handleAddAssignee = () => {
     if (!newAssignee.trim()) return;

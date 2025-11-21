@@ -20,7 +20,7 @@ function Home() {
         <div>
           <BlurReveal preset="slide-left">
             <h1 className="md:text-[48px] text-[24px] font-bold w-fit text-center mx-auto leading-[120%]">
-              Turn meetings into action
+              Turn meetings into actions
             </h1>
           </BlurReveal>
           <BlurReveal preset="slide-left">
