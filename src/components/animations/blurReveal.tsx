@@ -136,11 +136,15 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
     if (!disableScrollTrigger && timelineRef.current) {
       ScrollTrigger.create({
         trigger: textRef.current,
-        start: 'top 85%',
-        end: 'bottom 15%',
-        toggleActions: 'play none none reverse',
+        start: 'top 90%',
+        end: 'bottom 10%',
+        toggleActions: 'play none none none',
         animation: timelineRef.current,
+        once: true,
       });
+    } else if (disableScrollTrigger && timelineRef.current) {
+      // If scroll trigger disabled, play immediately
+      timelineRef.current.play();
     }
   };
 
