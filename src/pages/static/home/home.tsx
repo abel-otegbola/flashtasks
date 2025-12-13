@@ -2,7 +2,6 @@ import { MedalRibbon, Microphone2, ChartSquare, Lightning, Magnet, CheckCircle, 
 import HeroCheckIcon from "../../../assets/icons/heroCheck"
 import useTheme from '../../../customHooks/useTheme'
 import { useUser } from '../../../context/authContext'
-import BlurReveal from "../../../components/animations/blurReveal"
 import Button from "../../../components/button/button"
 
 function Home() {
@@ -18,23 +17,17 @@ function Home() {
         </p>
 
         <div>
-          <BlurReveal preset="slide-left">
             <h1 className="md:text-[48px] text-[24px] font-bold w-fit text-center mx-auto leading-[120%]">
               Turn meetings into actions
             </h1>
-          </BlurReveal>
-          <BlurReveal preset="slide-left">
             <h1 className="flex flex-wrap md:text-[48px] text-[24px] font-bold w-fit text-center gap-2 items-center mx-auto leading-[120%]">
               Instantly⚡
             </h1>
-          </BlurReveal>
         </div>
 
-        <BlurReveal preset="slide-left">
           <p className="text-gray dark:text-gray-300 text-center mx-auto md:w-[65%] w-full md:text-[18px]">
             Stop wasting time on manual meeting follow-ups. Record meetings or speak naturally — our AI converts conversations into prioritized, assigned tasks so teams spend less time tracking work and more time doing high-quality work.
           </p>
-        </BlurReveal>
         <div className="flex gap-4 flex-wrap justify-center">
           <Button href="/auth/signup">Start Free Trial</Button>
           <button className="px-6 py-3 rounded-lg border border-primary text-primary hover:bg-primary/10 transition-colors duration-300 font-medium">
@@ -45,12 +38,8 @@ function Home() {
   <img src={`/hero-img-${theme === 'dark' ? 'dark' : 'light'}.webp`} width={729} height={529} alt="hero" className="shadow-2xl rounded-lg" />
         
         <div className="py-4 flex flex-col items-center gap-4 md:w-[55%] text-center mb-12">
-          <BlurReveal preset="zoom">
             <h2 className="md:text-[24px] text-[18px] font-medium">Join 500+ teams saving 10+ hours/week of quality time</h2>
-          </BlurReveal>
-          <BlurReveal preset="zoom">
             <p className="dark:text-gray-300">Get early access, influence features, and unlock exclusive perks for early adopters</p>
-          </BlurReveal>
           <img src="/users.png" alt="users" width={220} height={36} className="" />
           {/* Show Sign up when not authenticated, otherwise show user initial circle */}
           <Button href="/auth/signup">Get Started</Button>
@@ -149,11 +138,9 @@ function Home() {
                 description: "Receive organized tasks with priorities, deadlines, and recommendations. Search, track, and optimize your workflow instantly.",
               }
             ].map((step, index) => (
-              <BlurReveal key={index} preset="zoom">
-                <div className="flex flex-col gap-6">
+                <div key={index} className="flex flex-col gap-6">
                   <img src={`/${step.id}-${theme === 'dark' ? 'dark' : 'light'}.webp`} alt={step.title} className="w-full" />
                 </div>
-              </BlurReveal>
             ))}
           </div>
         </div>
@@ -163,7 +150,6 @@ function Home() {
       <section id="pricing" className="md:p-[80px] p-4 py-[60px]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <BlurReveal preset="zoom">
               <span className="text-primary uppercase font-semibold tracking-wide text-[14px]">Pricing</span>
               <h2 className="md:text-[40px] text-[28px] font-bold mt-4 mb-6">
                 Simple, Transparent Pricing
@@ -171,7 +157,6 @@ function Home() {
               <p className="text-gray dark:text-gray-300 md:text-[18px]">
                 Start free, scale as you grow. No hidden fees, cancel anytime.
               </p>
-            </BlurReveal>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -239,12 +224,10 @@ function Home() {
                   <p className="text-gray dark:text-gray-300 mb-6">{plan.description}</p>
                   <ul className="space-y-3 mb-8">
                     {plan.features.map((feature, idx) => (
-                      <BlurReveal key={idx}>
-                        <li className="flex items-start gap-2">
+                        <li key={idx} className="flex items-start gap-2">
                           <CheckCircle size={20} className="text-primary flex-shrink-0 mt-0.5" />
                           <span className="text-[14px]">{feature}</span>
                         </li>
-                      </BlurReveal>
                     ))}
                   </ul>
                   <Button href="/auth/signup" variant={plan.name === "Professional" ? "primary" : "secondary"} className={`w-full justify-center ${plan.popular ? '' : 'bg-transparent border border-primary text-primary hover:bg-primary hover:text-white'}`}>
@@ -261,11 +244,9 @@ function Home() {
       <section id="faqs" className="md:p-[80px] p-4 py-[60px]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <BlurReveal preset="zoom">
               <span className="text-primary uppercase font-semibold tracking-wide text-[14px]">FAQs</span>
               <h2 className="md:text-[40px] text-[28px] font-bold mt-4 mb-6">Frequently asked questions</h2>
               <p className="text-gray dark:text-gray-300 md:text-[18px]">Answers to common questions about how Flashtasks saves teams time by automating task capture and follow-up.</p>
-            </BlurReveal>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -300,9 +281,7 @@ function Home() {
       <section className="md:p-[80px] p-4 py-[60px]">
           <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-dark to-dark-bg rounded-3xl p-12 text-white">
             <h2 className="md:text-[28px] text-[16px] font-bold mb-6">
-              <BlurReveal preset="zoom">
                 Reclaim your team's time by automating meeting follow-ups
-              </BlurReveal>
             </h2>
             <div className="flex gap-4 flex-wrap justify-center">
               <Button href="/auth/signup" className="">
@@ -313,9 +292,7 @@ function Home() {
               </button>
             </div>
             <p className="mt-6 text-[14px] opacity-75">
-              <BlurReveal preset="zoom">
                 ✓ 14-day free trial ✓ No credit card required ✓ Cancel anytime
-                </BlurReveal>
               </p>
           </div>
       </section>
