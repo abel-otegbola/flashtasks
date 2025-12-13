@@ -224,7 +224,7 @@ function Home() {
                 popular: false
               }
             ].map((plan, index) => (
-              <BlurReveal key={index} preset="zoom">
+              <div key={index}>
                 <div className={`p-8 rounded-2xl border ${plan.popular ? 'border-primary shadow-2xl scale-105' : 'border-border-gray-100 dark:border-gray-700'} bg-white dark:bg-dark-bg-secondary/50 relative`}>
                   {plan.popular && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-[12px] font-semibold">
@@ -239,17 +239,19 @@ function Home() {
                   <p className="text-gray dark:text-gray-300 mb-6">{plan.description}</p>
                   <ul className="space-y-3 mb-8">
                     {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <CheckCircle size={20} className="text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-[14px]">{feature}</span>
-                      </li>
+                      <BlurReveal key={idx}>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle size={20} className="text-primary flex-shrink-0 mt-0.5" />
+                          <span className="text-[14px]">{feature}</span>
+                        </li>
+                      </BlurReveal>
                     ))}
                   </ul>
                   <Button href="/auth/signup" variant={plan.name === "Professional" ? "primary" : "secondary"} className={`w-full justify-center ${plan.popular ? '' : 'bg-transparent border border-primary text-primary hover:bg-primary hover:text-white'}`}>
                     {plan.cta}
                   </Button>
                 </div>
-              </BlurReveal>
+              </div>
             ))}
           </div>
         </div>
@@ -296,10 +298,11 @@ function Home() {
 
       {/* Final CTA Section */}
       <section className="md:p-[80px] p-4 py-[60px]">
-        <BlurReveal preset="zoom">
           <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-dark to-dark-bg rounded-3xl p-12 text-white">
             <h2 className="md:text-[28px] text-[16px] font-bold mb-6">
-              Reclaim your team's time by automating meeting follow-ups
+              <BlurReveal preset="zoom">
+                Reclaim your team's time by automating meeting follow-ups
+              </BlurReveal>
             </h2>
             <div className="flex gap-4 flex-wrap justify-center">
               <Button href="/auth/signup" className="">
@@ -309,9 +312,12 @@ function Home() {
                 Schedule a Demo
               </button>
             </div>
-            <p className="mt-6 text-[14px] opacity-75">✓ 14-day free trial ✓ No credit card required ✓ Cancel anytime</p>
+            <p className="mt-6 text-[14px] opacity-75">
+              <BlurReveal preset="zoom">
+                ✓ 14-day free trial ✓ No credit card required ✓ Cancel anytime
+                </BlurReveal>
+              </p>
           </div>
-        </BlurReveal>
       </section>
     </main>
   )

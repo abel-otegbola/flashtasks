@@ -132,16 +132,30 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
       },
     });
 
+    // Check if element is already in viewport
+    const isInViewport = () => {
+      if (!textRef.current) return false;
+      const rect = textRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+      return rect.top <= windowHeight * 0.9 && rect.bottom >= 0;
+    };
+
     // Add scroll trigger if enabled
     if (!disableScrollTrigger && timelineRef.current) {
-      ScrollTrigger.create({
-        trigger: textRef.current,
-        start: 'top 90%',
-        end: 'bottom 10%',
-        toggleActions: 'play none none none',
-        animation: timelineRef.current,
-        once: true,
-      });
+      if (isInViewport()) {
+        // Element already visible, play immediately
+        timelineRef.current.play();
+      } else {
+        // Element not visible, wait for scroll
+        ScrollTrigger.create({
+          trigger: textRef.current,
+          start: 'top 90%',
+          end: 'bottom 10%',
+          toggleActions: 'play none none none',
+          animation: timelineRef.current,
+          once: true,
+        });
+      }
     } else if (disableScrollTrigger && timelineRef.current) {
       // If scroll trigger disabled, play immediately
       timelineRef.current.play();
