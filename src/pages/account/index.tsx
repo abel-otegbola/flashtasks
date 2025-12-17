@@ -13,6 +13,7 @@ import Organizations from "./organizations";
 import SearchBar from "../../components/search/searchBar";
 import CreateTask from "./create-task/createTask";
 import SettingsPage from "./settings";
+import PricingPage from "./pricing";
 
 function AccountPages() {
     const { user } = useUser();
@@ -59,6 +60,7 @@ function AccountPages() {
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/organizations" element={<Organizations />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/tasks/new" element={<CreateTask />} />
             </Routes>
         </div>

@@ -162,12 +162,13 @@ function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: "Starter",
+                name: "Free",
                 price: "Free",
-                description: "Perfect for individuals testing the waters",
+                description: "Perfect for individuals getting started",
                 features: [
-                  "Up to 10 hours of recording/month",
-                  "Basic task conversion",
+                  "10 minutes recording time per session",
+                  "Basic AI task conversion",
+                  "Up to 50 tasks per month",
                   "7-day history",
                   "Email support",
                   "Core features access"
@@ -178,16 +179,16 @@ function Home() {
               {
                 name: "Professional",
                 price: "$29",
-                period: "/user/month",
-                description: "Best for growing teams who need more power",
+                period: "/month",
+                description: "Best for professionals and growing teams",
                 features: [
-                  "Unlimited recordings",
-                  "Advanced AI analytics",
+                  "20 minutes recording time per session",
+                  "Advanced AI task conversion & analytics",
+                  "Unlimited tasks",
                   "Unlimited history",
                   "Priority support",
-                  "Workflow optimization insights",
                   "Team collaboration tools",
-                  "Custom integrations"
+                  "Advanced search & filters"
                 ],
                 cta: "Start 14-Day Trial",
                 popular: true
@@ -197,6 +198,7 @@ function Home() {
                 price: "Custom",
                 description: "For large teams with advanced needs",
                 features: [
+                  "30 minutes recording time per session",
                   "Everything in Professional",
                   "Dedicated account manager",
                   "Custom AI training",

@@ -16,9 +16,14 @@ function CreateTask() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedTasks, setGeneratedTasks] = useState<todo[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [recordingTime, setRecordingTime] = useState(0) // in seconds
   const { addMultipleTasks, loading: savingTasks } = useTasks()
   const { user } = useUser();
   const { currentOrg } = useOrganizations();
+
+  // Calculate max recording time based on user role (in seconds)
+  const userRole = ((user as any)?.prefs?.role as string) || 'free'; // 'free', 'pro', 'enterprise'
+  const maxRecordingTime = userRole === 'enterprise' ? 1800 : userRole === 'pro' ? 1200 : 600; // 30min, 20min, 10min
 
   const handleTranscript = (text: string) => {
     // Append the transcribed text to existing text
@@ -140,7 +145,11 @@ function CreateTask() {
             </Formik>
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <VoiceInput onTranscript={handleTranscript} />
+              <VoiceInput 
+                onTranscript={handleTranscript} 
+                maxRecordingTime={maxRecordingTime}
+                onRecordingTimeUpdate={setRecordingTime}
+              />
               <button
                 type="button"
                 onClick={handleUploadClick}
@@ -155,7 +164,10 @@ function CreateTask() {
         </div>
 
         <div className="flex justify-between items-end">
-          <p className="text-gray-400 text-sm">{inputText.length}/1000</p>
+          <p className="text-gray-400 text-sm">
+            {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')} / {Math.floor(maxRecordingTime / 60)}:00 mins
+            {userRole === 'free' && <span className="ml-2 text-primary text-xs">(Upgrade for more time)</span>}
+          </p>
           <Button 
             className="rounded-full" 
             size="small"

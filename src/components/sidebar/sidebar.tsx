@@ -3,7 +3,7 @@ import { useState, type ReactElement } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LogoIcon from "../../assets/icons/logo";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
-import { Bell, Calendar, Home, IconProps, Logout, Server, Settings, UsersGroupTwoRounded } from "@solar-icons/react";
+import { Bell, Calendar, DollarMinimalistic, Home, IconProps, Logout, Server, Settings, UsersGroupTwoRounded } from "@solar-icons/react";
 import ThemeSelector from "../themeSelector/themeSelector";
 import { useUser } from "../../context/authContext";
 
@@ -34,10 +34,11 @@ function Sidebar() {
     ]
     
     const otherLinks: Link[] = [
-        { id: 0, label: "Notifications", icon: <Bell size={16} />, link: "/account/notifications" },
-        { id: 1, label: "Settings", icon: <Settings size={16} />, link: "/account/settings" },
+        { id: 0, label: "Pricing", icon: <DollarMinimalistic size={16} />, link: "/account/pricing" },
+        { id: 1, label: "Notifications", icon: <Bell size={16} />, link: "/account/notifications" },
+        { id: 2, label: "Settings", icon: <Settings size={16} />, link: "/account/settings" },
         // Logout is handled specially to run the logout effect
-        { id: 2, label: "Logout", icon: <Logout size={16} />, link: "#" },
+        { id: 3, label: "Logout", icon: <Logout size={16} />, link: "#" },
     ]
     const modalRef = useOutsideClick(setOpen, false)
 

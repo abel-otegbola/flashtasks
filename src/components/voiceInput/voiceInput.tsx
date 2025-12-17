@@ -5,13 +5,18 @@ import { transcribeAudio } from "../../services/gemini";
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
   disabled?: boolean;
+  maxRecordingTime?: number; // in seconds
+  onRecordingTimeUpdate?: (time: number) => void;
 }
 
-function VoiceInput({ onTranscript, disabled = false }: VoiceInputProps) {
+function VoiceInput({ onTranscript, disabled = false, maxRecordingTime = 600, onRecordingTimeUpdate }: VoiceInputProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingStartTimeRef = useRef<number>(0);
 
   const startRecording = async () => {
     try {
@@ -32,10 +37,29 @@ function VoiceInput({ onTranscript, disabled = false }: VoiceInputProps) {
         
         // Stop all tracks to release the microphone
         stream.getTracks().forEach(track => track.stop());
+        
+        // Clear timer
+        if (timerIntervalRef.current) {
+          clearInterval(timerIntervalRef.current);
+          timerIntervalRef.current = null;
+        }
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      
+      // Start timer
+      recordingStartTimeRef.current = Date.now();
+      timerIntervalRef.current = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
+        setRecordingTime(elapsed);
+        if (onRecordingTimeUpdate) onRecordingTimeUpdate(elapsed);
+        
+        // Auto-stop when max time reached
+        if (elapsed >= maxRecordingTime) {
+          stopRecording();
+        }
+      }, 1000);
     } catch (error) {
       console.error('Error accessing microphone:', error);
       alert('Unable to access microphone. Please ensure you have granted permission.');
@@ -46,6 +70,12 @@ function VoiceInput({ onTranscript, disabled = false }: VoiceInputProps) {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      
+      // Clear timer
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
     }
   };
 
@@ -59,6 +89,8 @@ function VoiceInput({ onTranscript, disabled = false }: VoiceInputProps) {
       alert(error instanceof Error ? error.message : 'Failed to transcribe audio. Please try again.');
     } finally {
       setIsProcessing(false);
+      setRecordingTime(0);
+      if (onRecordingTimeUpdate) onRecordingTimeUpdate(0);
     }
   };
 
@@ -77,6 +109,9 @@ function VoiceInput({ onTranscript, disabled = false }: VoiceInputProps) {
     return () => {
       if (mediaRecorderRef.current && isRecording) {
         mediaRecorderRef.current.stop();
+      }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
       }
     };
   }, [isRecording]);

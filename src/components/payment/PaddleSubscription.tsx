@@ -33,17 +33,34 @@ export default function PaddleSubscription({ productId, label = 'Subscribe', cla
     try {
       await openPaddleCheckout(pid, {
         email: (user as any)?.email,
-        passthrough: JSON.stringify({ userId: (user as any)?.$id || null }),
+        passthrough: JSON.stringify({ 
+          userId: (user as any)?.$id || null,
+          productId: pid
+        }),
       });
 
       // Notify backend to provision subscription (best-effort)
       try {
-        await fetch('/api/paddle/activate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: (user as any)?.$id || null }) });
+        const response = await fetch('/api/paddle/activate', { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ 
+            userId: (user as any)?.$id || null,
+            productId: pid
+          }) 
+        });
+        
+        if (response.ok) {
+          alert('Thank you! Your subscription is now active. Please refresh the page to see your updated plan.');
+          // Refresh page to update user context
+          setTimeout(() => window.location.reload(), 2000);
+        } else {
+          throw new Error('Activation failed');
+        }
       } catch (e) {
         console.warn('activation call failed', e);
+        alert('Payment successful, but activation is pending. Please contact support if your plan is not updated within 5 minutes.');
       }
-
-      alert('Thank you — if the checkout completed your subscription will be active shortly.');
     } catch (e: any) {
       if (e?.message === 'checkout-closed') {
         // user closed checkout
