@@ -166,7 +166,7 @@ function Home() {
                 price: "Free",
                 description: "Perfect for individuals getting started",
                 features: [
-                  "10 minutes recording time per session",
+                  "5 minutes recording time per session",
                   "Basic AI task conversion",
                   "Up to 50 tasks per month",
                   "7-day history",
@@ -182,7 +182,7 @@ function Home() {
                 period: "/month",
                 description: "Best for professionals and growing teams",
                 features: [
-                  "20 minutes recording time per session",
+                  "30 minutes recording time per session",
                   "Advanced AI task conversion & analytics",
                   "Unlimited tasks",
                   "Unlimited history",
@@ -198,7 +198,7 @@ function Home() {
                 price: "Custom",
                 description: "For large teams with advanced needs",
                 features: [
-                  "30 minutes recording time per session",
+                  "Unlimited recording time per session",
                   "Everything in Professional",
                   "Dedicated account manager",
                   "Custom AI training",

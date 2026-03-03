@@ -23,7 +23,7 @@ function CreateTask() {
 
   // Calculate max recording time based on user role (in seconds)
   const userRole = ((user as any)?.prefs?.role as string) || 'free'; // 'free', 'pro', 'enterprise'
-  const maxRecordingTime = userRole === 'enterprise' ? 1800 : userRole === 'pro' ? 1200 : 600; // 30min, 20min, 10min
+  const maxRecordingTime = userRole === 'enterprise' ? Infinity : userRole === 'pro' ? 1800 : 300; // unlimited, 30min, 5min
 
   const handleTranscript = (text: string) => {
     // Append the transcribed text to existing text
@@ -165,7 +165,7 @@ function CreateTask() {
 
         <div className="flex justify-between items-end">
           <p className="text-gray-400 text-sm">
-            {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')} / {Math.floor(maxRecordingTime / 60)}:00 mins
+            {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')} / {userRole === 'enterprise' ? '∞' : `${Math.floor(maxRecordingTime / 60)}:00`} mins
             {userRole === 'free' && <span className="ml-2 text-primary text-xs">(Upgrade for more time)</span>}
           </p>
           <Button 

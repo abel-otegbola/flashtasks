@@ -1,7 +1,7 @@
 import { CheckCircle, CloseCircle } from "@solar-icons/react";
 import { useState } from "react";
 import Button from "../../../components/button/button";
-import PaddleSubscription from "../../../components/payment/PaddleSubscription";
+import DodoSubscription from "../../../components/payment/DodoSubscription";
 import { useUser } from "../../../context/authContext";
 
 interface PricingPlan {
@@ -15,7 +15,7 @@ interface PricingPlan {
   limitations?: string[];
   cta: string;
   popular: boolean;
-  productId?: string;
+  planId?: string;
   isCurrent?: boolean;
 }
 
@@ -30,9 +30,9 @@ function PricingPage() {
       role: 'free',
       price: "$0",
       description: "Perfect for individuals getting started",
-      recordingTime: "10 minutes",
+      recordingTime: "5 minutes",
       features: [
-        "10 minutes recording time per session",
+        "5 minutes recording time per session",
         "Basic AI task conversion",
         "Up to 50 tasks per month",
         "7-day task history",
@@ -54,9 +54,9 @@ function PricingPage() {
       price: billingCycle === 'monthly' ? "$29" : "$290",
       period: billingCycle === 'monthly' ? "/month" : "/year",
       description: "Best for professionals and growing teams",
-      recordingTime: "20 minutes",
+      recordingTime: "30 minutes",
       features: [
-        "20 minutes recording time per session",
+        "30 minutes recording time per session",
         "Advanced AI task conversion & analytics",
         "Unlimited tasks",
         "Unlimited task history",
@@ -68,7 +68,7 @@ function PricingPage() {
       ],
       cta: "Upgrade to Pro",
       popular: true,
-      productId: import.meta.env.VITE_PADDLE_PRO_PRODUCT_ID,
+      planId: import.meta.env.VITE_DODO_PRO_PLAN_ID,
       isCurrent: currentUserRole === 'pro'
     },
     {
@@ -77,9 +77,9 @@ function PricingPage() {
       price: billingCycle === 'monthly' ? "$99" : "$990",
       period: billingCycle === 'monthly' ? "/user/month" : "/user/year",
       description: "For large teams with advanced needs",
-      recordingTime: "30 minutes",
+      recordingTime: "Unlimited",
       features: [
-        "30 minutes recording time per session",
+        "Unlimited recording time per session",
         "Everything in Professional",
         "Dedicated account manager",
         "Custom AI training for your domain",
@@ -93,7 +93,7 @@ function PricingPage() {
       ],
       cta: "Contact Sales",
       popular: false,
-      productId: import.meta.env.VITE_PADDLE_ENTERPRISE_PRODUCT_ID,
+      planId: import.meta.env.VITE_DODO_ENTERPRISE_PLAN_ID,
       isCurrent: currentUserRole === 'enterprise'
     }
   ];
@@ -235,11 +235,12 @@ function PricingPage() {
                     >
                       {plan.cta}
                     </Button>
-                  ) : plan.productId ? (
-                    <PaddleSubscription
-                      productId={plan.productId}
+                  ) : plan.planId ? (
+                    <DodoSubscription
+                      planId={plan.planId}
                       label={plan.cta}
                       className="w-full"
+                      role={plan.role as 'pro' | 'enterprise'}
                     />
                   ) : (
                     <Button
@@ -278,7 +279,7 @@ function PricingPage() {
               </thead>
               <tbody>
                 {[
-                  { feature: 'Recording Time per Session', free: '10 min', pro: '20 min', enterprise: '30 min' },
+                  { feature: 'Recording Time per Session', free: '5 min', pro: '30 min', enterprise: 'Unlimited' },
                   { feature: 'Tasks per Month', free: '50', pro: 'Unlimited', enterprise: 'Unlimited' },
                   { feature: 'Task History', free: '7 days', pro: 'Unlimited', enterprise: 'Unlimited' },
                   { feature: 'AI Task Conversion', free: true, pro: true, enterprise: true },
