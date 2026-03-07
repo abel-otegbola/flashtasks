@@ -9,9 +9,9 @@ function Home() {
   const theme = useTheme();
   return (
     <main className="w-full dark:bg-dark dark:text-gray-100">
-      <header className="flex min-h-[600px]">
+      <header className="flex md:flex-row flex-col min-h-[600px]">
 
-        <div className="flex flex-col flex-1 h-[600px] justify-center px-[10%] gap-8 ">
+        <div className="flex flex-col flex-1 h-[600px] md:py-0 py-[60px] justify-center md:px-[10%] px-4 gap-8 ">
           <h1 className="md:text-[56px] text-[32px] font-medium leading-[60px]">
             AI Meeting Recorder & Note Transcriber
           </h1>
@@ -23,7 +23,7 @@ function Home() {
           <img src="/users.png" alt="users" width={120} height={36} className="" />
         </div>
         
-        <div className="flex justify-center items-center p-[8%] md:w-[45%] w-full h-[600px] bg-[#D0D0D00D] ">
+        <div className="flex justify-center items-center md:p-[8%] p-4 md:w-[45%] w-full h-[600px] bg-[#D0D0D00D] ">
           <img src={`/hero-img-${theme === 'dark' ? 'dark' : 'light'}.webp`} width={729} height={529} alt="hero" className="shadow-2xl rounded-lg" />
         </div>
       </header>
