@@ -57,7 +57,7 @@ function Topbar() {
 
     return (
         <>
-        <div className={`flex justify-between items-center w-full md:px-[10%] p-4 z-[3] sticky top-0 bg-white dark:bg-dark backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'shadow-sm' : ''}`}>
+        <div className={`flex justify-between items-center w-full md:px-[8%] p-4 z-[3] sticky top-0 bg-white dark:bg-dark backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'shadow-sm' : ''}`}>
             <Link to={"/"} className="md:w-[13%] text-start flex gap-1 items-center">
                 <LogoIcon className="" />
                 <h3 className="text-[16px] font-medium tracking-[2px]">rion</h3>
@@ -71,14 +71,13 @@ function Topbar() {
                     {
                         [
                             { id: 0, title: "Features", href: "#features" },
-                            { id: 1, title: "How It Works", href: "#how-it-works" },
+                            { id: 1, title: "Integrations", href: "#integrations" },
                             { id: 2, title: "Pricing", href: "#pricing" },
-                            { id: 3, title: "Testimonials", href: "#testimonials" },
                         ].map(link => (
                             <li key={link.id} className="px-2 py-3">
                                 <a 
                                     href={link.href} 
-                                    className={`font-medium p-4 duration-300 w-full ${activeSection === link.href ? 'text-primary' : 'text-text-black dark:text-gray-200'} hover:text-primary dark:hover:text-primary`}
+                                    className={`font-medium p-4 px-6 duration-300 w-full ${activeSection === link.href ? 'text-primary' : 'text-text-black dark:text-gray-200'} hover:text-primary dark:hover:text-primary`}
                                     onClick={(e) => {
                                         e.preventDefault();
                                         const element = document.querySelector(link.href);
@@ -93,7 +92,7 @@ function Topbar() {
                             </li>
                         ))
                     }
-                    <div className="flex flex-col gap-4 md:hidden p-6 mt-16 dark:text-gray-200">
+                    <div className="flex flex-col items-end gap-4 md:hidden p-6 mt-16 dark:text-gray-200">
                         Have ideas to make flashtasks better?
                         <Link to="/contact" className="text-primary">Message us</Link>
                     </div>
@@ -101,7 +100,7 @@ function Topbar() {
             </div>
 
             {/* Right actions + search */}
-            <div className="flex items-center justify-end gap-6 md:w-[13%]">
+            <div className="flex items-center justify-end gap-6">
                 <ThemeSelector />
                 <AuthCTA />
                 <button className="flex flex-col justify-center items-center gap-1 text-lg w-10 h-10 md:hidden z-[50]" onClick={() => setOpen(!open)}>
