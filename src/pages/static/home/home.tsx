@@ -31,10 +31,31 @@ function Home() {
             <BlurReveal preset="slide-right">Efficiently manage your tasks and boost productivity</BlurReveal>
           </p>
           <Button href="/auth/signup">Get free demo</Button>
+
+          <div className='grid sm:grid-cols-3 gap-4 w-3.5xl mt-6'>
+            <div className='flex gap-2 items-center justify-center'>
+              <div className='flex items-center justify-center h-4 w-4 bg-dark/[0.3] rounded-full'>
+                <div className='h-2 w-2 bg-dark rounded-full'></div>
+              </div>
+              <p className='text-gray-500'>Real-time collaboration</p>
+            </div>
+            <div className='flex gap-2 items-center justify-center'>
+              <div className='flex items-center justify-center h-4 w-4 bg-dark/[0.3] rounded-full'>
+                <div className='h-2 w-2 bg-dark rounded-full'></div>
+              </div>
+              <p className='text-gray-500'>Intelligent task automation</p>
+            </div>
+            <div className='flex gap-2 items-center justify-center'>
+              <div className='flex items-center justify-center h-4 w-4 bg-dark/[0.3] rounded-full'>
+                <div className='h-2 w-2 bg-dark rounded-full'></div>
+              </div>
+              <p className='text-gray-500'>Customizable analytics dashboard</p>
+            </div>
+          </div>
         </div>
         
-        <div className="flex flex-col justify-center items-center py-[60px] p-4 md:w-[75%] w-full">
-          <img src={`/hero-img-${theme === 'dark' ? 'dark' : 'light'}.webp`} width={1229} height={829} alt="hero" className="shadow-2xl rounded-lg" />
+        <div className="flex flex-col justify-center items-center py-[60px] p-4 md:w-[65%] w-full">
+          <img src={`/hero-img-${theme === 'dark' ? 'dark' : 'light'}.webp`} width={1229} height={829} alt="hero" className="shadow-2xl rounded-[16px]" />
           <h2 className="font-medium mt-20 mb-4 text-center">Join 500+ teams saving 10+ hours/week of quality time</h2>
           <img src="/users.png" alt="users" width={240} height={64} className="" />
         </div>

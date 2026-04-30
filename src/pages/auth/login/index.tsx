@@ -7,6 +7,7 @@ import { AuthContext } from "../../../context/authContext";
 import { loginSchema } from "../../../schema/auth";
 import Input from "../../../components/input/input";
 import LogoIcon from "../../../assets/icons/logo";
+import { Letter, Lock } from "@solar-icons/react";
 
 export default function Login() {
   const { signIn, loading } = useContext(AuthContext);
@@ -17,11 +18,11 @@ export default function Login() {
       <div className="flex md:w-[60%] h-auto w-full items-center justify-center">
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%] md:py-[5%] py-[80px]">
-            <div>
+            <div className="flex flex-col items-center gap-4">
               <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] w-fit">
                 <LogoIcon className="w-[14px]"  />
               </div>
-              <h1 className="font-semibold md:text-[30px] text-[24px] text-dark-500">Welcome 👋</h1>
+              <h1 className="font-bold md:text-[20px] text-[16px] text-dark-500">Welcome</h1>
               <p className="text-gray-500">Please login here</p>
             </div>
             <Formik
@@ -41,7 +42,8 @@ export default function Login() {
                     onChange={handleChange}
                     type="email"
                     error={touched.email ? errors.email : ""}
-                    label="Email Address"
+                    placeholder="Email Address"
+                    leftIcon={<Letter />}
                   />
                   <Input
                     name="password"
@@ -49,9 +51,10 @@ export default function Login() {
                     onChange={handleChange}
                     type="password"
                     error={touched.password ? errors.password : ""}
-                    label="Password"
+                    placeholder="Password"
+                    leftIcon={<Lock />}
                   />
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full py-[12px]">
                     {isSubmitting || loading ? <LoadingIcon color="white" className="animate-spin w-[20px]" /> : "Login"}
                   </Button>
                 </form>

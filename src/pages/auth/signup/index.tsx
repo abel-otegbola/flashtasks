@@ -20,7 +20,7 @@ export default function SignupPage() {
       <div className="flex md:w-[55%] h-screen w-full items-center justify-center">
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%]">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col items-center gap-4">
               <div className="px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] w-fit">
                 <LogoIcon className="w-[14px]"  />
               </div>
@@ -29,7 +29,7 @@ export default function SignupPage() {
                 <h1 className="font-bold md:text-[20px] text-[16px] text-dark-500">Get Started now</h1>
               </BlurReveal>
               <BlurReveal preset="slide-left">
-                <p className="text-gray">Help shape flashtasks, and enjoy free premium perks at launch. </p>
+                <p className="text-gray text-center">Help shape flashtasks, and enjoy free premium perks at launch. </p>
               </BlurReveal>
             </div>
             <Formik
@@ -41,15 +41,14 @@ export default function SignupPage() {
               }}
             >
               {({ values, errors, touched, handleChange, handleSubmit, isSubmitting }) => (
-                <form onSubmit={handleSubmit} className="flex flex-col w-full gap-3">
+                <form onSubmit={handleSubmit} className="flex flex-col w-full gap-6">
                     <Input
                       name="name" 
                       value={values.name}
                       onChange={handleChange}
                       type="text"
                       error={touched.name ? errors.name : ""}
-                      label="Username"
-                      placeholder="Your name"
+                      placeholder="User name"
                       leftIcon={<User weight="Outline" />}
                     />
 
@@ -59,8 +58,7 @@ export default function SignupPage() {
                       onChange={handleChange}
                       type="email"
                       error={touched.email ? errors.email : ""}
-                      label="Email Address"
-                      placeholder="Enter your email"
+                      placeholder="Email Address"
                       leftIcon={<Letter weight="Outline" />}
                     />
 
@@ -70,12 +68,11 @@ export default function SignupPage() {
                       onChange={handleChange}
                       type="password"
                       error={touched.password ? errors.password : ""}
-                      label="Password"
-                      placeholder="Enter your password"
+                      placeholder="Password"
                       leftIcon={<Lock weight="Outline" />}
                     />
                   
-                  <Button type="submit" className="w-full mt-4">
+                  <Button type="submit" className="w-full mt-4 py-[12px]">
                     {isSubmitting || loading ? <LoadingIcon color="white" className="animate-spin w-[20px]" /> : "Register"}
                   </Button>
                 </form>
