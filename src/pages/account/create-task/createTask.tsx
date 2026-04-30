@@ -2,7 +2,7 @@ import { Link } from "react-router-dom"
 import Input from "../../../components/input/input"
 import { Formik } from "formik";
 import Button from "../../../components/button/button";
-import { ArrowRight } from "@solar-icons/react";
+import { ArrowRight, Upload } from "@solar-icons/react";
 import VoiceInput from "../../../components/voiceInput/voiceInput";
 import { useRef, useState } from "react";
 import { convertTextToTasks, transcribeAudio } from "../../../services/gemini";
@@ -117,7 +117,7 @@ function CreateTask() {
         <Link to={"tasks"} className="text-primary">View all</Link>
       </div>
 
-      <div className="flex flex-col gap-2 p-4 rounded-[10px] border border-border-gray-100 dark:border-gray-700 bg-gray-100 dark:bg-dark-bg-secondary/50">
+      <div className="flex flex-col gap-2 p-4 rounded-[10px] border border-border-gray-100/[0.5] shadow-[0px_4px_8px_0px_#80808010] dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50">
         <div className="flex gap-2 w-full">
           <Formik
                 initialValues={{ search: inputText }}
@@ -154,9 +154,9 @@ function CreateTask() {
                 type="button"
                 onClick={handleUploadClick}
                 disabled={isUploading}
-                className={`px-3 py-2 rounded-md border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50 text-sm ${isUploading ? 'opacity-60' : ''}`}
+                className={`p-4 rounded-full border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50 text-sm ${isUploading ? 'opacity-60' : ''}`}
               >
-                {isUploading ? 'Transcribing...' : 'Upload audio'}
+                {isUploading ? 'Transcribing...' : <Upload size={16} />}
               </button>
             </div>
             <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleFileChange} />
@@ -169,20 +169,19 @@ function CreateTask() {
             {userRole === 'free' && <span className="ml-2 text-primary text-xs">(Upgrade for more time)</span>}
           </p>
           <Button 
-            className="rounded-full" 
+            className="" 
             size="small"
             onClick={handleGenerateTasks}
             disabled={isGenerating || !inputText.trim()}
           >
             {isGenerating ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin" />
                 Generating...
               </>
             ) : (
               <>
                 Generate tasks
-                <span className="bg-white rounded-full p-2 text-primary md:-mr-2 -mr-1"><ArrowRight color="currentColor" size={12}/></span>
               </>
             )}
           </Button>
