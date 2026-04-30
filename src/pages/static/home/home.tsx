@@ -15,7 +15,7 @@ function Home() {
           <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2]">
             <LogoIcon className="w-[14px]"  />
           </div>
-          <div className="flex flex-col gap-3 md:text-[48px] text-[28px] max-[400px]:text-[24px] font-semibold md:leading-[60px] leading-[40px]">
+          <div className="flex flex-col md:text-[48px] text-[28px] max-[400px]:text-[24px] font-semibold md:leading-[60px] leading-[36px]">
             
             <BlurReveal preset="slide-right"><h1>Get tasks done</h1></BlurReveal>
 
