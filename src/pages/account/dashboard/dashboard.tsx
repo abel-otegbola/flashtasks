@@ -80,27 +80,27 @@ function Dashboard() {
           <div className="text-gray-500">No tasks yet. Create one using the Create button.</div>
         ) : (
           <div className="flex flex-col gap-3">
-            {recent.map((task) => (
+            {recent.map((task, index) => (
               <div 
                 key={task.$id}
                 onClick={() => openTaskDetails(task)}
                 role="button"
                 tabIndex={0}
-                className="md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 border border-gray-500/[0.2] rounded-lg hover:shadow-md transition-shadow bg-bg-gray-100 dark:bg-dark-bg-secondary/50 cursor-pointer"
+                className={`md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 border border-gray-500/[0.1] rounded-lg hover:shadow-[0px_4px_8px_0px_#80808020] transition-shadow ${index % 2 !== 0 ? 'bg-bg-gray-100 dark:bg-dark-bg-secondary/50' : 'bg-white dark:bg-dark-bg'} cursor-pointer`}
               >
                 {/* Mobile Layout */}
                 <div className="md:col-span-4 flex flex-col gap-1">
-                    <h3 className="font-semibold text-sm">{task.title}</h3>
-                    <p className="text-xs text-gray-400 line-clamp-2 md:line-clamp-1">{task.description}</p>
+                    <h3 className="font-semibold text-[13px]">{task.title}</h3>
+                    <p className="text-sm text-gray-400 line-clamp-2 md:line-clamp-1">{task.description}</p>
                 </div>
                 
-                {/* Desktop Layout - Remaining columns */}
-                <div className="md:col-span-2 flex items-center md:justify-start">
+                
+                <div className="md:col-span-2 md:flex hidden items-center md:justify-start">
                     <span className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700">
                         {task.category}
                     </span>
                 </div>
-                <div className="md:col-span-2 flex items-center md:justify-start">
+                <div className="md:col-span-2 md:flex hidden items-center md:justify-start">
                     <span className={`text-xs px-2 py-1 rounded-full ${
                         task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                         task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
@@ -111,7 +111,7 @@ function Dashboard() {
                         {task.status}
                     </span>
                 </div>
-                <div className="md:col-span-2 flex items-center md:justify-start">
+                <div className="md:col-span-2 md:flex hidden items-center md:justify-start">
                     <span className={`text-xs px-2 py-1 rounded-full ${
                         task.priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
                         task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
@@ -123,16 +123,16 @@ function Dashboard() {
                 <div className="md:col-span-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
                     {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}
                 </div>
-                                </div>
+              </div>
             ))}
           </div>
         )}
       </div>
       
       {/* Tasks per day chart */}
-      <div>
+      {/* <div>
         <TasksPerDay days={14} />
-      </div>
+      </div> */}
     </div>
 
       <div className="p-4 sm:w-[320px] w-full border border-primary/[0.12] bg-white dark:bg-dark-bg rounded-[10px]">

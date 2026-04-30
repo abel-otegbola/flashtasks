@@ -51,7 +51,7 @@ function Sidebar() {
             </button>
             <div className={`flex flex-col justify-between md:h-full bg-white dark:bg-dark-bg-secondary border border-gray-500/[0.1] dark:border-gray-500/[0.2] h-[100vh] md:rounded-[20px] md:sticky fixed md:top-0 top-0 py-4 px-4 right-0 overflow-y-auto overflow-x-hidden z-[5] transition-all duration-700 ${open ? "sm:w-[70px] w-[280px] translate-x-[0px] opacity-[1]": "sm:w-full translate-x-[400px] md:translate-x-[0px] md:opacity-[1] opacity-[0]"}`}>  
                 <Link to={"/"} className="flex items-center mb-2 sm:p-1">
-                    <LogoIcon className="text-primary 2xl:w-[40px] md:w-[32px] w-[24px]" />
+                    <LogoIcon className="text-primary w-[12px]" />
                 </Link>
 
                 {/* Navigation Links */}
