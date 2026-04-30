@@ -22,7 +22,10 @@ function Topbar() {
         }
 
         return (
-        <Button href="/auth/signup" variant="secondary" className="md:w-fit w-full">Sign up</Button>
+            <div className="flex md:flex-row flex-col gap-4">
+                <Button href="/auth/login" variant="tertiary" className="md:w-fit w-full">Login</Button>
+                <Button href="/auth/signup" variant="secondary" className="md:w-fit w-full">Sign up</Button>
+            </div>
         );
     }
 
@@ -57,15 +60,15 @@ function Topbar() {
 
     return (
         <>
-        <div className={`flex justify-between items-center w-full md:px-[8%] p-4 z-[3] sticky top-0 bg-white dark:bg-dark backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'border-b border-gray-500/[0.1]' : ''}`}>
-            <Link to={"/"} className="md:w-[13%] text-start flex gap-2 items-center">
+        <div className={`flex justify-between items-center w-full md:px-[8%] px-4 py-2 z-[3] sticky top-0 bg-white dark:bg-[#101010] backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'border-b border-gray-500/[0.1]' : ''}`}>
+            <Link to={"/"} className="md:w-[19%] text-start flex gap-2 items-center">
                 <LogoIcon className="w-[14px]"  />
                 <h3 className="text-[16px] font-bold">Flash Tasks</h3>
             </Link>
             
             <div className="md:static fixed top-0 right-0 z-20 overflow-hidden md:h-auto h-screen md:w-auto h-full w-full">
                 <ul className={`
-                    flex md:flex-row flex-col md:px-0 md:py-0 py-12 px-6 bg-white dark:bg-dark md:w-auto h-full w-full
+                    flex md:flex-row flex-col md:px-0 md:py-0 py-12 px-6 bg-white dark:bg-[#101010] md:w-auto h-full w-full
                     ${open ? "translate-x-[0px]" : "md:translate-x-[0] translate-x-[120%]"} duration-500
                 `}>
                     {

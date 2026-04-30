@@ -8,7 +8,7 @@ function Home() {
   const { user } = useUser();
   const theme = useTheme();
   return (
-    <main className="w-full dark:bg-dark dark:text-gray-100 py-20 px-6">
+    <main className="w-full dark:bg-[#101010] dark:text-gray-100 py-20 px-6">
       <header className="flex flex-col justify-center items-center w-full">
         
         <div className="flex flex-col text-center items-center justify-center gap-4 ">
@@ -30,7 +30,7 @@ function Home() {
           <p className="text-gray dark:text-gray-300 mb-6">
             <BlurReveal preset="slide-right">Efficiently manage your tasks and boost productivity</BlurReveal>
           </p>
-          <Button href="/auth/signup">Get free demo</Button>
+          <Button href="/auth/signup" className='py-[2px] sm:w-fit w-full'>Get free demo</Button>
 
           <div className='grid sm:grid-cols-3 gap-4 w-3.5xl mt-6'>
             <div className='flex gap-2 items-center justify-center'>
