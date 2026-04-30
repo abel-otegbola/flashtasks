@@ -22,7 +22,7 @@ function Topbar() {
         }
 
         return (
-        <Button href="/auth/signup" className="md:w-fit w-full">Sign up</Button>
+        <Button href="/auth/signup" variant="secondary" className="md:w-fit w-full">Sign up</Button>
         );
     }
 
