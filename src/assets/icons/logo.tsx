@@ -1,11 +1,16 @@
 import { type SVGProps } from "react";
 
 const LogoIcon = (props: SVGProps<SVGSVGElement>) => (
-    <svg width="21" height="30" viewBox="0 0 21 30" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-        <ellipse cx="9.36888" cy="14.3736" rx="9.36888" ry="9.57259" fill="#8187FF"/>
-        <path d="M11.8138 5.26629C11.8138 5.26629 14.8951 2.09199 17.1085 1.23681C22.5048 -0.848119 17.3176 11.3854 14.2571 16.7159C11.0803 22.249 2.96651 33.3338 1.73132 27.205C1.27318 24.9318 2.54601 21.0948 2.54601 21.0948" stroke="#8187FF" stroke-width="2" stroke-linecap="round"/>
-        <path d="M11.8138 5.26629C11.8138 5.26629 14.8951 2.09199 17.1085 1.23681C22.5048 -0.848119 17.3176 11.3854 14.2571 16.7159C11.0803 22.249 2.96651 33.3338 1.73132 27.205C1.27318 24.9318 2.54601 21.0948 2.54601 21.0948" stroke="white" stroke-opacity="0.2" stroke-width="1" stroke-linecap="round"/>
+    <svg width="28" height="40" viewBox="0 0 28 40" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <rect x="1" y="1" width="10" height="10" rx="5" fill="#7159FD"/>
+        <rect x="17" y="1" width="10" height="10" rx="5" fill="#7159FD"/>
+        <rect x="1" y="15" width="10" height="10" rx="5" fill="#7159FD"/>
+        <rect x="17" y="15" width="10" height="10" rx="5" fill="#7159FD"/>
+        <rect x="1" y="29" width="10" height="10" rx="5" fill="#7159FD"/>
+        <rect x="16" y="28" width="10" height="10" rx="6" fill="#4BD551"/>
     </svg>
+
+
 )
     
 export default LogoIcon;
