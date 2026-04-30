@@ -21,11 +21,9 @@ export default function SignupPage() {
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%]">
             <div className="flex flex-col gap-2">
-              <BlurReveal preset="slide-right">
-                <div className="flex gap-2 items-center">
-                  <LogoIcon /><span className="text-dark-500 font-bold">Flashtasks</span>
-                </div>
-              </BlurReveal>
+              <div className="px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2]">
+                <LogoIcon className="w-[14px]"  />
+              </div>
 
               <BlurReveal preset="slide-left">
                 <h1 className="font-bold md:text-[20px] text-[16px] text-dark-500">Get Started now</h1>

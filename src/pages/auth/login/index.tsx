@@ -6,6 +6,7 @@ import LoadingIcon from "../../../assets/icons/loading";
 import { AuthContext } from "../../../context/authContext";
 import { loginSchema } from "../../../schema/auth";
 import Input from "../../../components/input/input";
+import LogoIcon from "../../../assets/icons/logo";
 
 export default function Login() {
   const { signIn, loading } = useContext(AuthContext);
@@ -17,6 +18,9 @@ export default function Login() {
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%] md:py-[5%] py-[80px]">
             <div>
+              <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2]">
+                <LogoIcon className="w-[14px]"  />
+              </div>
               <h1 className="font-semibold md:text-[30px] text-[24px] text-dark-500">Welcome 👋</h1>
               <p className="text-gray-500">Please login here</p>
             </div>
