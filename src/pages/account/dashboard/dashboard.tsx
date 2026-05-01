@@ -8,6 +8,7 @@ import TasksList from "../../../components/ui/tasksList";
 import TasksPerDay from "../../../components/charts/TasksPerDay";
 import { todo } from "../../../interface/todo";
 import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
+import Button from "../../../components/button/button";
 
 function Dashboard() {
   const { tasks, loading, getTasks } = useTasks();
@@ -37,33 +38,33 @@ function Dashboard() {
   };
 
   return (
-    <div className="grid sm:grid-cols-2 gap-4 mb-4">
-      <div className="flex flex-1 flex-col gap-6 bg-white dark:bg-dark-bg border border-gray-500/[0.1] md:rounded-[10px] px-6 py-4 h-full mb-4">
-        <div className="flex flex-col gap-4 gap-4">
+    <div className="max-w-5xl mx-auto gap-4 mb-4 px-4">
+      <div className="flex flex-1 flex-col gap-6 h-full mb-4">
+        <div className="flex flex-col gap-4 gap-4 p-4 md:p-6 bg-white dark:bg-dark-bg border border-gray-500/[0.1] rounded-[10px]">
           <div>
             <h1 className="font-semibold text-2xl">Welcome back, {user.name}</h1>
             <p className="text-sm text-gray-500">Here's a quick overview of your tasks</p>
           </div>
           <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-dark-bg-secondary rounded-lg">
-            <div className="text-center p-4 bg-gray-50 bg-white dark:bg-dark rounded-md">
+            <div className="text-center p-4 bg-gray-50 bg-white dark:bg-dark rounded-md border border-gray-500/[0.1]">
               <div className="text-xs text-gray-500">Total</div>
               <div className="font-bold text-xl">{total}</div>
             </div>
-            <div className="text-center p-4 bg-gray-50 bg-white dark:bg-dark rounded-md">
+            <div className="text-center p-4 bg-gray-50 bg-white dark:bg-dark rounded-md border border-gray-500/[0.1]">
               <div className="text-xs text-gray-500">Completed</div>
               <div className="font-bold text-xl">{completed}</div>
             </div>
-            <div className="text-center p-4 bg-gray-50 bg-white dark:bg-dark rounded-md">
+            <div className="text-center p-4 bg-gray-50 bg-white dark:bg-dark rounded-md border border-gray-500/[0.1]">
               <div className="text-xs text-gray-500">Pending</div>
               <div className="font-bold text-xl">{pending}</div>
             </div>
           </div>
         </div>
 
-        <div className="">
-          <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col bg-white dark:bg-dark-bg border border-gray-500/[0.1] rounded-[10px]">
+          <div className="flex justify-between items-center border-b border-gray-500/[0.1] md:px-6 p-4">
             <h2 className="font-semibold">Recent tasks</h2>
-            <Link to={"/account/tasks"} className="text-primary">View all</Link>
+            <Button href={"/account/tasks"} variant="secondary" size="small" className="">View all</Button>
           </div>
           {/* Task Details Modal (for list/grid/calendar clicks) */}
           {selectedTask && (
@@ -79,7 +80,7 @@ function Dashboard() {
           ) : recent.length === 0 ? (
             <div className="text-gray-500">No tasks yet. Create one using the Create button.</div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 p-4 md:p-6">
               {recent.map((task, index) => (
                 <div 
                   key={task.$id}
@@ -90,7 +91,7 @@ function Dashboard() {
                 >
                   {/* Mobile Layout */}
                   <div className="md:col-span-6 flex flex-col gap-1">
-                      <h3 className="font-semibold text-[13px]">{task.title}</h3>
+                      <h3 className="font-medium text-[13px]">{task.title}</h3>
                       <p className="text-[12px] text-gray-400 line-clamp-2 md:line-clamp-1">{task.description}</p>
                   </div>
                   <div className="md:col-span-2 md:flex hidden items-center md:justify-start">
@@ -128,7 +129,7 @@ function Dashboard() {
         </div> */}
       </div>
 
-      <div className="p-4 w-full border border-primary/[0.12] bg-white dark:bg-dark-bg rounded-[10px]">
+      {/* <div className="p-4 w-full border border-primary/[0.12] bg-white dark:bg-dark-bg rounded-[10px]">
         <div className="flex py-2 justify-between items-center gap-2">
             <p className="font-semibold 2xl:text-[20px] text-[16px]">Calendar</p>
             <div className="p-[6px] rounded-[5px] bg-[#A2A1A81A] hover:bg-gray-500/[0.06]">
@@ -152,7 +153,7 @@ function Dashboard() {
         <div className="flex flex-col gap-6 py-2">
             <TasksList tasks={tasks} />
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }

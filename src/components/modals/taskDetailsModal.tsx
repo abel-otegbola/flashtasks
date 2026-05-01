@@ -1,11 +1,12 @@
 'use client';
 import { useState } from "react";
 import { todo } from "../../interface/todo";
-import { CloseCircle, Calendar, User, Flag, TrashBinTrash, PenNewSquare } from "@solar-icons/react";
+import { CloseCircle, Calendar, User, Flag, TrashBinTrash, PenNewSquare, House } from "@solar-icons/react";
 import Button from "../button/button";
 import { useTasks } from "../../context/tasksContext";
 import { useOrganizations } from '../../context/organizationContext';
 import { useUser } from '../../context/authContext';
+import { ChatCenteredDotsIcon, FileIcon, GridFourIcon, InfoIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
@@ -84,28 +85,30 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-[#101010] rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-end z-50 p-4">
+      <div className="bg-white dark:bg-[#101010] shadow-xl w-full max-w-xl max-[500px]:w-full h-screen overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-[#101010] border-b border-border-gray-100 dark:border-gray-700 p-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Task Details</h2>
+        <div className="sticky top-0 bg-white dark:bg-[#101010] border-b border-gray-500/[0.1] dark:border-gray-700 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
+              <XIcon size={16} />
+            </button>
+            <h2 className="px-4 border-l border-gray-500/[0.1] opacity-[0.7] leading-4">Created on {new Date(task.$createdAt).toLocaleDateString()}</h2>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsEditing(!isEditing)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors"
               title={isEditing ? "Cancel Edit" : "Edit Task"}
             >
-              <PenNewSquare size={20} />
+              <PenNewSquare size={16} />
             </button>
             <button
               onClick={handleDelete}
               className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
               title="Delete Task"
             >
-              <TrashBinTrash size={20} />
-            </button>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
-              <CloseCircle size={24} />
+              <TrashIcon size={16} />
             </button>
           </div>
         </div>
@@ -113,8 +116,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Title */}
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-dark-bg-secondary">
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">Title</label>
+          <div className="">
             {isEditing ? (
               <input
                 value={editedTask.title}
@@ -123,57 +125,56 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
                 placeholder="Task title"
               />
             ) : (
-              <h3 className="text-2xl font-bold">{task.title}</h3>
+              <h3 className="text-xl font-medium">{task.title}</h3>
             )}
           </div>
 
           {/* Description */}
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-dark-bg-secondary">
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">Description</label>
+          <div className="">
+            <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+              <FileIcon size={16} /> Description
+            </label>
             {isEditing ? (
               <textarea
                 value={editedTask.description}
                 onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-                className="w-full min-h-[100px] p-3 rounded-lg border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none focus:ring-2 focus:ring-primary"
+                className="w-full min-h-[100px] p-3 rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark-bg outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Task description"
               />
             ) : (
-              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{task.description || 'No description provided'}</p>
+              <p className="p-3 rounded-lg text-sm border border-gray-500/[0.1] whitespace-pre-wrap">{task.description || 'No description provided'}</p>
             )}
           </div>
 
           {/* Task Details Grid */}
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-dark-bg-secondary">
-            <div className="grid md:grid-cols-2 gap-4">
+          <div className="p-3 rounded-lg border border-gray-500/[0.1]">
+            <div className="grid grid-cols-3 gap-4">
               {/* Category */}
-              <div>
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2">
-                  <span></span> Category
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 py-1 flex items-center gap-2">
+                  <GridFourIcon size={16} /> Category
                 </label>
                 {isEditing ? (
                   <input
                     value={editedTask.category}
                     onChange={(e) => setEditedTask({ ...editedTask, category: e.target.value })}
                     placeholder="e.g. Design, Dev"
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none focus:ring-2 focus:ring-primary"
+                    className="col-span-2 w-full p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none focus:ring-2 focus:ring-primary"
                   />
                 ) : (
-                  <span className="inline-block px-3 py-1 rounded-full bg-gray-200 dark:bg-gray-700 text-sm">
+                  <span className="col-span-2 inline-block py-1 rounded-lg text-sm">
                     {task.category}
                   </span>
                 )}
-              </div>
 
               {/* Status */}
-              <div>
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2">
-                  <span></span> Status
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                  <InfoIcon size={16} /> Status
                 </label>
                 {isEditing ? (
                   <select
                     value={editedTask.status}
                     onChange={(e) => setEditedTask({ ...editedTask, status: e.target.value as todo['status'] })}
-                    className="w-full p-2 rounded-lg border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none"
+                    className="col-span-2 w-full p-2 rounded-lg border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none"
                   >
                     <option value="upcoming">Upcoming</option>
                     <option value="in progress">In Progress</option>
@@ -182,37 +183,33 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
                     <option value="suspended">Suspended</option>
                   </select>
                 ) : (
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(task.status)}`}>
+                  <span className={`col-span-2 inline-block px-3 py-1 rounded-lg text-sm w-fit font-medium ${getStatusColor(task.status)}`}>
                     {task.status}
                   </span>
                 )}
-              </div>
 
               {/* Priority */}
-              <div>
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
                   <Flag size={16} /> Priority
                 </label>
                 {isEditing ? (
                   <select
                     value={editedTask.priority || 'medium'}
                     onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value as todo['priority'] })}
-                    className="w-full p-2 rounded-lg border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none"
+                    className="col-span-2 w-full p-2 rounded-lg border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                   </select>
                 ) : (
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(task.priority)}`}>
+                  <span className={`col-span-2 inline-block px-3 py-1 rounded-lg w-fit text-sm font-medium ${getPriorityColor(task.priority)}`}>
                     {task.priority || 'medium'}
                   </span>
                 )}
-              </div>
 
               {/* Due Date */}
-              <div>
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
                   <Calendar size={16} /> Due Date
                 </label>
                 {isEditing ? (
@@ -220,10 +217,10 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
                     type="date"
                     value={editedTask.dueDate || ''}
                     onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value })}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none focus:ring-2 focus:ring-primary"
+                    className="col-span-2 w-full p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none focus:ring-2 focus:ring-primary"
                   />
                 ) : (
-                  <p className="text-gray-700 dark:text-gray-300">
+                  <p className="col-span-2 text-gray-700 dark:text-gray-300">
                     {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
@@ -231,21 +228,22 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
                     }) : 'No due date'}
                   </p>
                 )}
-              </div>
             </div>
           </div>
 
           {/* Organization / Team Display */}
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-dark-bg-secondary">
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Organization</label>
+          <div className="">
+            <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+              <House size={16} /> Organization
+            </label>
             <div>
               {taskOrg ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 p-3 rounded-lg text-sm border border-gray-500/[0.1]">
                   <span className="text-sm font-medium">{taskOrg.name}</span>
                   {taskTeam && <span className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">{taskTeam.name}</span>}
                 </div>
               ) : (
-                <div className="text-sm text-gray-500">Personal / No organization</div>
+                <div className="p-3 rounded-lg text-sm border border-gray-500/[0.1] mt-2">Personal / No organization</div>
               )}
             </div>
 
@@ -278,14 +276,14 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           </div>
 
           {/* Assignees Section */}
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-dark-bg-secondary">
+          <div className="">
             <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
               <User size={16} /> Assignees
             </label>
             
             {/* Add Assignee Input */}
             {isEditing && (
-              <div className="flex gap-2 mb-3">
+              <div className="flex gap-2 mb-3 p-3 rounded-lg text-sm border border-gray-500/[0.1]">
                 <input
                   value={newAssignee}
                   onChange={(e) => setNewAssignee(e.target.value)}
@@ -305,7 +303,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             )}
 
             {/* Assignees List */}
-            <div className="space-y-2">
+            <div className="space-y-2 ">
               {/* Main Assignee */}
               {task.assignee && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-dark-bg border border-border-gray-100 dark:border-gray-700">
@@ -347,25 +345,11 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           </div>
 
           {/* Comments Count */}
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-dark-bg-secondary">
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2">
-              💬 Comments
+          <div className="">
+            <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+              <ChatCenteredDotsIcon size={16} /> Comments
             </label>
-            <p className="text-gray-700 dark:text-gray-300">{task.comments || 0} comments</p>
-          </div>
-
-          {/* Metadata */}
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-dark-bg-secondary">
-            <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-500 dark:text-gray-400">
-              <div>
-                <span className="font-medium">Created:</span> {new Date(task?.$createdAt).toLocaleString()}
-              </div>
-              {task.$updatedAt && (
-                <div>
-                  <span className="font-medium">Updated:</span> {new Date(task.$updatedAt).toLocaleString()}
-                </div>
-              )}
-            </div>
+            <p className="p-3 rounded-lg text-sm border border-gray-500/[0.1]">{task.comments || 0} comments</p>
           </div>
         </div>
 

@@ -41,10 +41,10 @@ export default function SearchBar({ onResults, placeholder = "Search tasks..." }
   }, [debouncedQuery, user?.email]);
 
   return (
-    <div className="flex items-center relative w-full border border-gray-300 dark:border-gray-700 rounded-lg pl-2">
+    <div className="flex items-center relative w-full rounded-lg pl-2">
       <Magnifer size={16} color="currentColor" />
       <input
-        className="w-full p-2 bg-transparent rounded-lg outline-none"
+        className="w-full p-2 bg-transparent text-sm rounded-lg outline-none"
         placeholder={placeholder}
         value={query}
         onChange={(e) => {setQuery(e.target.value); console.log("Input changed:", e.target.value); }}
@@ -66,8 +66,8 @@ export default function SearchBar({ onResults, placeholder = "Search tasks..." }
                       key={t.$id}
                       onClick={async () => {
                         // Fetch full task document from Appwrite for complete data
-                        const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
-                        const TASKS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_TASKS_COLLECTION_ID || '';
+                        const DATABASE_ID = (import.meta as any).env.VITE_APPWRITE_DATABASE_ID || '';
+                        const TASKS_COLLECTION_ID = (import.meta as any).env.VITE_APPWRITE_TASKS_COLLECTION_ID || '';
                         try {
                           const full = await databases.getDocument(DATABASE_ID, TASKS_COLLECTION_ID, t.$id);
                           // Appwrite returns the full document; cast to todo

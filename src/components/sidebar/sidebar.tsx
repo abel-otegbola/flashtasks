@@ -43,25 +43,25 @@ function Sidebar() {
     const modalRef = useOutsideClick(setOpen, false)
 
     return (
-        <div ref={modalRef} className={`md:sticky top-0 left-0 h-screen w-0 md:p-4 duration-500 ${open ? "sm:w-[100px]": "sm:w-[250px]"}`}>
+        <div ref={modalRef} className={`md:sticky top-0 left-0 h-screen w-0 md:p-4 duration-500 ${open ? "sm:w-[100px]": "sm:w-[280px]"}`}>
             <button className={`md:absolute fixed sm:top-10 top-6 md:right-[2px] right-5 flex flex-col justify-center items-center bg-white/[0.7] dark:bg-dark-bg/[0.7] backdrop-blur-md gap-1 w-5 h-8 z-[50] p-[2px] px-[13px] border border-gray-500/[0.2] rounded-full`} onClick={() => setOpen(!open)}>
                 <span className={`w-[7px] h-[1px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "rotate-[45deg] translate-y-[4px]" : "rotate-[0deg]"}`}></span>
                 <span className={`duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "py-[0px] w-[0px] h-[0px] translate-x-[-12px]" : "translate-x-[4px] py-[0.5px] px-[4px] w-[8px] h-[0.5px]"}`}></span>
                 <span className={`w-[7px] h-[1px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "rotate-[-45deg] translate-y-[-4px]" : "rotate-[0deg]"}`}></span>
             </button>
             <div className={`flex flex-col justify-between md:h-full bg-white dark:bg-dark-bg-secondary border border-gray-500/[0.1] dark:border-gray-500/[0.2] h-[100vh] md:rounded-[20px] md:sticky fixed md:top-0 top-0 py-4 px-4 right-0 overflow-y-auto overflow-x-hidden z-[5] transition-all duration-700 ${open ? "sm:w-[70px] w-[280px] translate-x-[0px] opacity-[1]": "sm:w-full translate-x-[400px] md:translate-x-[0px] md:opacity-[1] opacity-[0]"}`}>  
-                <Link to={"/"} className="flex items-center mb-2 sm:p-1">
+                <Link to={"/"} className="flex items-center mb-2 ml-3 sm:p-1">
                     <LogoIcon className="text-primary w-[12px]" />
                 </Link>
 
                 {/* Navigation Links */}
-                <div className="flex-1 flex flex-col gap-6 text-sm">
+                <div className="flex-1 flex flex-col gap-6">
                     <div className="flex flex-col gap-2">
                         <p className={`text-gray-400 mb-2 ${open ? "sm:opacity-0" : ""}`}>GENERAL</p>
                         {
                         generalLinks.map(link => {
                                 return (
-                                <Link key={link.id} onClick={() => setOpen(false)} to={ link.link} className={`relative flex items-center justify-between px-3 py-1 h-[32px] md:rounded-[6px] duration-300 font-medium ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-gray-100 dark:hover:bg-dark-bg"}`}>
+                                <Link key={link.id} onClick={() => setOpen(false)} to={ link.link} className={`relative flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
                                     <div className="flex items-center gap-1">
                                         <span className="w-[24px] opacity-[0.6]">{link.icon}</span>
                                         <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""}`}>{link.label} </span>
@@ -83,7 +83,7 @@ function Sidebar() {
                                         <button
                                             key={link.id}
                                             onClick={async () => { setOpen(false); await logOut(); navigate('/auth/waitlist'); }}
-                                            className={`relative w-full text-left flex items-center justify-between px-3 py-1 h-[32px] md:rounded-[6px] duration-300 font-medium cursor-pointer ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-gray-100 dark:hover:bg-dark-bg"}`}>
+                                            className={`relative w-full text-left flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium cursor-pointer ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
                                             <div className="flex items-center gap-1">
                                                 <span className="w-[24px] opacity-[0.6]">{link.icon}</span>
                                                 <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""}`}>{link.label} </span>
@@ -93,7 +93,7 @@ function Sidebar() {
                                 }
 
                                 return (
-                                <Link key={link.id} onClick={() => setOpen(false)} to={ link.link} className={`relative flex items-center justify-between px-3 py-1 h-[32px] md:rounded-[6px] duration-300 font-medium ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-gray-100 dark:hover:bg-dark-bg"}`}>
+                                <Link key={link.id} onClick={() => setOpen(false)} to={ link.link} className={`relative flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
                                     <div className="flex items-center gap-1">
                                         <span className="w-[24px] opacity-[0.6]">{link.icon}</span>
                                         <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""}`}>{link.label} </span>

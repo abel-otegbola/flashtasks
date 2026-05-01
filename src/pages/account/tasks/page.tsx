@@ -97,7 +97,7 @@ function Tasks() {
 
     return (
         <>
-        <div className="flex flex-col gap-6 bg-white dark:bg-dark-bg md:rounded-[10px] p-6 py-10 h-full mb-4">
+        <div className="flex flex-col gap-6 bg-white dark:bg-dark-bg md:rounded-[10px] p-6 h-full mb-4">
             <div className="flex justify-between gap-6 items-start flex-wrap">
                 <div>
                     <h1 className="font-medium md:text-[24px] text-[18px] leading-[120%]">
@@ -113,54 +113,54 @@ function Tasks() {
                     <div className="flex items-center gap-1 bg-bg-gray-100 dark:bg-dark-bg-secondary p-1 rounded-lg border border-gray-500/[0.2]">
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`p-2 rounded-md transition-all ${
+                            className={`p-1 rounded-md transition-all ${
                                 viewMode === 'list' 
                                     ? 'bg-white dark:bg-dark-bg text-primary shadow-sm' 
                                     : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                             }`}
                             title="List View"
                         >
-                            <List size={20} />
+                            <List size={16} />
                         </button>
                         <button
                             onClick={() => setViewMode('kanban')}
-                            className={`p-2 rounded-md transition-all ${
+                            className={`p-1 rounded-md transition-all ${
                                 viewMode === 'kanban' 
                                     ? 'bg-white dark:bg-dark-bg text-primary shadow-sm' 
                                     : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                             }`}
                             title="Kanban View"
                         >
-                            <Widget4 size={20} />
+                            <Widget4 size={16} />
                         </button>
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded-md transition-all ${
+                            className={`p-1 rounded-md transition-all ${
                                 viewMode === 'grid' 
                                     ? 'bg-white dark:bg-dark-bg text-primary shadow-sm' 
                                     : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                             }`}
                             title="Grid View"
                         >
-                            <Widget size={20} />
+                            <Widget size={16} />
                         </button>
                         <button
                             onClick={() => setViewMode('calendar')}
-                            className={`p-2 rounded-md transition-all ${
+                            className={`p-1 rounded-md transition-all ${
                                 viewMode === 'calendar' 
                                     ? 'bg-white dark:bg-dark-bg text-primary shadow-sm' 
                                     : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                             }`}
                             title="Calendar View"
                         >
-                            <CalendarIcon size={20} />
+                            <CalendarIcon size={16} />
                         </button>
                     </div>
 
                     <Button
                         onClick={() => setShowModal(true)}
                         className="text-dark"
-                        variant="secondary"
+                        size="small"
                         disabled={loading}
                     > 
                         + New Task
@@ -177,25 +177,22 @@ function Tasks() {
                 </div>
             </div>
 
-            {/* Task Statistics */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {sections.map(({ key, title, filter, color }) => {
-                    const count = tasks.filter((t) => t.status === filter).length;
-                    return (
-                        <div 
-                            key={key} 
-                            className={`p-4 rounded-lg border ${colorClasses[color]} bg-bg-gray-100 dark:bg-dark-bg-secondary/50`}
-                        >
-                            <p className="text-gray-400 text-xs mb-1">{title}</p>
-                            <p className="text-2xl font-bold">{count}</p>
-                        </div>
-                    );
-                })}
-            </div>
-
             {/* Kanban View */}
             {viewMode === 'kanban' && (
                 <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start">
+                    {/* Task Statistics */}
+                    {sections.map(({ key, title, filter, color }) => {
+                        const count = tasks.filter((t) => t.status === filter).length;
+                        return (
+                            <div 
+                                key={key} 
+                                className={`p-4 rounded-lg border ${colorClasses[color]} bg-white dark:bg-dark-bg-secondary/50`}
+                            >
+                                <p className="text-gray-400 text-xs mb-1">{title}</p>
+                                <p className="text-2xl font-bold">{count}</p>
+                            </div>
+                        );
+                    })}
                     {sections.map(({ key, title, filter, color }) => (
                         <div key={key} className="flex flex-col gap-2">
                             <div
@@ -226,7 +223,7 @@ function Tasks() {
 
             {/* List View */}
             {viewMode === 'list' && (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 border border-gray-500/[0.1] rounded-lg p-4 bg-bg-gray-100 dark:bg-dark-bg">
                     {loading ? (
                         <div className="flex justify-center items-center py-8">
                             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -247,27 +244,27 @@ function Tasks() {
                             </div>
                             
                             {/* List Items */}
-                            {tasks.map((task) => (
+                            {tasks.map((task, index) => (
                                 <div 
                                     key={task.$id}
                                     onClick={() => openTaskDetails(task)}
                                     role="button"
                                     tabIndex={0}
-                                    className="md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 border border-gray-500/[0.2] rounded-lg hover:shadow-md transition-shadow bg-bg-gray-100 dark:bg-dark-bg-secondary/50 cursor-pointer"
+                                    className={`md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 border border-gray-500/[0.1] rounded-lg hover:shadow-[0px_4px_8px_0px_#20202020] transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark'}`}
                                 >
                                     {/* Mobile Layout */}
-                                    <div className="md:col-span-4 flex flex-col gap-1">
+                                    <div className="md:col-span-4 flex flex-col gap-1 md:order-none order-1">
                                         <h3 className="font-semibold text-sm">{task.title}</h3>
                                         <p className="text-xs text-gray-400 line-clamp-2 md:line-clamp-1">{task.description}</p>
                                     </div>
                                     
                                     {/* Desktop Layout - Remaining columns */}
-                                    <div className="md:col-span-2 flex items-center md:justify-start">
+                                    <div className="md:col-span-2 md:flex hidden items-center md:justify-start">
                                         <span className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700">
                                             {task.category}
                                         </span>
                                     </div>
-                                    <div className="md:col-span-2 flex items-center md:justify-start">
+                                    <div className="md:col-span-2 md:flex hidden items-center md:justify-start">
                                         <span className={`text-xs px-2 py-1 rounded-full ${
                                             task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                                             task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
@@ -278,7 +275,7 @@ function Tasks() {
                                             {task.status}
                                         </span>
                                     </div>
-                                    <div className="md:col-span-2 flex items-center md:justify-start">
+                                    <div className="md:col-span-2 flex items-center md:justify-start md:order-none order-0">
                                         <span className={`text-xs px-2 py-1 rounded-full ${
                                             task.priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
                                             task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
@@ -287,7 +284,7 @@ function Tasks() {
                                             {task.priority || 'medium'}
                                         </span>
                                     </div>
-                                    <div className="md:col-span-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
+                                    <div className="md:col-span-2 flex items-center text-xs text-gray-500 dark:text-gray-400 md:order-none order-1">
                                         {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}
                                     </div>
                                 </div>
