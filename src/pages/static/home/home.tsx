@@ -66,6 +66,24 @@ function Home() {
         
       </header>
 
+      
+      <section className="flex flex-col gap-10 lg:px-[6%] md:px-[3%] p-4">
+
+        <div className="flex flex-col justify-center items-center mx-auto max-w-3xl gap-[19px] mb-10 text-center">
+          <p className="font-medium flex items-center gap-2 border border-gray-500/[0.2] rounded-full px-6 py-2">
+            <LightningIcon />
+            Why People Choose Flashtasks
+          </p>
+          <h2 className="md:text-[32px] text-[28px] font-medium leading-[120%]">
+            Built to help teams move faster with less effort
+          </h2>
+          <p className='text-[#939395] md:w-[60%] w-[90%] mx-auto'>
+            Flashtasks keeps planning, prioritization, and collaboration in one simple workspace.
+          </p>
+        </div>
+
+      </section>
+
       <section className="flex flex-col gap-10 pt-20 pb-10 p-4 md:mx-[5%]">
         <div className="flex flex-col justify-center items-center mx-auto max-w-3xl gap-[19px] mb-10">
           <p className="font-medium flex items-center gap-2 border border-gray-500/[0.2] rounded-full px-6 py-2">
@@ -120,16 +138,14 @@ function Home() {
 
       <section className="flex flex-col gap-10 lg:px-[6%] md:px-[3%] p-4">
 
-        <div className="relative flex md:flex-nowrap flex-wrap w-full gap-8 bg-primary/[0.08] rounded-lg md:pl-[6%] p-6 pb-0 md:h-[400px]">
+        <div className="relative flex md:flex-nowrap flex-wrap w-full gap-8 bg-gray-100 dark:bg-[#191919] rounded-lg md:pl-[6%] p-6 pb-0 md:h-[400px]">
           <div className="flex flex-col justify-between gap-8 md:w-[30%] py-[6%]">
             <h3 className="font-semibold text-lg">
-              Complete Productivity Visibility
+              Clear Task Visibility
             </h3>
 
             <p>
-              Track progress across projects, assignments, and daily tasks with a
-              smart dashboard that keeps your priorities, deadlines, and workflow
-              performance organized in one place.
+              Track projects, due dates, and priorities from a single dashboard so your team always knows what to do next.
             </p>
 
             <Button href="/auth/signup" variant="primary" className="">
@@ -145,12 +161,12 @@ function Home() {
               className="object-cover md:w-[500px] w-full"
             />
 
-            <div className="absolute bottom-0 left-0 w-full h-[90px] bg-gradient-to-t from-primary/[0.1] via-primary/[0.08] rounded-b-lg"></div>
+            <div className="absolute bottom-0 left-0 w-full h-[90px] bg-gradient-to-t from-[gray-500/[0.1]  rounded-b-lg"></div>
           </div>
         </div>
 
         <div className="flex md:flex-nowrap flex-wrap gap-[32px]">
-          <div className="flex flex-col md:w-[50%] w-full gap-4 bg-primary/[0.08] rounded-lg md:p-[6%] p-6">
+          <div className="flex flex-col md:w-[50%] w-full gap-4 bg-gray-100 dark:bg-[#191919] rounded-lg md:p-[6%] p-6">
             <h3 className="font-medium text-[80px] font-semibold">AI</h3>
 
             <p>
@@ -159,7 +175,7 @@ function Home() {
             </p>
           </div>
 
-          <div className="flex flex-col justify-between md:w-[50%] w-full gap-4 bg-primary/[0.08] rounded-lg md:p-[6%] p-6">
+          <div className="flex flex-col justify-between md:w-[50%] w-full gap-4 bg-gray-100 dark:bg-[#191919] rounded-lg md:p-[6%] p-6">
             <h3 className="font-semibold text-lg">
               Simple & Distraction-Free
             </h3>
@@ -174,10 +190,33 @@ function Home() {
 
       </section>
 
+      <section className="flex md:flex-row flex-col sm:items-start 2xl:gap-8 md:gap-6 gap-4 md:px-[11%] p-4 md:py-40 py-4 bg-primary/[0.01] pb-24">
+        <div className="flex flex-col md:gap-4 gap-2 md:w-[40%] w-full py-6">
+          <h2 className="md:text-[32px] text-[24px] max-w-2xl leading-[120%] font-semibold">
+            Plan Less. Execute Faster With Flashtasks
+          </h2>
+
+          <p className="max-w-2xl leading-[24px] md:mb-4 mb-2">
+            Add tasks naturally, let AI organize and prioritize your workflow, and
+            stay focused on completing work faster without the stress of complicated
+            planning tools.
+          </p>
+
+          <Button className="z-2" href="/auth/login">
+            Get Started Free
+          </Button>
+        </div>
+
+        <div className="p-4 md:w-[60%] w-full">
+          <img src="/hero-bg.png" alt="UniLinks app mockup" width={1920} height={1080} className="md:w-[75%] w-full h-auto mt-auto mx-auto" />
+        </div>
+
+      </section>
+
       <section className="flex flex-col items-center justify-center gap-10 lg:p-[6%] p-[10%] sm:mx-[6%] mt-20 mx-4 mb-12 rounded-[12px] bg-primary text-white">
         <div>
           <h2 className="md:text-[42px] text-[32px] font-medium leading-[110%] text-center">
-            Start Achieving More With AI
+            Start Achieving More With Flashtasks Today
           </h2>
         </div>
 
