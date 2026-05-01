@@ -30,7 +30,7 @@ function Home() {
           <p className="text-gray dark:text-gray-300 mb-6">
             <BlurReveal preset="slide-right">Efficiently manage your tasks and boost productivity</BlurReveal>
           </p>
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center justify-center flex-wrap">
             <Button href="/auth/signup" className='py-[2px] sm:w-fit w-full'>Get free demo</Button>
             <Button href="/auth/signup" variant='secondary' className='py-[2px] sm:w-fit w-full'>Learn more</Button>
           </div>
