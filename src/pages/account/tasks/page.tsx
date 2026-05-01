@@ -6,6 +6,7 @@ import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
 import { todo } from "../../../interface/todo";
 import Button from "../../../components/button/button";
 import { useTasks } from "../../../context/tasksContext";
+import Confirmationmessage from "../../../components/modals/confirmation";
 import { useUser } from "../../../context/authContext";
 import CreateTaskModal from "../../../components/modals/createTaskModal";
 import { TaskSkeletonLoader } from "../../../components/skeletons";
@@ -33,7 +34,8 @@ function Tasks() {
     const [showModal, setShowModal] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [currentDate, setCurrentDate] = useState(new Date());
-    const { tasks, loading, getTasks } = useTasks();
+    const { tasks, loading, getTasks, movePendingToToday } = useTasks();
+    const [showMoveConfirm, setShowMoveConfirm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<todo | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const { user } = useUser();
@@ -104,6 +106,23 @@ function Tasks() {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <Button
+                        variant="secondary"
+                        size="small"
+                        onClick={() => setShowMoveConfirm(true)}
+                        className=""
+                    >
+                        Move pending → today
+                    </Button>
+                    {showMoveConfirm && (
+                        <Confirmationmessage
+                            title="Move pending tasks to today?"
+                            text="This will set the due date of all tasks with status 'pending' to today."
+                            buttonText="Move"
+                            setOpen={setShowMoveConfirm}
+                            onConfirm={async () => { await movePendingToToday(); setShowMoveConfirm(false); }}
+                        />
+                    )}
                     {/* View Toggle */}
                     <div className="flex items-center gap-1 bg-bg-gray-100 dark:bg-dark-bg-secondary p-1 rounded-lg border border-gray-500/[0.2]">
                         <button

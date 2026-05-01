@@ -18,6 +18,7 @@ type TasksContextValues = {
     getTaskById: (taskId: string) => todo | undefined;
     filterTasksByStatus: (status: todo['status']) => todo[];
     filterTasksByCategory: (category: string) => todo[];
+    movePendingToToday: () => Promise<number>;
 }
 
 export const TasksContext = createContext({} as TasksContextValues);
@@ -227,6 +228,53 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         }
     };
 
+    // Move all pending tasks to today by updating their dueDate
+    const movePendingToToday = async (): Promise<number> => {
+        setLoading(true);
+        setError(null);
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const pendingTasks = tasks.filter(t => t.status === 'pending');
+            if (pendingTasks.length === 0) {
+                toast('No pending tasks to move');
+                return 0;
+            }
+
+            const updatedTasks: todo[] = [];
+
+            // Update sequentially to avoid rate limits
+            for (const t of pendingTasks) {
+                const response = await databases.updateDocument(
+                    DATABASE_ID,
+                    TASKS_COLLECTION_ID,
+                    t.$id,
+                    { dueDate: today }
+                );
+                const updated = response as unknown as todo;
+                updatedTasks.push(updated);
+                try { await indexTask('update', updated); } catch {}
+            }
+
+            // Merge updated tasks into state
+            setTasks(prev => {
+                const byId = new Map(prev.map(p => [p.$id, p]));
+                for (const u of updatedTasks) byId.set(u.$id, u);
+                return Array.from(byId.values()).sort((a,b) => (a.$createdAt > b.$createdAt ? -1 : 1));
+            });
+
+            toast.success(`${updatedTasks.length} pending tasks moved to today`);
+            return updatedTasks.length;
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to move pending tasks';
+            setError(errorMessage);
+            toast.error(errorMessage);
+            console.error('Error moving pending tasks:', err);
+            return 0;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Get a task by ID
     const getTaskById = (taskId: string): todo | undefined => {
         return tasks.find(task => task.$id === taskId);
@@ -253,7 +301,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         getTasks,
         getTaskById,
         filterTasksByStatus,
-        filterTasksByCategory
+        filterTasksByCategory,
+        movePendingToToday
     };
 
     return (
