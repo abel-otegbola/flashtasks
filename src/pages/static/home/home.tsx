@@ -83,7 +83,7 @@ function Home() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 max-w-6xl mx-auto gap-[60px]">
+        <div className="grid md:grid-cols-3 max-w-6xl mx-auto md:gap-[60px] gap-8">
           <div className="flex flex-col gap-4 border border-gray-500/[0.2] p-12">
             <p className="md:text-[40px] text-[32px] text-primary">
               <GridNineIcon weight='light' />
@@ -112,7 +112,7 @@ function Home() {
               Automatically organize your day with AI-powered prioritization.
             </p>
             <div className='flex-1 flex items-end'>
-              <div className='mt-8 p-3 w-fit rounded-full border border-gray-500/[0.2]'>
+              <div className='mt-8 p-3 w-fit rounded-full border border-white/[0.5]'>
                 <ArrowRightUp size={20} weight='Outline' opacity={0.6} />
               </div>
             </div>
