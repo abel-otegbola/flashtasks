@@ -7,6 +7,7 @@ import { useTasks } from "../../context/tasksContext";
 import { useOrganizations } from '../../context/organizationContext';
 import { useUser } from '../../context/authContext';
 import { ChatCenteredDotsIcon, FileIcon, GridFourIcon, InfoIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
+import Confirmationmessage from "./confirmation";
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState(task);
   const [newAssignee, setNewAssignee] = useState("");
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const { updateTask, deleteTask } = useTasks();
   const { organizations, currentOrg } = useOrganizations();
   const { user } = useUser();
@@ -37,10 +39,9 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   };
 
   const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      await deleteTask(task.$id);
-      onClose();
-    }
+    await deleteTask(task.$id);
+    setShowDeleteConfirmation(false);
+    onClose();
   };
 
   const handleAddAssignee = () => {
@@ -104,7 +105,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
               <PenNewSquare size={16} />
             </button>
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteConfirmation(true)}
               className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
               title="Delete Task"
             >
@@ -368,6 +369,16 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           </div>
         )}
       </div>
+
+      {showDeleteConfirmation && (
+        <Confirmationmessage
+          title="Delete task?"
+          text="Are you sure you want to delete this task? This action cannot be undone."
+          buttonText="Delete"
+          setOpen={setShowDeleteConfirmation}
+          onConfirm={handleDelete}
+        />
+      )}
     </div>
   );
 }

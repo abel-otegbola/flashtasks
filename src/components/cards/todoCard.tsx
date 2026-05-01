@@ -5,12 +5,16 @@ import { ChatLine, MenuDots, Pen, TrashBinMinimalistic } from "@solar-icons/reac
 import { todo } from "../../interface/todo";
 import TaskDetailsModal from "../modals/taskDetailsModal";
 import { useOrganizations } from '../../context/organizationContext';
+import { useTasks } from "../../context/tasksContext";
+import Confirmationmessage from "../modals/confirmation";
 
 function TodoCard(task: todo) {
   const { title, description, comments, category, status } = task;
   const [openMenu, setOpenMenu] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { deleteTask } = useTasks();
 
   const statusColors: Record<
     string,
@@ -96,9 +100,7 @@ function TodoCard(task: todo) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (window.confirm(`Delete task: ${title}?`)) {
-                        // Delete handled in modal
-                      }
+                      setShowDeleteConfirmation(true);
                       setOpenMenu(false);
                     }}
                     className="flex items-center gap-2 w-full text-left text-sm p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500"
@@ -151,6 +153,19 @@ function TodoCard(task: todo) {
         onClose={() => setShowDetails(false)}
         task={task}
       />
+
+      {showDeleteConfirmation && (
+        <Confirmationmessage
+          title={`Delete task: ${title}?`}
+          text="This action cannot be undone."
+          buttonText="Delete"
+          setOpen={setShowDeleteConfirmation}
+          onConfirm={async () => {
+            await deleteTask(task.$id);
+            setShowDeleteConfirmation(false);
+          }}
+        />
+      )}
     </>
   );
 }

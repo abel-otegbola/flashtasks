@@ -1,12 +1,10 @@
 'use client'
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useContext, useState } from 'react';
 import { ID, Query } from "appwrite";
 import { databases } from "../appwrite/appwrite";
 import { todo } from '../interface/todo';
 import toast from "react-hot-toast";
 import { indexTask } from '../services/indexer';
-import { useUser } from './authContext';
-import { User } from '../interface/auth';
 
 type TasksContextValues = {
     tasks: todo[];
@@ -98,8 +96,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             setTasks(prev => [newTask, ...prev]);
             toast.success('Task created successfully!');
 
-                                    // Index the task in Elasticsearch via backend endpoint
-                                    await indexTask('create', newTask);
+            // Index the task in Elasticsearch via backend endpoint
+            await indexTask('create', newTask);
             return newTask;
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to create task';

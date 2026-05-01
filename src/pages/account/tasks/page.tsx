@@ -1,14 +1,13 @@
 'use client';
 import { useEffect, useState } from "react";
-import { AddCircle, Widget4, MenuDots, List, Calendar as CalendarIcon, Widget } from "@solar-icons/react";
+import { Widget4, List, Calendar as CalendarIcon, Widget } from "@solar-icons/react";
 import TodoCard from "../../../components/cards/todoCard";
-import AddTaskModal from "../../../components/modals/addTaskModal";
 import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
 import { todo } from "../../../interface/todo";
 import Button from "../../../components/button/button";
 import { useTasks } from "../../../context/tasksContext";
-import SearchBar from "../../../components/search/searchBar";
 import { useUser } from "../../../context/authContext";
+import CreateTaskModal from "../../../components/modals/createTaskModal";
 
 const sections = [
   { key: "todo", title: "Todo", filter: "upcoming", color: "yellow" },
@@ -29,11 +28,11 @@ const colorClasses: Record<string, string> = {
 type ViewMode = 'kanban' | 'list' | 'grid' | 'calendar';
 
 function Tasks() {
-    const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+    const [openSections] = useState<Record<string, boolean>>({});
     const [showModal, setShowModal] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('list');
     const [currentDate, setCurrentDate] = useState(new Date());
-    const { tasks, loading, addTask, updateTask, deleteTask, getTasks } = useTasks();
+    const { tasks, loading, getTasks } = useTasks();
     const [selectedTask, setSelectedTask] = useState<todo | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const { user } = useUser();
@@ -53,15 +52,6 @@ function Tasks() {
         setDetailsOpen(false);
         setSelectedTask(null);
     };
-
-    const handleAddTask = async (task: Omit<todo, '$id' | 'id' | '$createdAt'>) => {
-        await addTask(task);
-        setShowModal(false);
-    };
-
-    const toggleSection = (key: string) =>
-        setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
-
     // Calendar helper functions
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
@@ -166,13 +156,9 @@ function Tasks() {
                         + New Task
                     </Button>
 
-                    <AddTaskModal
+                    <CreateTaskModal
                         isOpen={showModal}
                         onClose={() => setShowModal(false)}
-                        onAdd={handleAddTask}
-                        onUpdate={updateTask}
-                        onDelete={deleteTask}
-                        mode="add"
                     />
                 </div>
             </div>

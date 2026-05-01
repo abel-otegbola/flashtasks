@@ -5,6 +5,7 @@ import { useOrganizations } from '../../context/organizationContext';
 import { CloseCircle, Calendar, User, Flag, TrashBinTrash } from "@solar-icons/react";
 import Button from "../button/button";
 import { useUser } from "../../context/authContext";
+import Confirmationmessage from "./confirmation";
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export default function AddTaskModal({
 
   const [newAssignee, setNewAssignee] = useState("");
   const [assigneesList, setAssigneesList] = useState<string[]>([]);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   // Populate form when editing
   useEffect(() => {
@@ -164,10 +166,9 @@ export default function AddTaskModal({
 
   const handleDelete = () => {
     if (task && onDelete) {
-      if (window.confirm("Are you sure you want to delete this task?")) {
-        onDelete(task.$id);
-        onClose();
-      }
+      onDelete(task.$id);
+      setShowDeleteConfirmation(false);
+      onClose();
     }
   };
 
@@ -180,7 +181,7 @@ export default function AddTaskModal({
           <div className="flex items-center gap-2">
             {mode === 'edit' && onDelete && (
               <button
-                onClick={handleDelete}
+                onClick={() => setShowDeleteConfirmation(true)}
                 className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
                 title="Delete Task"
               >
@@ -429,6 +430,16 @@ export default function AddTaskModal({
           </Button>
         </div>
       </div>
+
+      {showDeleteConfirmation && (
+        <Confirmationmessage
+          title="Delete task?"
+          text="Are you sure you want to delete this task? This action cannot be undone."
+          buttonText="Delete"
+          setOpen={setShowDeleteConfirmation}
+          onConfirm={handleDelete}
+        />
+      )}
     </div>
   );
 }
