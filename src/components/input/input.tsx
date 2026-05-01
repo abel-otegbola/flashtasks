@@ -23,9 +23,9 @@ export default function Input({ className, disabled, label, name, value, type, o
         <div>
             { label ? <label htmlFor={name} className={`text-[12px] font-medium duration-300 mb-1 ${focus ? "text-primary" : ""}`}>{label}</label> : "" }
 
-            <div className={`flex items-center gap-1 relative bg-white dark:bg-transparent dark:text-gray w-full border rounded-[6px] p-2 duration-500 
-                ${error && !focus ? "border-red-500 text-red-500 " : "border-gray-500/[0.2]"}
-                ${focus ? "border-primary shadow-input-active" : "border-gray-500/[0.2]"}
+            <div className={`flex items-center gap-1 relative bg-white dark:bg-[#000] dark:text-gray w-full border rounded-[6px] p-2 duration-500 
+                ${error && !focus ? "border-red-500 text-red-500 " : "border-gray-500/[0.2] dark:border-gray-500/[0.4] "}
+                ${focus ? "border-primary dark:border-primary shadow-input-active" : "border-gray-500/[0.2] dark:border-gray-500/[0.4] "}
                 ${className}
                 ${label ? "mt-1" : ""}
             `}>
@@ -50,7 +50,7 @@ export default function Input({ className, disabled, label, name, value, type, o
                     <span tabIndex={1} className="p-2 cursor-pointer" title="toggle show password" aria-checked={show} onClick={() => setShow(!show)}>{ show ? <Eye /> : <EyeClosed /> }</span>
                 : "" }
             </div>
-                { error && !focus ? <p className="duration-300 p1-1 text-[10px] bg-white text-red-500 backdrop-blur-sm">{error}</p> : "" }
+                { error && !focus ? <p className="duration-300 p1-1 text-[10px] text-red-500 backdrop-blur-sm">{error}</p> : "" }
         </div>
     )
 }

@@ -8,8 +8,8 @@ function Home() {
   const { user } = useUser();
   const theme = useTheme();
   return (
-    <main className="w-full dark:bg-[#101010] dark:text-gray-100 py-20 px-6">
-      <header className="flex flex-col justify-center items-center w-full">
+    <main className="w-full dark:bg-[#101010] dark:text-gray-100 pb-20">
+      <header className="flex flex-col justify-center items-center w-full bg-[#F6F6F6]/[0.4] dark:bg-[#191919] py-20 px-6">
         
         <div className="flex flex-col text-center items-center justify-center gap-4 ">
           <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2]">
@@ -20,8 +20,8 @@ function Home() {
             <BlurReveal preset="slide-right"><h1>Get tasks done</h1></BlurReveal>
 
             <h1 className="flex gap-2 items-center justify-center">
-            <BlurReveal preset="slide-right"><span className="text-[#8E7CF8]">Faster</span> and more</BlurReveal>
-              <span className="relative bg-gradient-to-r from-[#8E7CF8] via-[#1AC464] to-[#1AC464] bg-clip-text text-transparent ml-1">
+            <BlurReveal preset="slide-right">Faster and more</BlurReveal>
+              <span className="relative ml-1 underline decoration-[#22FF7E]">
                 Efficiently
                 <img src="/arrow.svg" alt="sparkle" width={200} height={64} className="md:block hidden absolute -top-16 -right-24 animate-pulse" />
               </span>
@@ -30,7 +30,10 @@ function Home() {
           <p className="text-gray dark:text-gray-300 mb-6">
             <BlurReveal preset="slide-right">Efficiently manage your tasks and boost productivity</BlurReveal>
           </p>
-          <Button href="/auth/signup" className='py-[2px] sm:w-fit w-full'>Get free demo</Button>
+          <div className="flex gap-4">
+            <Button href="/auth/signup" className='py-[2px] sm:w-fit w-full'>Get free demo</Button>
+            <Button href="/auth/signup" variant='secondary' className='py-[2px] sm:w-fit w-full'>Learn more</Button>
+          </div>
 
           <div className='grid sm:grid-cols-3 gap-4 w-3.5xl mt-6'>
             <div className='flex gap-2 items-center justify-center'>

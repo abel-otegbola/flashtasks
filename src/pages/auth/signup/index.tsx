@@ -26,10 +26,10 @@ export default function SignupPage() {
               </div>
 
               <BlurReveal preset="slide-left">
-                <h1 className="font-bold md:text-[20px] text-[16px] text-dark-500">Get Started now</h1>
+                <h1 className="font-bold md:text-[28px] text-[16px] text-dark-500">Create Account</h1>
               </BlurReveal>
               <BlurReveal preset="slide-left">
-                <p className="text-gray text-center">Help shape flashtasks, and enjoy free premium perks at launch. </p>
+                <p className="text-gray text-center">Enter your personal details to create an account</p>
               </BlurReveal>
             </div>
             <Formik

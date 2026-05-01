@@ -22,8 +22,8 @@ export default function Login() {
               <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] w-fit">
                 <LogoIcon className="w-[14px]"  />
               </div>
-              <h1 className="font-bold md:text-[20px] text-[16px] text-dark-500">Welcome</h1>
-              <p className="text-gray-500">Please login here</p>
+              <h1 className="font-bold md:text-[28px] text-[16px] text-dark-500">Welcome back</h1>
+              <p className="text-gray-500 text-center">Enter your email and password to access your account</p>
             </div>
             <Formik
               initialValues={{ email: "test@gmail.com", password: "password1" }}
