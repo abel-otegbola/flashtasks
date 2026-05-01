@@ -85,7 +85,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-end z-50 p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-end z-50">
       <div className="bg-white dark:bg-[#101010] shadow-xl w-full max-w-xl max-[500px]:w-full h-screen overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-[#101010] border-b border-gray-500/[0.1] dark:border-gray-700 p-4 flex items-center justify-between">
