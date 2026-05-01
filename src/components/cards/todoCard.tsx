@@ -7,6 +7,7 @@ import TaskDetailsModal from "../modals/taskDetailsModal";
 import { useOrganizations } from '../../context/organizationContext';
 import { useTasks } from "../../context/tasksContext";
 import Confirmationmessage from "../modals/confirmation";
+import EditTaskModal from "../modals/editTaskModal";
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -18,6 +19,7 @@ function TodoCard(task: TodoCardProps) {
   const { title, description, comments, category, status } = task;
   const [openMenu, setOpenMenu] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -55,6 +57,11 @@ function TodoCard(task: TodoCardProps) {
   };
 
   const color = statusColors[status] || statusColors.upcoming;
+  const assigneeList = Array.isArray(task?.assignee)
+    ? task.assignee
+    : typeof task?.assignee === 'string'
+      ? task.assignee.split(',')
+      : [];
 
   // Close menu if clicked outside
   useEffect(() => {
@@ -109,7 +116,7 @@ function TodoCard(task: TodoCardProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowDetails(true);
+                      setShowEditModal(true);
                       setOpenMenu(false);
                     }}
                     className="flex items-center gap-2 w-full text-left text-sm p-2 hover:bg-gray-50 dark:hover:bg-dark-bg text-gray-700 dark:text-gray-300"
@@ -156,8 +163,11 @@ function TodoCard(task: TodoCardProps) {
 
         <div className="flex justify-between gap-4 flex-wrap p-2 px-4 border-t border-gray-100 dark:border-gray-500/[0.2]">
           <div className="flex ml-2">
-            <span className="border-2 border-white -ml-2 p-2 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-500/[0.2] dark:border-[#151515]"></span>
-            <span className="border-2 border-white -ml-2 p-2 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-500/[0.2] dark:border-[#151515]"></span>
+            {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => (
+              <span key={index} className="border-2 border-white -ml-2 flex items-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-500/[0.2] dark:border-[#151515] flex items-center justify-center text-[10px] text-gray-700">
+                {String(initial).trim().charAt(0).toUpperCase()}
+              </span>
+            ))}
           </div>
           <p className="text-[12px] flex gap-1 items-center text-gray-500">
             <ChatLine size={12} color="currentColor" />
@@ -171,6 +181,11 @@ function TodoCard(task: TodoCardProps) {
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
         task={task}
+      />
+      <EditTaskModal
+        task={task}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
       />
 
       {showDeleteConfirmation && (
