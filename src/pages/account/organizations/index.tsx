@@ -8,9 +8,10 @@ import EditOrganizationModal from '../../../components/modals/editOrganizationMo
 import { Formik } from 'formik';
 import { createOrganizationSchema } from '../../../schema/organizationSchema';
 import { GridFourIcon, PencilSimpleLineIcon, TrashIcon } from '@phosphor-icons/react';
+import { OrganizationSkeletonLoader } from '../../../components/skeletons';
 
 export default function OrganizationsPage() {
-  const { organizations, currentOrg, selectOrganization, addTeam, removeTeam } = useOrganizations();
+  const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, loading } = useOrganizations();
   const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -21,6 +22,10 @@ export default function OrganizationsPage() {
     await addTeam({ name: teamName });
     setTeamName('');
   };
+
+  if (loading) {
+    return <OrganizationSkeletonLoader />;
+  }
 
   return (
     <div className="md:p-0 px-4">

@@ -10,6 +10,7 @@ import { todo } from "../../../interface/todo";
 import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
 import Button from "../../../components/button/button";
 import { FileIcon } from "@phosphor-icons/react";
+import { DashboardSkeletonLoader } from "../../../components/skeletons";
 
 function Dashboard() {
   const { tasks, loading, getTasks } = useTasks();
@@ -27,6 +28,10 @@ function Dashboard() {
   useEffect(() => {
     getTasks(user?.email || "");
   }, [user]);
+
+  if (loading) {
+    return <DashboardSkeletonLoader />;
+  }
   
   const openTaskDetails = (task: todo) => {
       setSelectedTask(task);

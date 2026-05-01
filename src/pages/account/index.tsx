@@ -3,7 +3,6 @@ import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { useUser } from "../../context/authContext";
 import Dashboard from "./dashboard/dashboard";
 import Sidebar from "../../components/sidebar/sidebar";
-import Input from "../../components/input/input";
 import { AddCircle, Bell, Magnifer } from "@solar-icons/react";
 import { Formik } from "formik";
 import Button from "../../components/button/button";
@@ -13,6 +12,8 @@ import Organizations from "./organizations";
 import SearchBar from "../../components/search/searchBar";
 import CreateTask from "./create-task/createTask";
 import SettingsPage from "./settings";
+import Pricing from "./pricing";
+import Notifications from "./notifications";
 
 function AccountPages() {
     const { user } = useUser();
@@ -58,6 +59,8 @@ function AccountPages() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/organizations" element={<Organizations />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/notifications" element={<Notifications />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/tasks/new" element={<CreateTask />} />
             </Routes>

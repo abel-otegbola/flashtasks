@@ -8,6 +8,7 @@ import Button from "../../../components/button/button";
 import { useTasks } from "../../../context/tasksContext";
 import { useUser } from "../../../context/authContext";
 import CreateTaskModal from "../../../components/modals/createTaskModal";
+import { TaskSkeletonLoader } from "../../../components/skeletons";
 
 const sections = [
   { key: "todo", title: "Todo", filter: "upcoming", color: "yellow" },
@@ -30,7 +31,7 @@ type ViewMode = 'kanban' | 'list' | 'grid' | 'calendar';
 function Tasks() {
     const [openSections] = useState<Record<string, boolean>>({});
     const [showModal, setShowModal] = useState(false);
-    const [viewMode, setViewMode] = useState<ViewMode>('list');
+    const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [currentDate, setCurrentDate] = useState(new Date());
     const { tasks, loading, getTasks } = useTasks();
     const [selectedTask, setSelectedTask] = useState<todo | null>(null);
@@ -84,6 +85,10 @@ function Tasks() {
     const monthNames = ["January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"];
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    if (loading) {
+        return <TaskSkeletonLoader />;
+    }
 
     return (
         <>
@@ -186,11 +191,7 @@ function Tasks() {
                                     ${openSections[key] ? "max-h-[2000px]" : "max-h-0 md:max-h-none"}
                                 `}
                             >
-                                {loading ? (
-                                    <div className="flex justify-center items-center py-8">
-                                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                                    </div>
-                                ) : tasks.filter((t) => t.status === filter).length === 0 ? (
+                                {tasks.filter((t) => t.status === filter).length === 0 ? (
                                     <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                                         No tasks in {title.toLowerCase()}
                                     </div>
@@ -210,11 +211,7 @@ function Tasks() {
             {/* List View */}
             {viewMode === 'list' && (
                 <div className="flex flex-col gap-3 border border-gray-500/[0.1] rounded-lg p-4 bg-bg-gray-100/[0.2] dark:bg-dark-bg">
-                    {loading ? (
-                        <div className="flex justify-center items-center py-8">
-                            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                        </div>
-                    ) : tasks.length === 0 ? (
+                    {tasks.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                             No tasks yet. Create your first task!
                         </div>
@@ -282,12 +279,8 @@ function Tasks() {
 
             {/* Grid View */}
             {viewMode === 'grid' && (
-                <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4">
-                    {loading ? (
-                        <div className="col-span-full flex justify-center items-center py-8">
-                            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                        </div>
-                    ) : tasks.length === 0 ? (
+                <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-4">
+                    {tasks.length === 0 ? (
                         <div className="col-span-full text-center py-8 text-gray-400 dark:text-gray-500">
                             No tasks yet. Create your first task!
                         </div>
@@ -321,73 +314,67 @@ function Tasks() {
                         </button>
                     </div>
 
-                    {loading ? (
-                        <div className="flex justify-center items-center py-8">
-                            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-7 gap-2">
-                            {/* Day names header */}
-                            {dayNames.map(day => (
-                                <div key={day} className="p-2 text-center font-semibold text-gray-500 dark:text-gray-400 text-sm">
-                                    {day}
-                                </div>
-                            ))}
+                    <div className="grid grid-cols-7 gap-2">
+                        {/* Day names header */}
+                        {dayNames.map(day => (
+                            <div key={day} className="p-2 text-center font-semibold text-gray-500 dark:text-gray-400 text-sm">
+                                {day}
+                            </div>
+                        ))}
 
-                            {/* Empty cells for days before month starts */}
-                            {Array.from({ length: getFirstDayOfMonth(currentDate) }).map((_, i) => (
-                                <div key={`empty-${i}`} className="p-2 min-h-[100px] bg-gray-50 dark:bg-dark-bg-secondary/20 rounded-lg" />
-                            ))}
+                        {/* Empty cells for days before month starts */}
+                        {Array.from({ length: getFirstDayOfMonth(currentDate) }).map((_, i) => (
+                            <div key={`empty-${i}`} className="p-2 min-h-[100px] bg-gray-50 dark:bg-dark-bg-secondary/20 rounded-lg" />
+                        ))}
 
-                            {/* Calendar days */}
-                            {Array.from({ length: getDaysInMonth(currentDate) }).map((_, i) => {
-                                const day = i + 1;
-                                const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                                const tasksForDay = getTasksForDate(date);
-                                const isToday = new Date().toDateString() === date.toDateString();
+                        {/* Calendar days */}
+                        {Array.from({ length: getDaysInMonth(currentDate) }).map((_, i) => {
+                            const day = i + 1;
+                            const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                            const tasksForDay = getTasksForDate(date);
+                            const isToday = new Date().toDateString() === date.toDateString();
 
-                                return (
-                                    <div
-                                        key={day}
-                                        className={`p-2 min-h-[100px] border rounded-lg ${
-                                            isToday 
-                                                ? 'border-primary bg-primary/5 dark:bg-primary/10' 
-                                                : 'border-gray-500/[0.2] bg-bg-gray-100 dark:bg-dark-bg-secondary/50'
-                                        } hover:shadow-md transition-shadow`}
-                                    >
-                                        <div className={`text-sm font-semibold mb-2 ${isToday ? 'text-primary' : ''}`}>
-                                            {day}
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            {tasksForDay.slice(0, 3).map(task => (
-                                                <div
-                                                    key={task.$id}
-                                                    onClick={() => openTaskDetails(task)}
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    className={`text-xs p-1 rounded truncate cursor-pointer ${
-                                                        task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                                        task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                                                        task.status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                        task.status === 'pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                                                        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                    }`}
-                                                    title={task.title}
-                                                >
-                                                    {task.title}
-                                                </div>
-                                            ))}
-                                            {tasksForDay.length > 3 && (
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 pl-1">
-                                                    +{tasksForDay.length - 3} more
-                                                </div>
-                                            )}
-                                        </div>
+                            return (
+                                <div
+                                    key={day}
+                                    className={`p-2 min-h-[100px] border rounded-lg ${
+                                        isToday 
+                                            ? 'border-primary bg-primary/5 dark:bg-primary/10' 
+                                            : 'border-gray-500/[0.2] bg-bg-gray-100 dark:bg-dark-bg-secondary/50'
+                                    } hover:shadow-md transition-shadow`}
+                                >
+                                    <div className={`text-sm font-semibold mb-2 ${isToday ? 'text-primary' : ''}`}>
+                                        {day}
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                                    <div className="flex flex-col gap-1">
+                                        {tasksForDay.slice(0, 3).map(task => (
+                                            <div
+                                                key={task.$id}
+                                                onClick={() => openTaskDetails(task)}
+                                                role="button"
+                                                tabIndex={0}
+                                                className={`text-xs p-1 rounded truncate cursor-pointer ${
+                                                    task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                                    task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                    task.status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                    task.status === 'pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                                }`}
+                                                title={task.title}
+                                            >
+                                                {task.title}
+                                            </div>
+                                        ))}
+                                        {tasksForDay.length > 3 && (
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 pl-1">
+                                                +{tasksForDay.length - 3} more
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
         </div>
