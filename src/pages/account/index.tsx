@@ -40,7 +40,7 @@ function AccountPages() {
                     )
                 }
                 </Formik>
-                <LogoIcon className="md:hidden w-[16px]"/>
+                <LogoIcon className="md:hidden w-[12px] ml-2"/>
 
                 <div className="flex gap-6 items-center">
                     <Button href="/account/tasks/new" size="small"><AddCircle /> Create</Button>

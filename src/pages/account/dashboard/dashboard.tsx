@@ -9,6 +9,7 @@ import TasksPerDay from "../../../components/charts/TasksPerDay";
 import { todo } from "../../../interface/todo";
 import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
 import Button from "../../../components/button/button";
+import { FileIcon } from "@phosphor-icons/react";
 
 function Dashboard() {
   const { tasks, loading, getTasks } = useTasks();
@@ -38,7 +39,7 @@ function Dashboard() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto gap-4 mb-4 px-4">
+    <div className="md:w-5xl w-full mx-auto gap-4 mb-4 px-4">
       <div className="flex flex-1 flex-col gap-6 h-full mb-4">
         <div className="flex flex-col gap-4 gap-4 p-4 md:p-6 bg-white dark:bg-dark-bg border border-gray-500/[0.1] rounded-[10px]">
           <div>
@@ -78,7 +79,10 @@ function Dashboard() {
           {loading ? (
             <div className="text-gray-500">Loading...</div>
           ) : recent.length === 0 ? (
-            <div className="text-gray-500">No tasks yet. Create one using the Create button.</div>
+            <div className="text-gray-500 flex flex-col items-center justify-center gap-4 py-10">
+              <FileIcon size={48} color="currentColor" />
+              <p>No tasks yet. Create one using the Create button.</p>
+            </div>
           ) : (
             <div className="flex flex-col gap-3 p-4 md:p-6">
               {recent.map((task, index) => (

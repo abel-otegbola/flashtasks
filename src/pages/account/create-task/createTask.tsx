@@ -114,7 +114,6 @@ function CreateTask() {
 
       <div className="flex justify-between gap-4">
         <p className="text-gray-400">Continue from where you stopped yesterday and add today's tasks</p>
-        <Link to={"tasks"} className="text-primary">View all</Link>
       </div>
 
       <div className="flex flex-col gap-2 p-4 rounded-[10px] border border-border-gray-100/[0.5] shadow-[0px_4px_8px_0px_#80808010] dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50">
@@ -143,8 +142,8 @@ function CreateTask() {
                 )
             }
             </Formik>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col flex-wrap gap-2">
+            <div className="flex items-center flex-wrap gap-2">
               <VoiceInput 
                 onTranscript={handleTranscript} 
                 maxRecordingTime={maxRecordingTime}
@@ -163,13 +162,13 @@ function CreateTask() {
           </div>
         </div>
 
-        <div className="flex justify-between items-end">
+        <div className="flex justify-between flex-wrap gap-4 items-end">
           <p className="text-gray-400 text-sm">
             {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')} / {userRole === 'enterprise' ? '∞' : `${Math.floor(maxRecordingTime / 60)}:00`} mins
-            {userRole === 'free' && <span className="ml-2 text-primary text-xs">(Upgrade for more time)</span>}
+            {userRole === 'free' && <Link to="/account/pricing" className="ml-2 text-primary text-xs">(Upgrade)</Link>}
           </p>
           <Button 
-            className="" 
+            className="max-[450px]:w-full" 
             size="small"
             onClick={handleGenerateTasks}
             disabled={isGenerating || !inputText.trim()}

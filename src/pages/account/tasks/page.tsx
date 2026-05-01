@@ -223,7 +223,7 @@ function Tasks() {
 
             {/* List View */}
             {viewMode === 'list' && (
-                <div className="flex flex-col gap-3 border border-gray-500/[0.1] rounded-lg p-4 bg-bg-gray-100 dark:bg-dark-bg">
+                <div className="flex flex-col gap-3 border border-gray-500/[0.1] rounded-lg p-4 bg-bg-gray-100/[0.2] dark:bg-dark-bg">
                     {loading ? (
                         <div className="flex justify-center items-center py-8">
                             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -250,7 +250,7 @@ function Tasks() {
                                     onClick={() => openTaskDetails(task)}
                                     role="button"
                                     tabIndex={0}
-                                    className={`md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 border border-gray-500/[0.1] rounded-lg hover:shadow-[0px_4px_8px_0px_#20202020] transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark'}`}
+                                    className={`md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark'}`}
                                 >
                                     {/* Mobile Layout */}
                                     <div className="md:col-span-4 flex flex-col gap-1 md:order-none order-1">
