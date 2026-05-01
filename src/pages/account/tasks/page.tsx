@@ -30,14 +30,16 @@ const colorClasses: Record<string, string> = {
 type ViewMode = 'kanban' | 'list' | 'grid' | 'calendar';
 
 function Tasks() {
-    const [openSections] = useState<Record<string, boolean>>({});
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
     const [showModal, setShowModal] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [currentDate, setCurrentDate] = useState(new Date());
-    const { tasks, loading, getTasks, movePendingToToday } = useTasks();
+    const { tasks, loading, getTasks, movePendingToToday, updateTask } = useTasks();
     const [showMoveConfirm, setShowMoveConfirm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<todo | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
+    const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+    const [dragOverSectionKey, setDragOverSectionKey] = useState<string | null>(null);
     const { user } = useUser();
 
     useEffect(() => {
@@ -54,6 +56,22 @@ function Tasks() {
     const closeTaskDetails = () => {
         setDetailsOpen(false);
         setSelectedTask(null);
+    };
+
+    const handleSectionDrop = async (sectionKey: string, taskStatus: todo['status']) => {
+        if (!draggedTaskId) return;
+
+        const draggedTask = tasks.find(task => task.$id === draggedTaskId);
+        if (!draggedTask || draggedTask.status === taskStatus) {
+            setDraggedTaskId(null);
+            setDragOverSectionKey(null);
+            return;
+        }
+
+        setOpenSections(prev => ({ ...prev, [sectionKey]: true }));
+        await updateTask(draggedTaskId, { status: taskStatus });
+        setDraggedTaskId(null);
+        setDragOverSectionKey(null);
     };
     // Calendar helper functions
     const getDaysInMonth = (date: Date) => {
@@ -191,20 +209,26 @@ function Tasks() {
             {viewMode === 'kanban' && (
                 <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start">
                     {/* Task Statistics */}
-                    {sections.map(({ key, title, filter, color }) => {
-                        const count = tasks.filter((t) => t.status === filter).length;
-                        return (
-                            <div 
+                    {sections.map(({ key, title, filter, color }) => (
+                        <div
+                            key={key}
+                            className={`flex flex-col gap-2 rounded-lg transition-all ${dragOverSectionKey === key ? 'ring-2 ring-primary/30 bg-primary/[0.03]' : ''}`}
+                            onDragOver={(event) => event.preventDefault()}
+                            onDragEnter={() => setDragOverSectionKey(key)}
+                            onDragLeave={() => setDragOverSectionKey((current) => current === key ? null : current)}
+                            onDrop={async (event) => {
+                                event.preventDefault();
+                                await handleSectionDrop(key, filter);
+                            }}
+                        >
+                            <button 
                                 key={key} 
-                                className={`p-4 rounded-lg border ${colorClasses[color]} bg-white dark:bg-dark-bg-secondary/50`}
+                                className={`p-4 md:text-center text-start rounded-lg border ${colorClasses[color]} bg-white dark:bg-dark-bg-secondary/50`}
+                                onClick={() => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))}                                
                             >
                                 <p className="text-gray-400 text-xs mb-1">{title}</p>
-                                <p className="text-2xl font-bold">{count}</p>
-                            </div>
-                        );
-                    })}
-                    {sections.map(({ key, title, filter, color }) => (
-                        <div key={key} className="flex flex-col gap-2">
+                                <p className="text-2xl font-bold">{tasks.filter((t) => t.status === filter).length}</p>
+                            </button>
                             <div
                                 className={`flex flex-col gap-4 overflow-hidden transition-all duration-300 
                                     ${openSections[key] ? "max-h-[2000px]" : "max-h-0 md:max-h-none"}
@@ -218,7 +242,17 @@ function Tasks() {
                                     tasks
                                         .filter((t) => t.status === filter)
                                         .map((task) => (
-                                            <TodoCard key={task.$id} {...task} />
+                                            <TodoCard
+                                                key={task.$id}
+                                                {...task}
+                                                draggable
+                                                onDragStart={(dragTask, event) => {
+                                                    setDraggedTaskId(dragTask.$id);
+                                                    event.dataTransfer.effectAllowed = 'move';
+                                                    event.dataTransfer.setData('text/plain', dragTask.$id);
+                                                }}
+                                                onDragEnd={() => setDraggedTaskId(null)}
+                                            />
                                         ))
                                 )}
                             </div>

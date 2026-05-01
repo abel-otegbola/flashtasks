@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type DragEvent } from "react";
 import { ChatLine, MenuDots, Pen, TrashBinMinimalistic } from "@solar-icons/react";
 import { todo } from "../../interface/todo";
 import TaskDetailsModal from "../modals/taskDetailsModal";
@@ -8,11 +8,18 @@ import { useOrganizations } from '../../context/organizationContext';
 import { useTasks } from "../../context/tasksContext";
 import Confirmationmessage from "../modals/confirmation";
 
-function TodoCard(task: todo) {
+type TodoCardProps = todo & {
+  draggable?: boolean;
+  onDragStart?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
+  onDragEnd?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
+};
+
+function TodoCard(task: TodoCardProps) {
   const { title, description, comments, category, status } = task;
   const [openMenu, setOpenMenu] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { deleteTask } = useTasks();
 
@@ -64,7 +71,19 @@ function TodoCard(task: todo) {
     <>
       <div
         onClick={() => setShowDetails(true)}
-        className={`relative flex flex-col border-l-4 ${color.border} rounded-[10px] border border-gray-100/10 bg-white dark:bg-[#101010] overflow-hidden transition-all hover:shadow-md cursor-pointer`}
+        draggable={task.draggable}
+        onDragStart={(event) => {
+          setIsDragging(true);
+          task.onDragStart?.(task, event);
+        }}
+        onDragEnd={(event) => {
+          setIsDragging(false);
+          task.onDragEnd?.(task, event);
+        }}
+        onDragOver={(event) => {
+          if (task.draggable) event.preventDefault();
+        }}
+        className={`relative flex flex-col border-l-4 ${color.border} rounded-[10px] border border-gray-100/10 bg-white dark:bg-[#101010] overflow-hidden transition-all hover:shadow-md cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
       >
         <div className="flex flex-col gap-3 p-4">
           <div className="flex justify-between gap-4 items-start">
