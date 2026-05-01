@@ -3,7 +3,7 @@ import { useUser } from '../../../context/authContext'
 import Button from "../../../components/button/button"
 import LogoIcon from "../../../assets/icons/logo"
 import BlurReveal from '../../../components/animations/blurReveal';
-import { ChartLineUpIcon, LightningIcon, ShareNetworkIcon } from '@phosphor-icons/react';
+import { CalendarIcon, ChartLineUpIcon, GridFourIcon, GridNineIcon, LightningIcon, ShareNetworkIcon, UsersIcon } from '@phosphor-icons/react';
 
 function Home() {
   const { user } = useUser();
@@ -66,83 +66,91 @@ function Home() {
         
       </header>
 
-      <section className="flex flex-col gap-10 lg:p-[6%] md:p-[3%] p-4 md:mx-[5%] mb-12 md:shadow-lg rounded-[12px] bg-white -mt-12">
-        <div className="grid md:grid-cols-2 items-center gap-[60px]">
-          <div className="flex flex-col gap-4">
-            <p className="font-medium text-primary uppercase">AI-Powered Productivity</p>
-            <h2 className="text-[42px] font-medium leading-[110%]">
-              Built For Faster Execution & Smarter Workflows
-            </h2>
-          </div>
+      <section className="flex flex-col gap-10 pt-20 pb-10 p-4 md:mx-[5%]">
+        <div className="flex flex-col justify-center items-center mx-auto max-w-3xl gap-[19px] mb-10">
+          <p className="font-medium flex items-center gap-2 border border-gray-500/[0.2] rounded-full px-6 py-2">
+            <GridFourIcon />
+            Features
+          </p>
 
-          <div className="flex items-center md:justify-center">
-            <p className="md:w-[75%]">
-              From students managing assignments to teams handling complex projects,
-              Flashtasks helps you organize work, prioritize smarter, and complete
-              tasks faster using intelligent AI-powered planning and productivity
-              tools.
-            </p>
-          </div>
+          <h2 className="md:text-[32px] text-[28px] text-center font-medium leading-[120%]">
+            Latest advanced technologies to ensure everything you need
+          </h2>
+          <p className='text-[#939395] md:w-[60%] w-[90%] mx-auto text-center'>maximize your team productivity with our advanced technologies built specifically for you.</p>
         </div>
 
-        <div className="grid md:grid-cols-3 items-center gap-[60px]">
+        <div className="grid md:grid-cols-3 max-w-6xl mx-auto items-center gap-[60px]">
           <div className="flex flex-col gap-4">
             <p className="md:text-[40px] text-[32px] text-primary">
-              <LightningIcon />
+              <GridNineIcon />
             </p>
 
             <h2 className="font-medium">AI Task Breakdown</h2>
 
             <p>
-              Turn overwhelming projects into actionable steps instantly. Flashtasks
-              intelligently breaks down large goals into manageable tasks so you can
-              start faster and stay productive.
+              Turn overwhelming projects into actionable steps instantly. 
             </p>
           </div>
 
           <div className="flex flex-col gap-4">
             <p className="md:text-[40px] text-[32px] text-primary">
-              <ChartLineUpIcon />
+              <CalendarIcon />
             </p>
 
             <h2 className="font-medium">Smart Daily Planning</h2>
 
             <p>
-              Automatically organize your day with AI-powered prioritization. Focus
-              on what matters most, reduce mental overload, and maintain momentum
-              throughout your workflow.
+              Automatically organize your day with AI-powered prioritization.
             </p>
           </div>
 
           <div className="flex flex-col gap-4">
             <p className="md:text-[40px] text-[32px] text-primary">
-              <ShareNetworkIcon />
+              <UsersIcon />
             </p>
 
             <h2 className="font-medium">Collaborate Anywhere</h2>
 
             <p>
-              Manage tasks with teammates, clients, or study groups in shared
-              workspaces. Assign tasks, track progress, and stay aligned across every
-              project from one clean dashboard.
+              Manage tasks with teammates, clients, or study groups in shared workspaces.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="flex flex-col gap-10 lg:p-[6%] md:p-[3%] p-4 mb-12">
-        <div className="flex flex-col justify-center md:items-center gap-4 mb-10">
-          <p className="font-medium text-primary uppercase">
-            Built For Modern Productivity
-          </p>
+      <section className="flex flex-col gap-10 lg:px-[6%] md:px-[3%] p-4">
 
-          <h2 className="text-[42px] font-medium leading-[110%]">
-            Why People Choose Flashtasks
-          </h2>
+        <div className="relative flex md:flex-nowrap flex-wrap w-full gap-8 bg-primary/[0.08] rounded-lg md:pl-[6%] p-6 pb-0 md:h-[400px]">
+          <div className="flex flex-col justify-between gap-8 md:w-[30%] py-[6%]">
+            <h3 className="font-semibold text-lg">
+              Complete Productivity Visibility
+            </h3>
+
+            <p>
+              Track progress across projects, assignments, and daily tasks with a
+              smart dashboard that keeps your priorities, deadlines, and workflow
+              performance organized in one place.
+            </p>
+
+            <Button href="/auth/signup" variant="primary" className="">
+              Learn more
+            </Button>
+          </div>
+
+          <div className="flex-1 flex items-end h-full justify-center">
+            <img
+              src={`/hero-img-${theme === 'dark' ? 'dark' : 'light'}.webp`}
+              width={500}
+              height={300}
+              className="object-cover md:w-[500px] w-full"
+            />
+
+            <div className="absolute bottom-0 left-0 w-full h-[90px] bg-gradient-to-t from-primary/[0.1] via-primary/[0.08] rounded-b-lg"></div>
+          </div>
         </div>
 
         <div className="flex md:flex-nowrap flex-wrap gap-[32px]">
-          <div className="flex flex-col md:w-[50%] w-full gap-4 bg-primary/[0.08] rounded-lg p-6">
+          <div className="flex flex-col md:w-[50%] w-full gap-4 bg-primary/[0.08] rounded-lg md:p-[6%] p-6">
             <h3 className="font-medium text-[80px] font-semibold">AI</h3>
 
             <p>
@@ -151,7 +159,7 @@ function Home() {
             </p>
           </div>
 
-          <div className="flex flex-col justify-between md:w-[50%] w-full gap-4 bg-primary/[0.08] rounded-lg p-6">
+          <div className="flex flex-col justify-between md:w-[50%] w-full gap-4 bg-primary/[0.08] rounded-lg md:p-[6%] p-6">
             <h3 className="font-semibold text-lg">
               Simple & Distraction-Free
             </h3>
@@ -164,33 +172,9 @@ function Home() {
           </div>
         </div>
 
-        <div className="relative flex md:flex-nowrap flex-wrap w-full gap-8 bg-primary/[0.08] rounded-lg p-6 pb-0 md:h-[400px]">
-          <div className="flex flex-col justify-center gap-8 md:w-[30%]">
-            <h3 className="font-semibold text-lg">
-              Complete Productivity Visibility
-            </h3>
-
-            <p>
-              Track progress across projects, assignments, and daily tasks with a
-              smart dashboard that keeps your priorities, deadlines, and workflow
-              performance organized in one place.
-            </p>
-          </div>
-
-          <div className="flex-1 flex items-end h-full justify-center">
-            <img
-              src="/why-bg.png"
-              width={500}
-              height={300}
-              className="object-cover md:w-[500px] w-full"
-            />
-
-            <div className="absolute bottom-0 left-0 w-full h-[90px] bg-gradient-to-t from-primary/[0.1] via-primary/[0.08] rounded-b-lg"></div>
-          </div>
-        </div>
       </section>
 
-      <section className="flex flex-col items-center justify-center gap-10 lg:p-[6%] p-[10%] sm:mx-[6%] mx-4 mb-12 rounded-[12px] bg-primary text-white">
+      <section className="flex flex-col items-center justify-center gap-10 lg:p-[6%] p-[10%] sm:mx-[6%] mt-20 mx-4 mb-12 rounded-[12px] bg-primary text-white">
         <div>
           <h2 className="md:text-[42px] text-[32px] font-medium leading-[110%] text-center">
             Start Achieving More With AI
@@ -198,7 +182,7 @@ function Home() {
         </div>
 
         <div>
-          <Button variant="secondary" className="z-2" href="/auth/login">
+          <Button className="z-2 bg-white text-primary hover:bg-gray-100" variant="tertiary" href="/auth/login">
             Get Started Free
           </Button>
         </div>

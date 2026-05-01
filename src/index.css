@@ -10,7 +10,7 @@
   --color-border-gray-100: oklch(67.60% 0.032 310.00);
   --color-dark: oklch(22.64% 0.000 0);
   --color-dark-200: oklch(22.64% 0.000 0);
-  --color-dark-bg: #121212;
+  --color-dark-bg: #292B38;
   --color-dark-bg-secondary: #131313;
   --color-white: oklch(100% 0 0);
 }
@@ -37,10 +37,10 @@
 :root[data-theme="light"] {
   --color-primary: oklch(58.41% 0.232 283.19);
   --color-text-gray: oklch(52.78% 0.037 304.86);
-  --color-text-black: oklch(23.51% 0.029 313.23);
+  --color-text-black: #292B38;
   --color-bg-gray-100: oklch(98.81% 0.000 0);
   --color-border-gray-100: oklch(77.311% 0.00009 271.152 / 0.513);
-  --color-dark: oklch(22.64% 0.000 0);
+  --color-dark: #292B38;
   color-scheme: light;
 }
 
