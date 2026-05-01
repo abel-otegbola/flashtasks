@@ -4,6 +4,7 @@ import Button from "../../../components/button/button"
 import LogoIcon from "../../../assets/icons/logo"
 import BlurReveal from '../../../components/animations/blurReveal';
 import { CalendarIcon, ChartLineUpIcon, GridFourIcon, GridNineIcon, LightningIcon, ShareNetworkIcon, UsersIcon } from '@phosphor-icons/react';
+import { ArrowRightUp } from '@solar-icons/react';
 
 function Home() {
   const { user } = useUser();
@@ -82,6 +83,59 @@ function Home() {
           </p>
         </div>
 
+        <div className="grid md:grid-cols-3 max-w-6xl mx-auto gap-[60px]">
+          <div className="flex flex-col gap-4 border border-gray-500/[0.2] p-12">
+            <p className="md:text-[40px] text-[32px] text-primary">
+              <GridNineIcon weight='light' />
+            </p>
+
+            <h2 className="font-medium">AI Task Breakdown</h2>
+
+            <p>
+              Turn overwhelming projects into actionable steps instantly. 
+            </p>
+            <div className='flex-1 flex items-end'>
+              <div className='mt-8 p-3 w-fit rounded-full border border-gray-500/[0.2]'>
+                <ArrowRightUp size={20} weight='Outline' opacity={0.6} />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 border border-gray-500/[0.2] p-12">
+            <p className="md:text-[40px] text-[32px] text-primary">
+              <CalendarIcon weight='light' />
+            </p>
+
+            <h2 className="font-medium">Smart Daily Planning</h2>
+
+            <p>
+              Automatically organize your day with AI-powered prioritization.
+            </p>
+            <div className='flex-1 flex items-end'>
+              <div className='mt-8 p-3 w-fit rounded-full border border-gray-500/[0.2]'>
+                <ArrowRightUp size={20} weight='Outline' opacity={0.6} />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 border border-gray-500/[0.2] p-12 bg-primary text-white">
+            <p className="md:text-[40px] text-[32px] text-white">
+              <UsersIcon weight='light' />
+            </p>
+
+            <h2 className="font-medium">Collaborate Anywhere</h2>
+
+            <p>
+              Manage tasks with teammates, clients, or study groups in shared workspaces.
+            </p>
+
+            <div className='flex-1 flex items-end'>
+              <div className='mt-8 p-3 w-fit rounded-full border border-gray-500/[0.2]'>
+                <ArrowRightUp size={20} weight='Outline' opacity={0.6} />
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="flex flex-col gap-10 pt-20 pb-10 p-4 md:mx-[5%]">
@@ -97,43 +151,6 @@ function Home() {
           <p className='text-[#939395] md:w-[60%] w-[90%] mx-auto text-center'>maximize your team productivity with our advanced technologies built specifically for you.</p>
         </div>
 
-        <div className="grid md:grid-cols-3 max-w-6xl mx-auto items-center gap-[60px]">
-          <div className="flex flex-col gap-4">
-            <p className="md:text-[40px] text-[32px] text-primary">
-              <GridNineIcon />
-            </p>
-
-            <h2 className="font-medium">AI Task Breakdown</h2>
-
-            <p>
-              Turn overwhelming projects into actionable steps instantly. 
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <p className="md:text-[40px] text-[32px] text-primary">
-              <CalendarIcon />
-            </p>
-
-            <h2 className="font-medium">Smart Daily Planning</h2>
-
-            <p>
-              Automatically organize your day with AI-powered prioritization.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <p className="md:text-[40px] text-[32px] text-primary">
-              <UsersIcon />
-            </p>
-
-            <h2 className="font-medium">Collaborate Anywhere</h2>
-
-            <p>
-              Manage tasks with teammates, clients, or study groups in shared workspaces.
-            </p>
-          </div>
-        </div>
       </section>
 
       <section className="flex flex-col gap-10 lg:px-[6%] md:px-[3%] p-4">
@@ -190,33 +207,10 @@ function Home() {
 
       </section>
 
-      <section className="flex md:flex-row flex-col sm:items-start 2xl:gap-8 md:gap-6 gap-4 md:px-[11%] p-4 md:py-40 py-4 bg-primary/[0.01] pb-24">
-        <div className="flex flex-col md:gap-4 gap-2 md:w-[40%] w-full py-6">
-          <h2 className="md:text-[32px] text-[24px] max-w-2xl leading-[120%] font-semibold">
-            Plan Less. Execute Faster With Flashtasks
-          </h2>
-
-          <p className="max-w-2xl leading-[24px] md:mb-4 mb-2">
-            Add tasks naturally, let AI organize and prioritize your workflow, and
-            stay focused on completing work faster without the stress of complicated
-            planning tools.
-          </p>
-
-          <Button className="z-2" href="/auth/login">
-            Get Started Free
-          </Button>
-        </div>
-
-        <div className="p-4 md:w-[60%] w-full">
-          <img src="/hero-bg.png" alt="UniLinks app mockup" width={1920} height={1080} className="md:w-[75%] w-full h-auto mt-auto mx-auto" />
-        </div>
-
-      </section>
-
       <section className="flex flex-col items-center justify-center gap-10 lg:p-[6%] p-[10%] sm:mx-[6%] mt-20 mx-4 mb-12 rounded-[12px] bg-primary text-white">
         <div>
-          <h2 className="md:text-[42px] text-[32px] font-medium leading-[110%] text-center">
-            Start Achieving More With Flashtasks Today
+          <h2 className="md:text-[32px] text-[24px] font-medium leading-[110%] text-center">
+            Start achieving more with Flashtasks today
           </h2>
         </div>
 
