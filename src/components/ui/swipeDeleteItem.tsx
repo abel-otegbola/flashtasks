@@ -94,13 +94,6 @@ function SwipeDeleteItem({
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <div className="absolute inset-0 flex items-center justify-end bg-red-500/95 text-white pr-5">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <TrashIcon size={16} />
-          Delete
-        </div>
-      </div>
-
       <div
         style={{
           transform: `translateX(${translateX}px)`,
