@@ -63,7 +63,7 @@ function Topbar() {
         <div className={`flex justify-between items-center w-full md:px-[8%] px-4 py-2 z-[3] sticky top-0 bg-white dark:bg-[#101010] backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'border-b border-gray-500/[0.1]' : ''}`}>
             <Link to={"/"} className="md:w-[19%] text-start flex gap-2 items-center">
                 <LogoIcon className="w-[14px]"  />
-                <h3 className="text-[16px] font-bold">Flash Tasks</h3>
+                <h3 className="text-lg font-semibold">Flashtasks</h3>
             </Link>
             
             <ul className={`
@@ -78,6 +78,7 @@ function Topbar() {
                         { id: 3, title: "Pricing", href: "#pricing" },
                     ].map(link => (
                             <Link
+                                key={link.id}
                                 to={link.href} 
                                 className={`font-semibold md:py-4 mx-6 py-6 md:border-none border-b border-gray-500/[0.2] duration-300 ${activeSection === link.href ? 'text-primary' : 'text-[#939395]'} hover:text-primary dark:hover:text-primary`}
                                 onClick={(e) => {

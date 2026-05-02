@@ -3,7 +3,7 @@ import { useUser } from '../../../context/authContext'
 import Button from "../../../components/button/button"
 import LogoIcon from "../../../assets/icons/logo"
 import BlurReveal from '../../../components/animations/blurReveal';
-import { CalendarIcon, ChartLineUpIcon, GridFourIcon, GridNineIcon, LightningIcon, ShareNetworkIcon, UsersIcon } from '@phosphor-icons/react';
+import { CalendarIcon, GridFourIcon, GridNineIcon, LightningIcon, UsersIcon } from '@phosphor-icons/react';
 import { ArrowRightUp } from '@solar-icons/react';
 
 function Home() {
@@ -17,7 +17,7 @@ function Home() {
           <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2]">
             <LogoIcon className="w-[14px]"  />
           </div>
-          <div className="relative flex flex-col text-[48px] font-semibold md:leading-[60px] leading-[56px] max-[400px]:leading-[40px]">
+          <div className="relative flex flex-col text-[48px] font-semibold md:leading-[60px] leading-[56px] max-[400px]:leading-[50px]">
             
             <BlurReveal preset="slide-right"><h1>Get tasks done</h1></BlurReveal>
 
@@ -27,11 +27,11 @@ function Home() {
                 Efficiently
               </span>
             </h1>
-            <img src="/arrow.svg" alt="sparkle" width={200} height={64} className="md:block hidden absolute -top-16 -right-24 animate-pulse" />
+            <img src="/arrow.svg" alt="sparkle" width={200} height={64} className="md:block hidden absolute top-0 -right-24 animate-pulse" />
           </div>
-          <p className="text-gray dark:text-gray-300 mb-6">
+          <div className="text-gray dark:text-gray-300 mb-6">
             <BlurReveal preset="slide-right">Efficiently manage your tasks and boost productivity</BlurReveal>
-          </p>
+          </div>
           <div className="flex gap-4 items-center justify-center flex-wrap w-full">
             <Button href="/auth/signup" className='py-[2px] sm:w-fit w-full'>Get free demo</Button>
             <Button href="/auth/signup" variant='secondary' className='py-[2px] sm:w-fit w-full'>Learn more</Button>

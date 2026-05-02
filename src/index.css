@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 @variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
@@ -45,11 +46,11 @@
 }
 
 html {
-  font-family: "Inter", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-  font-size: 14px;
+	font-family: "Montserrat", sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 400;
+	font-style: normal;
+	font-size: 14px;
 }
 
 .shadow-input-active {
@@ -204,7 +205,7 @@ html {
 	color: white;
 }
 .react-calendar__tile--range {
-	background: #2221F;
+	background: #22221F;
 	color: #222;
 	border-radius: 0px;
 }
@@ -213,7 +214,7 @@ html {
 	color: white;
 }
 .react-calendar__tile--rangeStart {
-	background: #2221F; 
+	background: #22221F; 
 	color: white;
 	border-top-left-radius: 32px;
 	border-bottom-left-radius: 32px;
@@ -225,7 +226,7 @@ html {
 	color: white;
 }
 .react-calendar__tile--rangeEnd {
-	background: #2221F; 
+	background-color: #22221F; 
 	color: white;
 	border-top-right-radius: 32px;
 	border-bottom-right-radius: 32px;
