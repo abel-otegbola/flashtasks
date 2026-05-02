@@ -66,42 +66,40 @@ function Topbar() {
                 <h3 className="text-[16px] font-bold">Flash Tasks</h3>
             </Link>
             
-            <div className="md:static fixed top-0 right-0 z-20 overflow-hidden md:h-auto h-screen md:w-auto h-full w-full">
-                <ul className={`
-                    flex md:flex-row flex-col md:px-0 md:py-0 py-12 px-6 bg-white dark:bg-[#101010] md:w-auto h-full w-full
-                    ${open ? "translate-x-[0px]" : "md:translate-x-[0] translate-x-[120%]"} duration-500
-                `}>
-                    {
-                        [
-                            { id: 0, title: "Features", href: "#features" },
-                            { id: 1, title: "Solutions", href: "#solutions" },
-                            { id: 2, title: "Resources", href: "#resources" },
-                            { id: 3, title: "Pricing", href: "#pricing" },
-                        ].map(link => (
-                                <Link
-                                    to={link.href} 
-                                    className={`font-semibold md:py-4 mx-6 py-6 md:border-none border-b border-gray-500/[0.2] duration-300 ${activeSection === link.href ? 'text-primary' : 'text-[#939395]'} hover:text-primary dark:hover:text-primary`}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        const element = document.querySelector(link.href);
-                                        if (element) {
-                                            element.scrollIntoView({ behavior: 'smooth' });
-                                            setOpen(false);
-                                        }
-                                    }}
-                                >
-                                    <span>{link.title}</span> 
-                                </Link>
-                        ))
-                    }
-                    <div className="flex md:hidden flex-col gap-4 p-6">
-                        <AuthCTA />
-                    </div>
-                </ul>
-            </div>
+            <ul className={`
+                md:static fixed top-0 right-0 z-20 flex md:flex-row flex-col md:px-0 md:py-0 py-12 px-6 bg-white dark:bg-[#101010] md:w-auto md:h-full h-screen w-full
+                ${open ? "translate-x-[0px]" : "md:translate-x-[0] translate-x-[120%]"} duration-500
+            `}>
+                {
+                    [
+                        { id: 0, title: "Features", href: "#features" },
+                        { id: 1, title: "Solutions", href: "#solutions" },
+                        { id: 2, title: "Resources", href: "#resources" },
+                        { id: 3, title: "Pricing", href: "#pricing" },
+                    ].map(link => (
+                            <Link
+                                to={link.href} 
+                                className={`font-semibold md:py-4 mx-6 py-6 md:border-none border-b border-gray-500/[0.2] duration-300 ${activeSection === link.href ? 'text-primary' : 'text-[#939395]'} hover:text-primary dark:hover:text-primary`}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    const element = document.querySelector(link.href);
+                                    if (element) {
+                                        element.scrollIntoView({ behavior: 'smooth' });
+                                        setOpen(false);
+                                    }
+                                }}
+                            >
+                                <span>{link.title}</span> 
+                            </Link>
+                    ))
+                }
+                <div className="flex md:hidden flex-col gap-4 p-6">
+                    <AuthCTA />
+                </div>
+            </ul>
 
             {/* Right actions + search */}
-            <div className="flex items-center justify-end gap-6">
+            <div className="flex items-center justify-end gap-6 md:w-[19%] w-auto">
                 <div className="md:flex hidden gap-4">
                     <ThemeSelector />
                     <AuthCTA />
