@@ -9,6 +9,7 @@ import { useTasks } from "../../context/tasksContext";
 import Confirmationmessage from "../modals/confirmation";
 import EditTaskModal from "../modals/editTaskModal";
 import TaskCheckbox from "../ui/taskCheckbox";
+import SwipeDeleteItem from "../ui/swipeDeleteItem";
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -77,6 +78,10 @@ function TodoCard(task: TodoCardProps) {
 
   return (
     <>
+      <SwipeDeleteItem
+        className={`relative flex flex-col border-l-4 ${color.border} rounded-[10px] border border-gray-100/10 bg-white dark:bg-[#101010] overflow-hidden transition-all hover:shadow-md cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
+        onSwipeLeft={() => setShowDeleteConfirmation(true)}
+      >
       <div
         onClick={() => setShowDetails(true)}
         draggable={task.draggable}
@@ -91,7 +96,6 @@ function TodoCard(task: TodoCardProps) {
         onDragOver={(event) => {
           if (task.draggable) event.preventDefault();
         }}
-        className={`relative flex flex-col border-l-4 ${color.border} rounded-[10px] border border-gray-100/10 bg-white dark:bg-[#101010] overflow-hidden transition-all hover:shadow-md cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
       >
         <div className="flex flex-col gap-3 p-4">
           <div className="flex justify-between gap-4 items-start">
@@ -185,6 +189,7 @@ function TodoCard(task: TodoCardProps) {
           </p>
         </div>
       </div>
+      </SwipeDeleteItem>
 
       {/* Task Details Modal */}
       <TaskDetailsModal

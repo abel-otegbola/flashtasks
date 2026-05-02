@@ -1,6 +1,9 @@
 import { todo } from '../../interface/todo';
 import { useTasks } from '../../context/tasksContext';
 import TaskCheckbox from './taskCheckbox';
+import SwipeDeleteItem from './swipeDeleteItem';
+import { useState } from 'react';
+import Confirmationmessage from '../modals/confirmation';
 
 type Props = {
   tasks: todo[];
@@ -8,6 +11,8 @@ type Props = {
 
 const TasksList = ({ tasks }: Props) => {
   const { updateTask } = useTasks();
+  const { deleteTask } = useTasks();
+  const [taskToDelete, setTaskToDelete] = useState<todo | null>(null);
 
   // Group tasks by due date (fall back to createdAt when no dueDate)
   const grouped = tasks.reduce<Record<string, todo[]>>((acc, t) => {
@@ -28,7 +33,8 @@ const TasksList = ({ tasks }: Props) => {
 
             <div className="space-y-3">
               {dayTasks.map((task, index) => (
-                <div key={task.$id || index} className="flex items-center gap-4 p-3 bg-white dark:bg-[#0f0f0f] rounded-lg border border-gray-100 dark:border-gray-500/[0.2]">
+                <SwipeDeleteItem key={task.$id || index} onSwipeLeft={() => setTaskToDelete(task)} className="rounded-lg">
+                <div className="flex items-center gap-4 p-3 bg-white dark:bg-[#0f0f0f] rounded-lg border border-gray-100 dark:border-gray-500/[0.2]">
                   <TaskCheckbox
                     checked={task.status === 'completed'}
                     onCheckedChange={(checked) => void updateTask(task.$id, { status: checked ? 'completed' : 'pending' })}
@@ -55,11 +61,25 @@ const TasksList = ({ tasks }: Props) => {
                     </div>
                   </div>
                 </div>
+                </SwipeDeleteItem>
               ))}
             </div>
           </div>
         ))}
       </div>
+
+      {taskToDelete && (
+        <Confirmationmessage
+          title={`Delete task: ${taskToDelete.title}?`}
+          text="This action cannot be undone."
+          buttonText="Delete"
+          setOpen={(open) => !open && setTaskToDelete(null)}
+          onConfirm={async () => {
+            await deleteTask(taskToDelete.$id);
+            setTaskToDelete(null);
+          }}
+        />
+      )}
     </div>
   );
 };

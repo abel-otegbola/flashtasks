@@ -12,6 +12,7 @@ import CreateTaskModal from "../../../components/modals/createTaskModal";
 import { TaskSkeletonLoader } from "../../../components/skeletons";
 import TaskListView from "../../../components/cards/taskListView";
 import TaskCheckbox from "../../../components/ui/taskCheckbox";
+import SwipeDeleteItem from "../../../components/ui/swipeDeleteItem";
 
 const sections = [
   { key: "todo", title: "Todo", filter: "upcoming", color: "yellow" },
@@ -36,9 +37,10 @@ function Tasks() {
     const [showModal, setShowModal] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [currentDate, setCurrentDate] = useState(new Date());
-    const { tasks, loading, getTasks, movePendingToToday, updateTask } = useTasks();
+    const { tasks, loading, getTasks, movePendingToToday, updateTask, deleteTask } = useTasks();
     const [showMoveConfirm, setShowMoveConfirm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<todo | null>(null);
+    const [taskToDelete, setTaskToDelete] = useState<todo | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
     const [dragOverSectionKey, setDragOverSectionKey] = useState<string | null>(null);
@@ -78,6 +80,12 @@ function Tasks() {
 
     const handleQuickComplete = async (taskId: string, checked: boolean) => {
         await updateTask(taskId, { status: checked ? 'completed' : 'pending' });
+    };
+
+    const handleDeleteTask = async () => {
+        if (!taskToDelete) return;
+        await deleteTask(taskToDelete.$id);
+        setTaskToDelete(null);
     };
     // Calendar helper functions
     const getDaysInMonth = (date: Date) => {
@@ -145,6 +153,15 @@ function Tasks() {
                             buttonText="Move"
                             setOpen={setShowMoveConfirm}
                             onConfirm={async () => { await movePendingToToday(); setShowMoveConfirm(false); }}
+                        />
+                    )}
+                    {taskToDelete && (
+                        <Confirmationmessage
+                            title={`Delete task: ${taskToDelete.title}?`}
+                            text="This action cannot be undone."
+                            buttonText="Delete"
+                            setOpen={(open) => !open && setTaskToDelete(null)}
+                            onConfirm={handleDeleteTask}
                         />
                     )}
                     {/* View Toggle */}
@@ -370,32 +387,37 @@ function Tasks() {
                                     </div>
                                     <div className="flex flex-col gap-1">
                                         {tasksForDay.slice(0, 3).map(task => (
-                                            <div
+                                            <SwipeDeleteItem
                                                 key={task.$id}
-                                                onClick={() => openTaskDetails(task)}
-                                                role="button"
-                                                tabIndex={0}
-                                                className={`text-xs p-1 rounded truncate cursor-pointer ${
-                                                    task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                                    task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                                                    task.status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                    task.status === 'pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                }`}
-                                                title={task.title}
+                                                onSwipeLeft={() => setTaskToDelete(task)}
+                                                className="rounded"
                                             >
-                                                <div className="flex items-center gap-2">
-                                                    <TaskCheckbox
-                                                        checked={task.status === 'completed'}
-                                                        onCheckedChange={(checked) => {
-                                                            void handleQuickComplete(task.$id, checked);
-                                                        }}
-                                                        ariaLabel={`Mark ${task.title} as completed`}
-                                                        className="shrink-0"
-                                                    />
-                                                    <span className="truncate">{task.title}</span>
+                                                <div
+                                                    onClick={() => openTaskDetails(task)}
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    className={`text-xs p-1 rounded truncate cursor-pointer ${
+                                                        task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                                        task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                        task.status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                        task.status === 'pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                                                        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                                    }`}
+                                                    title={task.title}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <TaskCheckbox
+                                                            checked={task.status === 'completed'}
+                                                            onCheckedChange={(checked) => {
+                                                                void handleQuickComplete(task.$id, checked);
+                                                            }}
+                                                            ariaLabel={`Mark ${task.title} as completed`}
+                                                            className="shrink-0"
+                                                        />
+                                                        <span className="truncate">{task.title}</span>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </SwipeDeleteItem>
                                         ))}
                                         {tasksForDay.length > 3 && (
                                             <div className="text-xs text-gray-500 dark:text-gray-400 pl-1">
