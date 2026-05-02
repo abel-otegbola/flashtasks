@@ -32,27 +32,27 @@ function TodoCard(task: TodoCardProps) {
     { border: string; bg: string; text: string }
   > = {
     upcoming: {
-      border: "border-blue-400/20",
+      border: "border-blue-400/30",
       bg: "bg-blue-400/[0.1]",
       text: "text-blue-500",
     },
     "in progress": {
-      border: "border-yellow-400/20",
+      border: "border-yellow-400/30",
       bg: "bg-yellow-400/[0.1]",
       text: "text-yellow-500",
     },
     pending: {
-      border: "border-orange-400/20",
+      border: "border-orange-400/30",
       bg: "bg-orange-400/[0.1]",
       text: "text-orange-500",
     },
     completed: {
-      border: "border-green-400/20",
+      border: "border-green-400/30",
       bg: "bg-green-400/[0.1]",
       text: "text-green-500",
     },
     suspended: {
-      border: "border-red-400/20",
+      border: "border-red-400/30",
       bg: "bg-red-400/[0.1]",
       text: "text-red-500",
     },
