@@ -26,7 +26,7 @@ export default function SignupPage() {
               </div>
 
               <BlurReveal preset="slide-left">
-                <h1 className="font-bold md:text-[28px] text-[16px] text-dark-500">Create Account</h1>
+                <h1 className="font-bold text-[28px] text-dark-500">Create Account</h1>
               </BlurReveal>
               <BlurReveal preset="slide-left">
                 <p className="text-gray text-center">Enter your personal details to create an account</p>
