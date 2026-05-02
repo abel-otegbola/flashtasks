@@ -17,45 +17,37 @@ function Home() {
           <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2]">
             <LogoIcon className="w-[14px]"  />
           </div>
-          <div className="flex flex-col md:text-[48px] text-[28px] max-[400px]:text-[24px] font-semibold md:leading-[60px] leading-[36px]">
+          <div className="relative flex flex-col md:text-[48px] text-[48px] max-[400px]:text-[40px] font-semibold md:leading-[60px] leading-[56px]">
             
             <BlurReveal preset="slide-right"><h1>Get tasks done</h1></BlurReveal>
 
-            <h1 className="flex gap-2 items-center justify-center">
-            <BlurReveal preset="slide-right">Faster and more</BlurReveal>
-              <span className="relative ml-1 underline decoration-[#22FF7E]">
+            <h1 className="">
+            <BlurReveal preset="slide-right" className='inline md:mr-2 mr-1'>Faster and more</BlurReveal>
+              <span className="underline decoration-[#22FF7E]">
                 Efficiently
-                <img src="/arrow.svg" alt="sparkle" width={200} height={64} className="md:block hidden absolute -top-16 -right-24 animate-pulse" />
               </span>
             </h1>
+            <img src="/arrow.svg" alt="sparkle" width={200} height={64} className="md:block hidden absolute -top-16 -right-24 animate-pulse" />
           </div>
           <p className="text-gray dark:text-gray-300 mb-6">
             <BlurReveal preset="slide-right">Efficiently manage your tasks and boost productivity</BlurReveal>
           </p>
-          <div className="flex gap-4 items-center justify-center flex-wrap">
+          <div className="flex gap-4 items-center justify-center flex-wrap w-full">
             <Button href="/auth/signup" className='py-[2px] sm:w-fit w-full'>Get free demo</Button>
             <Button href="/auth/signup" variant='secondary' className='py-[2px] sm:w-fit w-full'>Learn more</Button>
           </div>
 
           <div className='grid sm:grid-cols-3 gap-4 w-3.5xl mt-6'>
-            <div className='flex gap-2 items-center justify-center'>
-              <div className='flex items-center justify-center h-4 w-4 bg-dark/[0.3] rounded-full'>
-                <div className='h-2 w-2 bg-dark rounded-full'></div>
-              </div>
-              <p className='text-gray-500'>Real-time collaboration</p>
-            </div>
-            <div className='flex gap-2 items-center justify-center'>
-              <div className='flex items-center justify-center h-4 w-4 bg-dark/[0.3] rounded-full'>
-                <div className='h-2 w-2 bg-dark rounded-full'></div>
-              </div>
-              <p className='text-gray-500'>Intelligent task automation</p>
-            </div>
-            <div className='flex gap-2 items-center justify-center'>
-              <div className='flex items-center justify-center h-4 w-4 bg-dark/[0.3] rounded-full'>
-                <div className='h-2 w-2 bg-dark rounded-full'></div>
-              </div>
-              <p className='text-gray-500'>Customizable analytics dashboard</p>
-            </div>
+            {
+              ["Real-time collaboration", "Intelligent task automation", "Customizable analytics dashboard"].map((feature) => (
+                <div key={feature} className='flex gap-2 items-center justify-center'>
+                  <div className='flex items-center justify-center h-4 w-4 bg-dark/[0.3] dark:bg-white/[0.1] rounded-full'>
+                    <div className='h-2 w-2 bg-dark dark:bg-white rounded-full'></div>
+                  </div>
+                  <p className='text-gray-500'>{feature}</p>
+                </div>
+              ))
+            }
           </div>
         </div>
         
