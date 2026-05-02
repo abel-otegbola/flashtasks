@@ -43,7 +43,7 @@ function Sidebar() {
     const modalRef = useOutsideClick(setOpen, false)
 
     return (
-        <div ref={modalRef} className={`md:sticky top-0 left-0 h-screen w-0 md:p-4 duration-500 ${open ? "sm:w-[100px]": "sm:w-[280px]"}`}>
+        <div ref={modalRef} className={`md:sticky top-0 left-0 h-screen w-0 md:p-4 duration-500 ${open ? "md:w-[100px]": "md:w-[280px]"}`}>
             <button className={`md:absolute fixed sm:top-10 top-6 md:right-[2px] right-5 flex flex-col justify-center items-center bg-white/[0.7] dark:bg-dark-bg/[0.7] backdrop-blur-md gap-1 w-5 h-8 z-[50] p-[2px] px-[13px] border border-gray-500/[0.2] rounded-full`} onClick={() => setOpen(!open)}>
                 <span className={`w-[7px] h-[1px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "rotate-[45deg] translate-y-[4px]" : "rotate-[0deg]"}`}></span>
                 <span className={`duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "py-[0px] w-[0px] h-[0px] translate-x-[-12px]" : "translate-x-[4px] py-[0.5px] px-[4px] w-[8px] h-[0.5px]"}`}></span>

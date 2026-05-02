@@ -79,8 +79,8 @@ const pricingPlans = [
     <div className="min-h-screen">
 
       {/* Pricing Cards */}
-       <section className="flex flex-col gap-6 bg-white dark:bg-dark-bg md:rounded-[10px] p-6 h-full mb-4">
-            <div className="flex justify-between gap-6 items-start flex-wrap">
+       <section className="flex flex-col gap-6 md:rounded-[10px] h-full md:m-0 mx-4 mb-4">
+            <div className="flex justify-between gap-6 items-start flex-wrap bg-white dark:bg-dark-bg p-4 rounded-lg border border-gray-500/[0.1] dark:border-gray-500/[0.2]">
                 <div className="flex flex-col gap-3">
                 <h1 className="font-medium md:text-[24px] text-[18px] leading-[120%]">
                     Pricing
@@ -89,11 +89,11 @@ const pricingPlans = [
                 </div>
             </div>
 
-            <div className="grid lg:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-5 w-full mt-8">
+            <div className="grid lg:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-5 w-full rounded-lg">
                 {pricingPlans.map((plan) => (
                     <article
                         key={plan.id}
-                        className={`relative rounded-2xl border p-6 flex flex-col gap-5 bg-background ${plan.featured ? 'border-primary shadow-xl shadow-primary/10' : 'border-gray-500/[0.15]'}`}
+                        className={`relative rounded-2xl border bg-white dark:bg-dark-bg p-6 flex flex-col gap-5 bg-background ${plan.featured ? 'border-primary shadow-xl shadow-primary/10' : 'border-gray-500/[0.15]'}`}
                         
                     >
                         <div className="flex items-start justify-between gap-2">

@@ -126,7 +126,7 @@ function Tasks() {
 
     return (
         <>
-        <div className="flex flex-col gap-6 bg-white dark:bg-dark-bg md:rounded-[10px] p-6 h-full mb-4">
+        <div className="flex flex-col gap-6 bg-white dark:bg-dark-bg md:rounded-[10px] p-6 md:m-0 mx-4 h-full mb-4">
             <div className="flex justify-between gap-6 items-start flex-wrap">
                 <div>
                     <h1 className="font-medium md:text-[24px] text-[18px] leading-[120%]">
@@ -230,7 +230,7 @@ function Tasks() {
 
             {/* Kanban View */}
             {viewMode === 'kanban' && (
-                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start p-4 bg-gray-100/[0.2] dark:bg-dark-bg-secondary rounded-lg border border-gray-500/[0.1]">
+                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start md:p-4 bg-gray-100/[0.2] dark:bg-dark-bg-secondary rounded-lg border border-gray-500/[0.1]">
                     {/* Task Statistics */}
                     {sections.map(({ key, title, filter, color }) => (
                         <div
