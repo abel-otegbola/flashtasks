@@ -8,6 +8,7 @@ import { useOrganizations } from '../../context/organizationContext';
 import { useTasks } from "../../context/tasksContext";
 import Confirmationmessage from "../modals/confirmation";
 import EditTaskModal from "../modals/editTaskModal";
+import TaskCheckbox from "../ui/taskCheckbox";
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -23,7 +24,7 @@ function TodoCard(task: TodoCardProps) {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { deleteTask } = useTasks();
+  const { deleteTask, updateTask } = useTasks();
 
   const statusColors: Record<
     string,
@@ -94,11 +95,20 @@ function TodoCard(task: TodoCardProps) {
       >
         <div className="flex flex-col gap-3 p-4">
           <div className="flex justify-between gap-4 items-start">
-            <p
-              className={`p-1 px-3 font-medium rounded-full text-[10px] w-fit ${color.bg} ${color.text}`}
-            >
-              {category}
-            </p>
+            <div className="flex items-center gap-2">
+              <TaskCheckbox
+                checked={status === 'completed'}
+                onCheckedChange={(checked) => {
+                  void updateTask(task.$id, { status: checked ? 'completed' : 'pending' });
+                }}
+                ariaLabel={`Mark ${title} as completed`}
+              />
+              <p
+                className={`p-1 px-3 font-medium rounded-full text-[10px] w-fit ${color.bg} ${color.text}`}
+              >
+                {category}
+              </p>
+            </div>
 
             <div className="relative" ref={menuRef}>
               <button

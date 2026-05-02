@@ -11,6 +11,7 @@ import { useUser } from "../../../context/authContext";
 import CreateTaskModal from "../../../components/modals/createTaskModal";
 import { TaskSkeletonLoader } from "../../../components/skeletons";
 import TaskListView from "../../../components/cards/taskListView";
+import TaskCheckbox from "../../../components/ui/taskCheckbox";
 
 const sections = [
   { key: "todo", title: "Todo", filter: "upcoming", color: "yellow" },
@@ -73,6 +74,10 @@ function Tasks() {
         await updateTask(draggedTaskId, { status: taskStatus });
         setDraggedTaskId(null);
         setDragOverSectionKey(null);
+    };
+
+    const handleQuickComplete = async (taskId: string, checked: boolean) => {
+        await updateTask(taskId, { status: checked ? 'completed' : 'pending' });
     };
     // Calendar helper functions
     const getDaysInMonth = (date: Date) => {
@@ -379,7 +384,17 @@ function Tasks() {
                                                 }`}
                                                 title={task.title}
                                             >
-                                                {task.title}
+                                                <div className="flex items-center gap-2">
+                                                    <TaskCheckbox
+                                                        checked={task.status === 'completed'}
+                                                        onCheckedChange={(checked) => {
+                                                            void handleQuickComplete(task.$id, checked);
+                                                        }}
+                                                        ariaLabel={`Mark ${task.title} as completed`}
+                                                        className="shrink-0"
+                                                    />
+                                                    <span className="truncate">{task.title}</span>
+                                                </div>
                                             </div>
                                         ))}
                                         {tasksForDay.length > 3 && (

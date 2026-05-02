@@ -1,10 +1,14 @@
 import { todo } from '../../interface/todo';
+import { useTasks } from '../../context/tasksContext';
+import TaskCheckbox from './taskCheckbox';
 
 type Props = {
   tasks: todo[];
 };
 
 const TasksList = ({ tasks }: Props) => {
+  const { updateTask } = useTasks();
+
   // Group tasks by due date (fall back to createdAt when no dueDate)
   const grouped = tasks.reduce<Record<string, todo[]>>((acc, t) => {
     const key = t.dueDate ? new Date(t.dueDate).toDateString() : new Date(t.$createdAt).toDateString();
@@ -25,7 +29,12 @@ const TasksList = ({ tasks }: Props) => {
             <div className="space-y-3">
               {dayTasks.map((task, index) => (
                 <div key={task.$id || index} className="flex items-center gap-4 p-3 bg-white dark:bg-[#0f0f0f] rounded-lg border border-gray-100 dark:border-gray-500/[0.2]">
-                  
+                  <TaskCheckbox
+                    checked={task.status === 'completed'}
+                    onCheckedChange={(checked) => void updateTask(task.$id, { status: checked ? 'completed' : 'pending' })}
+                    aria-label={`Mark ${task.title} as completed`}
+                  />
+
                   <div className="w-[2px] h-8 bg-gradient-to-b from-primary rounded-full" />
 
                   <div className="flex-1">
