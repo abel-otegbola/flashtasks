@@ -11,47 +11,38 @@ import { extractTasksFromText } from "../../../helpers/voiceTaskExtractor";
 import { useRealtimeTranscription } from "../../../helpers/audioTranscriber";
 import TaskListView from "../../../components/cards/taskListView";
 import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
+import {
+  mapExtractedToTodo,
+  mapTodoToSavePayload,
+  formatRecordingTime,
+  formatRecordingLimit,
+  getMaxRecordingTime,
+} from "../../../helpers/createTaskHelpers";
 
 function CreateTask() {
-  // finalText  = committed transcript segments joined together
-  // interimText = what the engine is still deciding (shown greyed out)
   const [finalText, setFinalText] = useState("");
   const [interimText, setInterimText] = useState("");
-
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedTasks, setGeneratedTasks] = useState<todo[] | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [isTranscribingFile, setIsTranscribingFile] = useState(false);
 
   const { addMultipleTasks, loading: savingTasks } = useTasks();
   const { user } = useUser();
   const { currentOrg } = useOrganizations();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // ── Recording limits by plan ───────────────────────────────────────────────
   const userRole = ((user as any)?.prefs?.role as string) || "free";
-  const maxRecordingTime =
-    userRole === "enterprise" ? Infinity : userRole === "pro" ? 1800 : 300;
+  const maxRecordingTime = getMaxRecordingTime(userRole);
 
-    
-  const openTaskDetails = (task: todo) => {
-      setSelectedTask(task);
-      setDetailsOpen(true);
-  };
-
-  const closeTaskDetails = () => {
-      setDetailsOpen(false);
-      setSelectedTask(null);
-  };
-
-  // ── Hook ───────────────────────────────────────────────────────────────────
   const handleChunk = useCallback((text: string, isFinal: boolean) => {
     if (isFinal) {
       setFinalText((prev) => (prev ? `${prev} ${text}` : text));
-      setInterimText(""); // clear the in-progress preview
+      setInterimText("");
     } else {
-      setInterimText(text); // overwrite — interim is always the latest guess
+      setInterimText(text);
     }
   }, []);
 
@@ -69,12 +60,9 @@ function CreateTask() {
   });
 
   const isRecording = transcriptionStatus === "recording";
-  const isUploading = transcriptionStatus === "error"; // error state while file processes
-
-  // The full visible text: committed + in-progress
   const displayText = interimText ? `${finalText} ${interimText}`.trim() : finalText;
+  const displayError = taskError || transcriptionError;
 
-  // ── Microphone toggle ──────────────────────────────────────────────────────
   const handleMicToggle = () => {
     if (!isSupported) {
       setTaskError("Speech recognition is not supported in this browser.");
@@ -82,20 +70,15 @@ function CreateTask() {
     }
     if (isRecording) {
       stopRecording();
-    } else {
-      if (recordingTime >= maxRecordingTime) {
-        setTaskError("Recording limit reached. Upgrade your plan for more time.");
-        return;
-      }
-      setTaskError(null);
-      startRecording();
+      return;
     }
+    if (recordingTime >= maxRecordingTime) {
+      setTaskError("Recording limit reached. Upgrade your plan for more time.");
+      return;
+    }
+    setTaskError(null);
+    startRecording();
   };
-
-  // ── File upload ────────────────────────────────────────────────────────────
-  const handleUploadClick = () => fileInputRef.current?.click();
-
-  const [isTranscribingFile, setIsTranscribingFile] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -112,42 +95,25 @@ function CreateTask() {
     }
   };
 
-  // ── Task generation ────────────────────────────────────────────────────────
   const handleGenerateTasks = async () => {
     const textToProcess = finalText.trim();
     if (!textToProcess) {
       setTaskError("Please enter or speak some text first.");
       return;
     }
-
     setIsGenerating(true);
     setTaskError(null);
-
     try {
-      const extractedTasks = extractTasksFromText(textToProcess);
-
-      if (extractedTasks.length === 0) {
+      const extracted = extractTasksFromText(textToProcess);
+      if (extracted.length === 0) {
         setTaskError("This doesn't seem to be a task. Try describing something you need to do!");
         setGeneratedTasks(null);
       } else {
-        const tasks: todo[] = extractedTasks.map((task) => ({
-          $id: task.id,
-          id: task.id,
-          title: task.title,
-          description: task.originalText,
-          comments: "0",
-          category: task.tags?.[0] || "General",
-          userId: user?.$id ?? "",
-          userEmail: user?.email ?? "",
-          status: "pending",
-          priority: task.priority,
-          dueDate: task.date ? task.date.toISOString().split("T")[0] : undefined,
-          $createdAt: new Date().toISOString(),
-          $updatedAt: new Date().toISOString(),
-          organizationId: currentOrg?.$id || undefined,
-        }));
-
-        setGeneratedTasks(tasks);
+        setGeneratedTasks(
+          extracted.map((task) =>
+            mapExtractedToTodo(task, user?.$id ?? "", user?.email ?? "", currentOrg?.$id)
+          )
+        );
       }
     } catch (err) {
       setTaskError(err instanceof Error ? err.message : "Failed to generate tasks.");
@@ -157,25 +123,13 @@ function CreateTask() {
     }
   };
 
-  // ── Save tasks ─────────────────────────────────────────────────────────────
   const handleSaveTasks = async () => {
     if (!generatedTasks?.length) return;
-
     const saved = await addMultipleTasks(
-      generatedTasks.map((task) => ({
-        title: task.title,
-        userId: user?.$id ?? "",
-        userEmail: user?.email ?? "",
-        description: task.description,
-        category: task.category,
-        status: task.status,
-        priority: task.priority,
-        dueDate: task.dueDate,
-        comments: task.comments || "0",
-        organizationId: currentOrg?.$id || undefined,
-      }))
+      generatedTasks.map((task) =>
+        mapTodoToSavePayload(task, user?.$id ?? "", user?.email ?? "", currentOrg?.$id)
+      )
     );
-
     if (saved) {
       setFinalText("");
       setInterimText("");
@@ -183,13 +137,6 @@ function CreateTask() {
     }
   };
 
-  // ── Derived display values ─────────────────────────────────────────────────
-  const displayError = taskError || transcriptionError;
-  const formattedTime = `${Math.floor(recordingTime / 60)}:${String(recordingTime % 60).padStart(2, "0")}`;
-  const formattedLimit =
-    userRole === "enterprise" ? "∞" : `${Math.floor(maxRecordingTime / 60)}:00`;
-
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-6 bg-white dark:bg-dark-bg md:rounded-[10px] md:px-[16.66%] py-[10%] px-6 h-full mb-4">
       <h1 className="font-medium md:text-[40px] text-[20px] bg-gradient-to-r bg-clip-text text-transparent from-black dark:from-white to-primary leading-[120%]">
@@ -202,14 +149,8 @@ function CreateTask() {
         Continue from where you stopped yesterday and add today's tasks
       </p>
 
-      {/* ── Input card ── */}
       <div className="flex flex-col gap-2 p-4 rounded-[10px] border border-border-gray-100/[0.5] shadow-[0px_4px_8px_0px_#80808010] dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50">
         <div className="flex gap-2 w-full">
-          {/*
-           * The textarea shows `displayText` (final + interim combined).
-           * Manual edits only update finalText; interim is wiped on the
-           * next recognition result anyway.
-           */}
           <Formik
             initialValues={{ search: displayText }}
             enableReinitialize
@@ -222,13 +163,11 @@ function CreateTask() {
                   name="search"
                   value={displayText}
                   onChange={(e) => {
-                    // User typed manually → store as final, clear interim
                     setFinalText(e.target.value);
                     setInterimText("");
                   }}
                   className="border-none w-full h-[100px] outline-none bg-transparent dark:text-white dark:placeholder-gray-400 resize-none"
                 />
-                {/* Live interim overlay hint */}
                 {interimText && (
                   <span className="absolute bottom-2 left-0 text-xs text-gray-400 italic pointer-events-none px-1">
                     Listening…
@@ -240,7 +179,6 @@ function CreateTask() {
 
           <div className="flex flex-col flex-wrap gap-2">
             <div className="flex items-center flex-wrap gap-2">
-              {/* Mic button — hidden if browser doesn't support SpeechRecognition */}
               {isSupported && (
                 <button
                   type="button"
@@ -253,12 +191,10 @@ function CreateTask() {
                   }`}
                 >
                   {isRecording ? (
-                    /* Stop square */
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                       <rect x="3" y="3" width="10" height="10" rx="1" />
                     </svg>
                   ) : (
-                    /* Mic */
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M8 1a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zm0 1a2 2 0 0 1 2 2v4a2 2 0 0 1-4 0V4a2 2 0 0 1 2-2z" />
                       <path d="M4.5 8a.5.5 0 0 0-1 0 4.5 4.5 0 0 0 9 0 .5.5 0 0 0-1 0A3.5 3.5 0 0 1 8 11.5 3.5 3.5 0 0 1 4.5 8z" />
@@ -268,10 +204,9 @@ function CreateTask() {
                 </button>
               )}
 
-              {/* File upload */}
               <button
                 type="button"
-                onClick={handleUploadClick}
+                onClick={() => fileInputRef.current?.click()}
                 disabled={isTranscribingFile || isRecording}
                 className={`p-4 rounded-full border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50 text-sm ${
                   isTranscribingFile || isRecording ? "opacity-60 cursor-not-allowed" : ""
@@ -291,10 +226,9 @@ function CreateTask() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex justify-between flex-wrap gap-4 items-end">
           <p className="text-gray-400 text-sm">
-            {formattedTime} / {formattedLimit} mins
+            {formatRecordingTime(recordingTime)} / {formatRecordingLimit(userRole, maxRecordingTime)} mins
             {isRecording && (
               <span className="ml-2 text-red-400 text-xs font-medium">● Recording</span>
             )}
@@ -323,14 +257,12 @@ function CreateTask() {
         </div>
       </div>
 
-      {/* ── Error banner ── */}
       {displayError && (
         <div className="p-4 rounded-lg bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300">
           {displayError}
         </div>
       )}
 
-      {/* ── Generating skeleton ── */}
       {isGenerating && (
         <div className="flex flex-col items-center justify-center gap-4 p-8 rounded-lg border border-border-gray-100 dark:border-gray-700 bg-bg-gray-100 dark:bg-dark-bg-secondary/50">
           <div className="relative">
@@ -344,55 +276,48 @@ function CreateTask() {
         </div>
       )}
 
-      {/* ── Generated tasks list ── */}
       {generatedTasks && generatedTasks.length > 0 && (
-      <div className="flex flex-col bg-white dark:bg-dark-bg border border-gray-500/[0.1] rounded-[10px]">
-        <div className="flex justify-between items-center border-b border-gray-500/[0.1] md:px-6 p-4">
-          <h2 className="font-semibold">Generated Tasks ({generatedTasks.length})</h2>
+        <div className="flex flex-col bg-white dark:bg-dark-bg border border-gray-500/[0.1] rounded-[10px]">
+          <div className="flex justify-between items-center border-b border-gray-500/[0.1] md:px-6 p-4">
+            <h2 className="font-semibold">Generated Tasks ({generatedTasks.length})</h2>
             <Button size="small" onClick={handleSaveTasks} disabled={savingTasks}>
-            {savingTasks ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Saving…
-              </>
-            ) : (
-              "Save All Tasks"
-            )}
-          </Button>
-        </div>
-        <div className="flex flex-col gap-3 border border-gray-500/[0.1] rounded-lg p-4 bg-bg-gray-100/[0.2] dark:bg-dark-bg">
-          {generatedTasks.length === 0 ? (
-              <div className="text-center py-8 text-gray-400 dark:text-gray-500">
-                  No tasks yet. Create your first task!
-              </div>
-          ) : (
-              <div className="flex flex-col gap-2">
-                  {/* List Header - Hidden on mobile */}
-                  <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]">
-                      <div className="col-span-4">Task</div>
-                      <div className="col-span-2">Category</div>
-                      <div className="col-span-2">Status</div>
-                      <div className="col-span-2">Priority</div>
-                      <div className="col-span-2">Due Date</div>
-                  </div>
-                  {generatedTasks.map((task, index) => (
-                    <TaskListView
-                        key={task.$id}
-                        task={task}
-                        openTaskDetails={openTaskDetails}
-                        index={index}
-                    />
-                  ))}
-                  </div>
+              {savingTasks ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                "Save All Tasks"
               )}
+            </Button>
           </div>
-          {/* Task Details Modal (for list/grid/calendar clicks) */}
+
+          <div className="flex flex-col gap-3 border border-gray-500/[0.1] rounded-lg p-4 bg-bg-gray-100/[0.2] dark:bg-dark-bg">
+            <div className="flex flex-col gap-2">
+              <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]">
+                <div className="col-span-4">Task</div>
+                <div className="col-span-2">Category</div>
+                <div className="col-span-2">Status</div>
+                <div className="col-span-2">Priority</div>
+                <div className="col-span-2">Due Date</div>
+              </div>
+              {generatedTasks.map((task, index) => (
+                <TaskListView
+                  key={task.$id}
+                  task={task}
+                  openTaskDetails={(t) => { setSelectedTask(t); setDetailsOpen(true); }}
+                  index={index}
+                />
+              ))}
+            </div>
+          </div>
+
           {selectedTask && (
-              <TaskDetailsModal
-                  isOpen={detailsOpen}
-                  onClose={closeTaskDetails}
-                  task={selectedTask}
-              />
+            <TaskDetailsModal
+              isOpen={detailsOpen}
+              onClose={() => { setDetailsOpen(false); setSelectedTask(null); }}
+              task={selectedTask}
+            />
           )}
         </div>
       )}
