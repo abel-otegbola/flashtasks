@@ -230,7 +230,7 @@ function Tasks() {
 
             {/* Kanban View */}
             {viewMode === 'kanban' && (
-                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start">
+                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start p-4 bg-gray-100/[0.2] dark:bg-dark-bg-secondary rounded-lg border border-gray-500/[0.1]">
                     {/* Task Statistics */}
                     {sections.map(({ key, title, filter, color }) => (
                         <div
@@ -246,7 +246,7 @@ function Tasks() {
                         >
                             <button 
                                 key={key} 
-                                className={`p-4 md:text-center text-start rounded-lg border ${colorClasses[color]} bg-white dark:bg-dark-bg-secondary/50`}
+                                className={`p-4 md:text-center text-start rounded-lg border ${colorClasses[color]} bg-white dark:bg-[#101010]`}
                                 onClick={() => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))}                                
                             >
                                 <p className="text-gray-400 text-xs mb-1">{title}</p>

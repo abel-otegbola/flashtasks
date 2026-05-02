@@ -81,7 +81,7 @@ export default function TagInput({
       ) : null}
 
       <div
-        className={`rounded-lg bg-background w-full border p-2 px-4 duration-300 ${
+        className={`rounded-lg bg-gray-500/[0.04] w-full border p-4 duration-300 ${
           hasError ? 'border-red-500' : 'border-gray-500/[0.3]'
         } ${focus ? 'border-primary shadow-input-active' : ''} ${disabled ? 'opacity-[0.6]' : ''}`}
       >

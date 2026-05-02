@@ -32,38 +32,36 @@ function TodoCard(task: TodoCardProps) {
     { border: string; bg: string; text: string }
   > = {
     upcoming: {
-      border: "border-blue-400/10",
+      border: "border-blue-400/20",
       bg: "bg-blue-400/[0.1]",
       text: "text-blue-500",
     },
     "in progress": {
-      border: "border-yellow-400/10",
+      border: "border-yellow-400/20",
       bg: "bg-yellow-400/[0.1]",
       text: "text-yellow-500",
     },
     pending: {
-      border: "border-orange-400/10",
+      border: "border-orange-400/20",
       bg: "bg-orange-400/[0.1]",
       text: "text-orange-500",
     },
     completed: {
-      border: "border-green-400/10",
+      border: "border-green-400/20",
       bg: "bg-green-400/[0.1]",
       text: "text-green-500",
     },
     suspended: {
-      border: "border-red-400/10",
+      border: "border-red-400/20",
       bg: "bg-red-400/[0.1]",
       text: "text-red-500",
     },
   };
 
   const color = statusColors[status] || statusColors.upcoming;
-  const assigneeList = Array.isArray(task?.assignee)
-    ? task.assignee
-    : typeof task?.assignee === 'string'
-      ? task.assignee.split(',')
-      : [];
+  const assigneeList = Array.isArray(task?.assignees)
+    ? task.assignees
+    : [];
 
   // Close menu if clicked outside
   useEffect(() => {
@@ -79,7 +77,7 @@ function TodoCard(task: TodoCardProps) {
   return (
     <>
       <SwipeDeleteItem
-        className={`relative flex flex-col border-l-4 ${color.border} rounded-[10px] border border-gray-100/10 bg-white dark:bg-[#101010] overflow-hidden transition-all hover:shadow-md cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
+        className={`relative flex flex-col border-t-3 ${color.border} rounded-[10px] border border-gray-100/10 bg-white dark:bg-[#101010] overflow-hidden transition-all hover:shadow-md cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
         onSwipeLeft={() => setShowDeleteConfirmation(true)}
       >
       <div
@@ -164,8 +162,8 @@ function TodoCard(task: TodoCardProps) {
                   const team = (org.teams || []).find((t: any) => t.$id === (task as any).teamId);
                   return (
                     <>
-                      <span className="text-[11px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700">{org.name}</span>
-                      {team && <span className="text-[11px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700">{team.name}</span>}
+                      <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700/30">{org.name}</span>
+                      {team && <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700/30">{team.name}</span>}
                     </>
                   )
                 }

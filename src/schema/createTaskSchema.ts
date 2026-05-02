@@ -8,7 +8,6 @@ export const createTaskSchema = Yup.object({
     dueDate: Yup.string().required('Due date is required'),
     priority: Yup.string().required('Priority is required').oneOf(['low', 'medium', 'high']),
     invites: Yup.string(),
-    assignee: Yup.string() || Yup.array().of(Yup.string()),
     organizationId: Yup.string(),
     teamId: Yup.string(),
     comments: Yup.string(),

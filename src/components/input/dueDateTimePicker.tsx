@@ -113,8 +113,8 @@ export default function DueDateTimePicker({
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        className={`mt-2 flex w-full items-center justify-between gap-3 rounded-[6px] border p-2 duration-500 bg-white dark:bg-[#000] dark:text-gray outline-none ${
-          error ? 'border-red-500 text-red-500' : 'border-gray-500/[0.2] dark:border-gray-500/[0.4]'
+        className={`mt-2 flex w-full items-center justify-between gap-3 rounded-[6px] border p-4 duration-500 bg-gray-500/[0.04] dark:text-gray outline-none ${
+          error ? 'border-red-500 text-red-500' : 'border-gray-500/[0.2]'
         }`}
       >
         <span className="flex items-center gap-2">
@@ -128,9 +128,9 @@ export default function DueDateTimePicker({
         <div className="z-[60] p-4 fixed sm:right-[32%] right-0 bottom-20">
           <div
             ref={popupRef}
-            className="w-full max-w-md rounded-2xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg-secondary shadow-xl"
+            className="w-full max-w-md rounded-2xl border border-gray-500/[0.2] bg-white dark:bg-dark-bg-secondary shadow-xl"
           >
-            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 p-4">
+            <div className="flex items-center justify-between border-b border-gray-500/[0.2] p-4">
               <div>
                 <p className="text-sm font-medium">{label}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Pick a date and time</p>

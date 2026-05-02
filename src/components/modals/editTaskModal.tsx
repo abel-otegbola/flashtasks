@@ -43,8 +43,8 @@ export default function EditTaskModal({
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-end z-50">
-      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-full max-w-xl h-screen">
-        <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-200 dark:border-gray-700 z-[2] p-4 flex items-center justify-between">
+      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-full max-w-xl h-screen border-l border-gray-500/[0.2] shadow-lg">
+        <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-500/[0.2] z-[2] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
               <XIcon size={16} />
@@ -53,11 +53,11 @@ export default function EditTaskModal({
           </div>
         </div>
         <Formik
-          initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignee: task?.assignee || '', invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: toDateTimeLocalValue(task?.dueDate), comments: task?.comments || '' }}
+          initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignees: task?.assignees || [], invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: toDateTimeLocalValue(task?.dueDate), comments: task?.comments || '' }}
           validationSchema={createTaskSchema}
           enableReinitialize
             onSubmit={async (values, { setSubmitting }) => {
-              await updateTask(task?.$id || "", {...values, userEmail: user?.email || '', userId: user?._id?.toString() || '', invites: values.invites.split(","), assignee: values.assignee.toString(), status: values.status as todo["status"], priority: values.priority as todo["priority"]});
+              await updateTask(task?.$id || "", {...values, userEmail: user?.email || '', userId: user?._id?.toString() || '', invites: values.invites.split(","), assignees: values.assignees, status: values.status as todo["status"], priority: values.priority as todo["priority"]});
               onClose();
               setSubmitting(false);
             }}
@@ -72,7 +72,7 @@ export default function EditTaskModal({
 
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Description</label>
-                            <textarea value={values.description} name='description' onChange={handleChange} className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none" />
+                            <textarea value={values.description} name='description' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none" />
                             {touched.description && errors.description && <div className="text-red-500 text-sm">{errors.description}</div>}
                         </div>
                         
@@ -83,7 +83,7 @@ export default function EditTaskModal({
                         
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Status <span className="text-red-500">*</span></label>
-                            <select value={values.status} name='status' onChange={handleChange} className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none">
+                            <select value={values.status} name='status' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none">
                                 <option value="upcoming">Upcoming</option>
                                 <option value="in progress">In Progress</option>
                                 <option value="completed">Completed</option>
@@ -101,7 +101,7 @@ export default function EditTaskModal({
 
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Priority <span className="text-red-500">*</span></label>
-                            <select value={values.priority} name='priority' onChange={handleChange} className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none">
+                            <select value={values.priority} name='priority' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none">
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
                                 <option value="high">High</option>
@@ -115,7 +115,7 @@ export default function EditTaskModal({
                          
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Add to an organization</label>
-                            <select value={values.organizationId} name='organizationId' onChange={handleChange} className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none">
+                            <select value={values.organizationId} name='organizationId' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none">
                                 <option value="">Select an organization</option>
                                 {organizations.map((org: any) => (
                                     <option key={org.$id} value={org.$id}>{org.name}</option>
@@ -125,8 +125,8 @@ export default function EditTaskModal({
 
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Assignees</label>
-                            <TagInput tags={values.assignee} onChange={(e) => setFieldValue('assignee', e.toString())} placeholder="Assign the task to members" />
-                            <select onChange={(e) => setFieldValue('assignee', (values.assignee.split(",")).includes(e.target.value) ? values.assignee : `${values.assignee},${e.target.value}`)} className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none">
+                            <TagInput tags={values.assignees} onChange={(e) => setFieldValue('assignees', e)} placeholder="Assign the task to members" />
+                            <select onChange={(e) => setFieldValue('assignees', (values.assignees).includes(e.target.value) ? values.assignees : [...values.assignees, e.target.value])} className="w-full p-2 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none">
                               <option value="">Select a member</option>
                               {
                                 (
@@ -141,9 +141,9 @@ export default function EditTaskModal({
 
                     </div>
 
-                    <div className="sticky bottom-0 bg-white dark:bg-[#0b0b0b] border-t border-gray-200 dark:border-gray-700 p-6 flex justify-end gap-3">
+                    <div className="sticky bottom-0 bg-white dark:bg-[#0b0b0b] border-t border-gray-500/[0.2] p-6 flex justify-end gap-3">
                         <Button variant='secondary' onClick={onClose}>Close</Button>
-                        <Button type='submit' onClick={() => console.log(errors, values)} disabled={loading}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
+                        <Button type='submit' disabled={loading}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
                     </div>
                 </form>
             )}

@@ -7,7 +7,7 @@ export interface todo {
   category: string;
   userId: string;
   userEmail: string;
-  assignee?: string;
+  assignees?: string[];
   invites?: string[];
   organizationId?: string;
   teamId?: string;

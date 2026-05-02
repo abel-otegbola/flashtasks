@@ -54,14 +54,14 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-end z-50">
-      <div className="bg-white dark:bg-[#101010] shadow-xl w-full max-w-xl max-[500px]:w-full h-screen overflow-y-auto">
+      <div className="bg-white dark:bg-[#101010] shadow-xl w-full max-w-xl max-[500px]:w-full h-screen border-l border-gray-500/[0.3] shadow-lg overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-[#101010] border-b border-gray-500/[0.1] dark:border-gray-700 p-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white dark:bg-[#101010] border-b border-gray-500/[0.2] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
               <XIcon size={16} />
             </button>
-            <h2 className="px-4 border-l border-gray-500/[0.1] opacity-[0.7] leading-4">Created on {new Date(task.$createdAt).toLocaleDateString()}</h2>
+            <h2 className="px-4 border-l border-gray-500/[0.2] bg-gray-500/[0.04] opacity-[0.7] leading-4">Created on {new Date(task.$createdAt).toLocaleDateString()}</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -93,11 +93,11 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             <label className="text-sm font-semibold mb-3 flex items-center gap-2">
               Description
             </label>
-            <p className="p-3 rounded-lg text-sm border border-gray-500/[0.1] whitespace-pre-wrap">{task.description || 'No description provided'}</p>
+            <p className="p-3 rounded-lg text-sm border border-gray-500/[0.2] bg-gray-500/[0.04] whitespace-pre-wrap">{task.description || 'No description provided'}</p>
           </div>
 
           {/* Task Details Grid */}
-          <div className="p-3 rounded-lg border border-gray-500/[0.1]">
+          <div className="p-3 rounded-lg border border-gray-500/[0.2] bg-gray-500/[0.04]">
             <div className="grid grid-cols-3 gap-4">
               {/* Category */}
                 <label className="text-sm font-semibold py-1 flex items-center gap-2">
@@ -144,12 +144,12 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             </label>
             <div>
               {taskOrg ? (
-                <div className="flex items-center gap-2 p-3 rounded-lg text-sm border border-gray-500/[0.1]">
+                <div className="flex items-center gap-2 p-3 rounded-lg text-sm border border-gray-500/[0.2] bg-gray-500/[0.04]">
                   <span className="text-sm font-medium">{taskOrg.name}</span>
                   {taskTeam && <span className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">{taskTeam.name}</span>}
                 </div>
               ) : (
-                <div className="p-3 rounded-lg text-sm border border-gray-500/[0.1] mt-2">Personal / No organization</div>
+                <div className="p-3 rounded-lg text-sm border border-gray-500/[0.2] bg-gray-500/[0.04] mt-2">Personal / No organization</div>
               )}
             </div>
           </div>
@@ -163,19 +163,19 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             {/* Assignees List */}
             <div className="space-y-2 ">
               {/* Main Assignee */}
-              {task.assignee && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-dark-bg border border-border-gray-100 dark:border-gray-700">
+              {task.assignees && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-dark-bg border border-gray-500/[0.2] bg-gray-500/[0.04]">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-fuchsia-400 flex items-center justify-center text-white font-bold text-sm">
-                    {task?.assignee}
+                    {task?.assignees[0]?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{task.assignee}</p>
+                    <p className="text-sm font-medium">{task?.assignees[0]}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Main Assignee</p>
                   </div>
                 </div>
               )}
 
-              {!task.assignee && (!task.invites || task.invites.length === 0) && (
+              {!task.assignees && (!task.invites || task.invites.length === 0) && (
                 <p className="text-gray-500 dark:text-gray-400 text-sm italic">No assignees yet</p>
               )}
             </div>
@@ -186,7 +186,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             <label className="text-sm font-semibold mb-3 flex items-center gap-2">
               Comments
             </label>
-            <p className="p-3 rounded-lg text-sm border border-gray-500/[0.1]">{task.comments || 0} comments</p>
+            <p className="p-3 rounded-lg text-sm border border-gray-500/[0.2] bg-gray-500/[0.04]">{task.comments || 0} comments</p>
           </div>
         </div>
 
