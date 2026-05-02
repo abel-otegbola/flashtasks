@@ -1,31 +1,33 @@
 import { todo } from "../../interface/todo"
 import { useTasks } from "../../context/tasksContext"
 import TaskCheckbox from "../ui/taskCheckbox"
-import SwipeDeleteItem from "../ui/swipeDeleteItem"
-import Confirmationmessage from "../modals/confirmation"
-import { useState } from "react"
+import SwipeDeleteItem from "../ui/swipeDeleteItem";
+import Confirmationmessage from "../modals/confirmation";
+import { useState } from "react";
 
 export default function TaskListView({ task, openTaskDetails, index }: { task: todo, openTaskDetails: (task: todo) => void , index: number}) {
-    const { updateTask } = useTasks();
-    const { deleteTask } = useTasks();
-    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const { updateTask, deleteTask } = useTasks();
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
     const handleToggleComplete = async (checked: boolean) => {
         await updateTask(task.$id, { status: checked ? 'completed' : 'pending' });
     };
 
-    const handleDelete = async () => {
-        await deleteTask(task.$id);
-        setShowDeleteConfirmation(false);
-    };
-
   return (
     <>
-    <SwipeDeleteItem
-      className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark'}`}
-      onSwipeLeft={() => setShowDeleteConfirmation(true)}
+    {showDeleteConfirm && (
+        <Confirmationmessage
+            title={`Delete task: ${task.title}?`}
+            text="This action cannot be undone."
+            buttonText="Delete"
+            setOpen={(open) => !open && setShowDeleteConfirm(false)}
+            onConfirm={() => deleteTask(task.$id)}
+        />
+    )}
+    <SwipeDeleteItem onSwipeLeft={() => setShowDeleteConfirm(true)}>
+    <div className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark'}`}
+        
     >
-    <div>
         <div className="flex items-start md:items-center p-4 pr-0 md:col-span-1">
             <TaskCheckbox
                 checked={task.status === 'completed'}
@@ -80,17 +82,8 @@ export default function TaskListView({ task, openTaskDetails, index }: { task: t
         </div>
     
     </div>
-        </SwipeDeleteItem>
-
-        {showDeleteConfirmation && (
-            <Confirmationmessage
-                title={`Delete task: ${task.title}?`}
-                text="This action cannot be undone."
-                buttonText="Delete"
-                setOpen={setShowDeleteConfirmation}
-                onConfirm={handleDelete}
-            />
-        )}
-        </>
-        )
+    </SwipeDeleteItem>
+    
+    </>
+    )
 }
