@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import ThemeSelector from "../themeSelector/themeSelector";
 import SearchBar from "../search/searchBar";
 import { useUser } from "../../context/authContext";
+import BlurReveal from "../animations/blurReveal";
 
 function Topbar() {
     const pathname = useLocation().pathname;
@@ -60,15 +61,15 @@ function Topbar() {
 
     return (
         <>
-        <div className={`flex justify-between items-center w-full md:px-[8%] px-4 py-3 z-[3] sticky top-0 bg-white dark:bg-[#101010] backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'border-b border-gray-500/[0.1]' : ''}`}>
-            <Link to={"/"} className="md:w-[19%] text-start flex gap-2 items-center">
+        <div className={`flex justify-between items-center w-full md:px-[6%] px-4 py-3 z-[3] sticky top-0 bg-white dark:bg-[#101010] backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'border-b border-gray-500/[0.1]' : ''}`}>
+            <Link to={"/"} className="md:w-[25%] text-start flex gap-2 items-center">
                 <LogoIcon className="w-[14px]"  />
-                <h3 className="text-lg font-semibold">Flashtasks</h3>
+                <BlurReveal preset="slide-right" duration={3}><h3 className="text-lg font-semibold">Flashtasks</h3></BlurReveal>
             </Link>
             
             <ul className={`
-                md:static fixed top-0 right-0 z-20 flex md:flex-row flex-col md:px-0 md:py-0 py-12 px-6 bg-white dark:bg-[#101010] md:w-auto md:h-full h-screen w-full overflow-hidden
-                ${open ? "translate-y-[0px] w-full" : "md:translate-y-[0] -translate-y-[120%] md:w-auto w-0"} duration-500
+                lg:static fixed top-0 right-0 z-20 flex lg:flex-row flex-col lg:px-0 md:py-0 py-12 px-6 bg-white dark:bg-[#101010] lg:w-auto md:h-full h-screen w-full overflow-hidden
+                ${open ? "translate-y-[0px] w-full" : "lg:translate-y-[0] -translate-y-[120%] lg:w-auto w-0"} duration-500
             `}>
                 {
                     [
@@ -80,7 +81,7 @@ function Topbar() {
                             <Link
                                 key={link.id}
                                 to={link.href} 
-                                className={`font-semibold md:py-4 mx-6 py-6 md:border-none border-b border-gray-500/[0.2] duration-300 ${activeSection === link.href ? 'text-primary' : 'text-[#939395]'} hover:text-primary dark:hover:text-primary`}
+                                className={`font-semibold lg:py-4 mx-6 py-6 lg:border-none border-b border-gray-500/[0.2] duration-300 ${activeSection === link.href ? 'text-primary' : 'text-[#939395]'} hover:text-primary dark:hover:text-primary`}
                                 onClick={(e) => {
                                     e.preventDefault();
                                     const element = document.querySelector(link.href);
@@ -90,7 +91,7 @@ function Topbar() {
                                     }
                                 }}
                             >
-                                <span>{link.title}</span> 
+                                <BlurReveal preset="slide-right" duration={3}><span>{link.title}</span></BlurReveal>
                             </Link>
                     ))
                 }
@@ -100,12 +101,12 @@ function Topbar() {
             </ul>
 
             {/* Right actions + search */}
-            <div className="flex items-center justify-end gap-6 md:w-[19%] w-auto">
-                <div className="md:flex hidden gap-4">
+            <div className="flex items-center justify-end gap-6 lg:w-[25%] w-auto">
+                <div className="lg:flex hidden gap-4">
                     <ThemeSelector />
                     <AuthCTA />
                 </div>
-                <button className="flex flex-col justify-center items-center gap-1 text-lg w-10 h-10 md:hidden z-[50]" onClick={() => setOpen(!open)}>
+                <button className="flex flex-col justify-center items-center gap-1 text-lg w-10 h-10 lg:hidden z-[50]" onClick={() => setOpen(!open)}>
                     <span className={`w-[8px] h-[3px] py-[1px] px-[10px] duration-500 transition-all dark:bg-white bg-dark rounded-[2px] ${open ? "rotate-[45deg] translate-y-[5px]" : "rotate-[0deg]"}`}></span>
                     <span className={`duration-500 transition-all dark:bg-white bg-dark rounded-[2px] ${open ? "py-[0px] w-[0px] h-[0px] translate-x-[-12px]" : "translate-x-[4px] py-[1px] px-[4px] w-[8px] h-[3px]"}`}></span>
                     <span className={`w-[8px] h-[3px] py-[1px] px-[10px] duration-500 transition-all dark:bg-white bg-dark rounded-[2px] ${open ? "rotate-[-45deg] translate-y-[-5px]" : "rotate-[0deg]"}`}></span>
