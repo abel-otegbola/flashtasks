@@ -4,6 +4,7 @@ import TaskCheckbox from "../ui/taskCheckbox"
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
 import Confirmationmessage from "../modals/confirmation";
 import { useState } from "react";
+import { formatDeliveredTime } from "../../helpers/messageTime";
 
 export default function TaskListView({ task, openTaskDetails, index }: { task: todo, openTaskDetails: (task: todo) => void , index: number}) {
     const { updateTask, deleteTask } = useTasks();
@@ -77,7 +78,7 @@ export default function TaskListView({ task, openTaskDetails, index }: { task: t
                 </span>
             </div>
             <div className="md:col-span-2 flex items-center text-xs text-gray-500 dark:text-gray-400 md:order-none order-1">
-                {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}
+                {task.dueDate ? formatDeliveredTime(task.dueDate) : 'No date'}
             </div>
         </div>
     

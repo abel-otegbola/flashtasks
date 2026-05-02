@@ -11,6 +11,7 @@ import LoadingIcon from "../../assets/icons/loading";
 import { useTasks } from "../../context/tasksContext";
 import { Organization } from "../../interface/organization";
 import { createTaskSchema } from '../../schema/createTaskSchema';
+import DueDateTimePicker from "../input/dueDateTimePicker";
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -31,6 +32,12 @@ export default function CreateTaskModal({
   const { addTask, loading } = useTasks();
   const { user } = useUser();
 
+  const getLocalDateTimeValue = () => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - offset).toISOString().slice(0, 16);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -45,7 +52,7 @@ export default function CreateTaskModal({
           </div>
         </div>
         <Formik
-          initialValues={{ title: '', description: '', category: '', assignee: '', invites: '', organizationId: '', teamId: '', status: 'upcoming', priority: 'medium', dueDate: '', comments: '' }}
+          initialValues={{ title: '', description: '', category: '', assignee: '', invites: '', organizationId: '', teamId: '', status: 'upcoming', priority: 'medium', dueDate: getLocalDateTimeValue(), comments: '' }}
           validationSchema={createTaskSchema}
             onSubmit={async (values, { setSubmitting }) => {
               await addTask({...values, userEmail: user?.email || '', userId: user?._id?.toString() || '', invites: values.invites.split(","), assignee: values.assignee, status: values.status as todo["status"], priority: values.priority as todo["priority"]});
@@ -81,10 +88,12 @@ export default function CreateTaskModal({
                             </select>
                         </div>
                         
-                        <div className='flex flex-col gap-2'>
-                            <label className="text-sm font-medium">Due Date <span className="text-red-500">*</span></label>
-                            <Input type="date" value={values.dueDate} name='dueDate' onChange={handleChange} />
-                        </div>
+                        <DueDateTimePicker
+                          value={values.dueDate}
+                          onChange={(nextValue) => setFieldValue('dueDate', nextValue)}
+                          required
+                          error={touched.dueDate ? errors.dueDate : ''}
+                        />
 
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Priority <span className="text-red-500">*</span></label>

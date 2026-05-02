@@ -11,6 +11,7 @@ import LoadingIcon from "../../assets/icons/loading";
 import { useTasks } from "../../context/tasksContext";
 import { Organization } from "../../interface/organization";
 import { createTaskSchema } from '../../schema/createTaskSchema';
+import DueDateTimePicker from "../input/dueDateTimePicker";
 
 interface EditTaskModalProps {
   isOpen: boolean;
@@ -28,6 +29,16 @@ export default function EditTaskModal({
   const { updateTask, loading } = useTasks();
   const { user } = useUser();
 
+  const toDateTimeLocalValue = (value?: string) => {
+    if (!value) return '';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -38,15 +49,15 @@ export default function EditTaskModal({
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
               <XIcon size={16} />
             </button>
-            <h2 className="px-4 border-l border-gray-500/[0.1] opacity-[0.7] leading-4">Create New Task</h2>
+            <h2 className="px-4 border-l border-gray-500/[0.1] opacity-[0.7] leading-4">Update Current Task</h2>
           </div>
         </div>
         <Formik
-          initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignee: task?.assignee || '', invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: task?.dueDate || '', comments: task?.comments || '' }}
+          initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignee: task?.assignee || '', invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: toDateTimeLocalValue(task?.dueDate), comments: task?.comments || '' }}
           validationSchema={createTaskSchema}
           enableReinitialize
             onSubmit={async (values, { setSubmitting }) => {
-              await updateTask(task?.$id || "", {...values, userEmail: user?.email || '', userId: user?._id?.toString() || '', invites: values.invites.split(","), assignee: values.assignee, status: values.status as todo["status"], priority: values.priority as todo["priority"]});
+              await updateTask(task?.$id || "", {...values, userEmail: user?.email || '', userId: user?._id?.toString() || '', invites: values.invites.split(","), assignee: values.assignee.toString(), status: values.status as todo["status"], priority: values.priority as todo["priority"]});
               onClose();
               setSubmitting(false);
             }}
@@ -76,13 +87,17 @@ export default function EditTaskModal({
                                 <option value="upcoming">Upcoming</option>
                                 <option value="in progress">In Progress</option>
                                 <option value="completed">Completed</option>
+                                <option value="suspended">Suspended</option>
+                                <option value="pending">Pending</option>
                             </select>
                         </div>
                         
-                        <div className='flex flex-col gap-2'>
-                            <label className="text-sm font-medium">Due Date <span className="text-red-500">*</span></label>
-                            <Input type="date" value={values.dueDate} name='dueDate' onChange={handleChange} />
-                        </div>
+                        <DueDateTimePicker
+                          value={values.dueDate}
+                          onChange={(nextValue) => setFieldValue('dueDate', nextValue)}
+                          required
+                          error={touched.dueDate ? errors.dueDate : ''}
+                        />
 
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Priority <span className="text-red-500">*</span></label>
@@ -128,7 +143,7 @@ export default function EditTaskModal({
 
                     <div className="sticky bottom-0 bg-white dark:bg-[#0b0b0b] border-t border-gray-200 dark:border-gray-700 p-6 flex justify-end gap-3">
                         <Button variant='secondary' onClick={onClose}>Close</Button>
-                        <Button type='submit' disabled={loading}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Create Task'}</Button>
+                        <Button type='submit' onClick={() => console.log(errors, values)} disabled={loading}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
                     </div>
                 </form>
             )}
