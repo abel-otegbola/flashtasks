@@ -230,7 +230,7 @@ function Tasks() {
 
             {/* Kanban View */}
             {viewMode === 'kanban' && (
-                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start md:p-4 bg-gray-100/[0.2] dark:bg-dark-bg-secondary rounded-lg border border-gray-500/[0.1]">
+                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start md:p-4 bg-gray-100/[0.2] dark:bg-dark-bg-secondary rounded-lg md:border border-gray-500/[0.1]">
                     {/* Task Statistics */}
                     {sections.map(({ key, title, filter, color }) => (
                         <div
