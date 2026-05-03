@@ -38,25 +38,35 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   // load organizations for current user on mount or when user changes
   useEffect(() => {
     const load = async () => {
-      if (!user) return;
+      if (!user?.email) {
+        setOrganizations([]);
+        setCurrentOrg(null);
+        return;
+      }
       try {
         const res = await databases.listDocuments(
           DATABASE_ID,
           ORG_COLLECTION_ID,
           [
               Query.select(["*", "teams.*", "members.*"]),
-              Query.equal('ownerEmail', user?.email) || Query.equal('members.email', user?.email),
+              Query.limit(100),
           ]
         );
+
+        const organizationsForUser = (res.documents || []).filter((org: any) => {
+          if (org.ownerEmail === user.email) return true;
+
+          return Array.isArray(org.members) && org.members.some((member: any) => member?.email === user.email);
+        });
         
-        if (!res.documents) {
+        if (!organizationsForUser.length) {
           setOrganizations([]);
           setCurrentOrg(null);
           return;
         }
         else {
-          setOrganizations(res.documents as unknown as Organization[]);
-          setCurrentOrg(res.documents[0] as unknown as Organization);
+          setOrganizations(organizationsForUser as unknown as Organization[]);
+          setCurrentOrg(organizationsForUser[0] as unknown as Organization);
         }
       } catch (err) {
         console.error('Error loading organizations', err);

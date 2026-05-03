@@ -44,7 +44,7 @@ function AccountPages() {
                 <LogoIcon className="md:hidden w-[12px] ml-2"/>
 
                 <div className="flex gap-6 items-center">
-                    <Button href="/account/tasks/new" size="small"><AddCircle /> Create</Button>
+                    <Button href="/account/tasks/new" size="small"><AddCircle /> Voice to tasks</Button>
                     <button className="relative p-2">
                         <Bell size={16}/> 
                         <span className="absolute top-1 right-3 p-[2px] w-[2px] h-[2px] rounded-lg bg-red-500"></span>

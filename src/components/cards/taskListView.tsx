@@ -78,7 +78,7 @@ export default function TaskListView({ task, openTaskDetails, index }: { task: t
                 </span>
             </div>
             <div className="md:col-span-2 flex items-center text-xs text-gray-500 dark:text-gray-400 md:order-none order-1">
-                {task.dueDate ? formatDeliveredTime(task.dueDate) : 'No date'}
+                {task.dueDate ? formatDeliveredTime(task.dueDate, undefined, 'future') : 'No date'}
             </div>
         </div>
     

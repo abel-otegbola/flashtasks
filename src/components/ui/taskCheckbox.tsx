@@ -32,7 +32,7 @@ function TaskCheckbox({
       {checked ? (
         <CheckCircleIcon size={20}  className="text-green-500" aria-hidden="true" />
       ) : (
-        <span className="h-4 w-4 rounded-full border border-gray-500/[0.3] bg-transparent transition-colors duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-green-400 peer-focus-visible:ring-offset-2" />
+        <span className="h-5 w-5 rounded-full border border-gray-500/[0.3] bg-transparent transition-colors duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-green-400 peer-focus-visible:ring-offset-2" />
       )}
     </label>
   );

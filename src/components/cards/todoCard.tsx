@@ -10,6 +10,7 @@ import Confirmationmessage from "../modals/confirmation";
 import EditTaskModal from "../modals/editTaskModal";
 import TaskCheckbox from "../ui/taskCheckbox";
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
+import { formatDeliveredTime } from "../../helpers/messageTime";
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -154,7 +155,7 @@ function TodoCard(task: TodoCardProps) {
           <h2 className="font-semibold text-[12px]">{title}</h2>
           <p className="text-[10px] text-gray-400 line-clamp-2">{description}</p>
           {/* Organization / Team display */}
-          <div className="mt-2 flex gap-2 items-center">
+          <div className="mt-2 flex gap-2 items-center justify-between flex-wrap">
             {/* find org/team names */}
             {(() => {
               try {
@@ -163,21 +164,22 @@ function TodoCard(task: TodoCardProps) {
                   const team = (org.teams || []).find((t: any) => t.$id === (task as any).teamId);
                   return (
                     <>
-                      <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700/30">{org.name}</span>
-                      {team && <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700/30">{team.name}</span>}
+                      <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-[#202020]">{org.name}</span>
+                      {team && <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-[#202020]">{team.name}</span>}
                     </>
                   )
                 }
                 return null;
               } catch { return null }
             })()}
+            <p className="text-xs">Due: {task.dueDate ? formatDeliveredTime(task.dueDate, undefined, 'future') : 'No date'}</p>
           </div>
         </div>
 
         <div className="flex justify-between gap-4 flex-wrap p-2 px-4 border-t border-gray-100 dark:border-gray-500/[0.2]">
           <div className="flex ml-2">
             {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => (
-              <span key={index} className="border-2 border-white -ml-2 flex items-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-500/[0.2] dark:border-[#151515] flex items-center justify-center text-[10px]">
+              <span key={index} className="border-2 border-white -ml-2 flex items-center w-8 h-8 rounded-full bg-gray-100 dark:bg-[#202020] dark:border-[#151515] flex items-center justify-center text-[10px]">
                 {String(initial).trim().charAt(0).toUpperCase()}
               </span>
             ))}

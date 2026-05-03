@@ -64,7 +64,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
 
     // Add a single task
     const addTask = async (task: Omit<todo, '$id' | 'id' | '$createdAt'>): Promise<todo | null> => {
-        setLoading(true);
         setError(null);
         
         try {            
@@ -95,7 +94,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             
             const newTask = response as unknown as todo;
             setTasks(prev => [newTask, ...prev]);
-            toast.success('Task created successfully!');
 
             // Index the task in Elasticsearch via backend endpoint
             await indexTask('create', newTask);
@@ -104,16 +102,13 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             const errorMessage = err instanceof Error ? err.message : 'Failed to create task';
             setError(errorMessage);
             toast.error(errorMessage);
-            console.error('Error creating task:', err);
             return null;
         } finally {
-            setLoading(false);
         }
     };
 
     // Add multiple tasks at once
     const addMultipleTasks = async (tasksToAdd: Omit<todo, '$id' | 'id' | '$createdAt'>[]): Promise<todo[] | null> => {
-        setLoading(true);
         setError(null);
         
         try {            
@@ -147,8 +142,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                 );
                 
                 createdTasks.push(response as unknown as todo);
-                                                // index each created task
-                                                await indexTask('create', response);
+                await indexTask('create', response);
             }
             
             setTasks(prev => [...createdTasks, ...prev]);
@@ -158,10 +152,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             const errorMessage = err instanceof Error ? err.message : 'Failed to create tasks';
             setError(errorMessage);
             toast.error(errorMessage);
-            console.error('Error creating tasks:', err);
             return null;
         } finally {
-            setLoading(false);
         }
     };
 
@@ -182,7 +174,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             
             const updatedTask = response as unknown as todo;
             setTasks(prev => prev.map(task => task.$id === taskId ? updatedTask : task));
-            toast.success('Task updated successfully!');
 
             // update index
             await indexTask('update', updatedTask);
@@ -191,16 +182,13 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             const errorMessage = err instanceof Error ? err.message : 'Failed to update task';
             setError(errorMessage);
             toast.error(errorMessage);
-            console.error('Error updating task:', err);
             return null;
         } finally {
-            setLoading(false);
         }
     };
 
     // Delete a task
     const deleteTask = async (taskId: string): Promise<boolean> => {
-        setLoading(true);
         setError(null);
         
         try {
@@ -211,25 +199,21 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             );
 
             setTasks(prev => prev.filter(task => task.$id !== taskId));
-            toast.success('Task deleted successfully!');
 
-                                    // delete from index
-                                    await indexTask('delete', taskId);
+            // delete from index
+            await indexTask('delete', taskId);
             return true;
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to delete task';
             setError(errorMessage);
             toast.error(errorMessage);
-            console.error('Error deleting task:', err);
             return false;
         } finally {
-            setLoading(false);
         }
     };
 
     // Move all pending tasks to today by updating their dueDate
     const movePendingToToday = async (): Promise<number> => {
-        setLoading(true);
         setError(null);
         try {
             const today = new Date().toISOString().split('T')[0];
@@ -267,10 +251,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             const errorMessage = err instanceof Error ? err.message : 'Failed to move pending tasks';
             setError(errorMessage);
             toast.error(errorMessage);
-            console.error('Error moving pending tasks:', err);
             return 0;
         } finally {
-            setLoading(false);
         }
     };
 

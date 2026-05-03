@@ -14,11 +14,13 @@
  * Pipeline
  * ────────
  *  raw transcript
- *       ↓ normalise()        — lowercase, strip fillers, fix punctuation
- *       ↓ segment()          — split into individual task candidates
- *       ↓ parseCandidate()   — extract verb · date · people · priority · tags
- *       ↓ buildTitle()       — clean imperative title from candidate
- *       ↓ scoreConfidence()  — 0–1 confidence; low scores are discarded
+ *       ↓ normalise()           — lowercase, strip fillers, fix punctuation
+ *       ↓ segment()             — split into individual task candidates
+ *       ↓ parseCandidate()      — extract verb · date · people · priority · tags
+ *       ↓ buildTitle()          — clean imperative title from candidate
+ *       ↓ buildDescription()    — separate human-readable summary (never = title)
+ *       ↓ scoreConfidence()     — 0–1 confidence; low scores are discarded
+ *       ↓ spreadTasksOverWindow()— distribute undated tasks across deadline window
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,6 +32,7 @@ export type Priority = "low" | "medium" | "high";
 export interface ExtractedTask {
   id: string;
   title: string;
+  description: string;   // human-readable expansion; never identical to title
   originalText: string;
   date: Date | null;
   timeText: string | null;
@@ -57,6 +60,7 @@ const TASK_VERBS_T1 = new Set([
   "review", "check", "test", "verify", "confirm", "approve",
   "meet", "attend", "join", "present",
   "remind", "follow", "update", "prepare", "plan",
+  "launch", "deliver", "implement",
 ]);
 
 const TASK_VERBS_T2 = new Set([
@@ -73,6 +77,10 @@ const TASK_VERBS_T2 = new Set([
 /** Spoken prefixes that introduce a task but carry no semantic content */
 const TASK_PREFIXES = [
   /^i (need|have|want|got|should|must|will|am going) to\b/i,
+  /^i('ll| will) (then |also |finally )?\b/i,          // FIX: "i'll then develop"
+  /^(finally|lastly)[,\s]+/i,                           // FIX: "finally launch it"
+  /^(after (that|this)[,]?\s*)/i,                       // FIX: "after that, develop"
+  /^(then\s+(finally\s+)?)/i,                           // FIX: "then finally launch"
   /^(please |can you |could you |don'?t forget to |remember to |make sure (to |you )?)?\b/i,
   /^remind (me |us )?(to |about )?\b/i,
   /^(also |oh and |and also |one more thing[,:]? )\b/i,
@@ -100,6 +108,13 @@ const SEGMENT_SPLITTERS = [
   " plus ",
   ", and ",
   "; ",
+  // FIX: catch sequential phrases that mark the next task in a workflow
+  " then finally ",
+  " then ",
+  " finally ",
+  " after which ",
+  " following that ",
+  " subsequently ",
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -114,31 +129,18 @@ interface ParsedDateTime {
 /**
  * Recognises spoken date/time expressions and resolves them to a Date.
  * All patterns are relative to `now` so the function works offline.
- *
- * Handled:
- *   today, tomorrow, yesterday
- *   next {weekday | week | month}
- *   this {weekday}
- *   in {N} {days | weeks | months}
- *   on {weekday}
- *   {month} {d}[st|nd|rd|th]
- *   {d}[st|nd|rd|th] of {month}
- *   at {h}[:{mm}] [am|pm]
- *   {weekday} at {time}
  */
 function parseDateTime(text: string, now: Date = new Date()): ParsedDateTime {
   const lower = text.toLowerCase();
   let date: Date | null = null;
   let timeText: string | null = null;
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
   const WEEKDAYS = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
   const MONTHS   = ["january","february","march","april","may","june",
                     "july","august","september","october","november","december"];
 
   const clone = (d: Date) => new Date(d);
   const startOfDay = (d: Date) => { d.setHours(0,0,0,0); return d; };
-
   const addDays = (d: Date, n: number) => {
     const r = clone(d); r.setDate(r.getDate() + n); return r;
   };
@@ -147,12 +149,10 @@ function parseDateTime(text: string, now: Date = new Date()): ParsedDateTime {
     return addDays(d, diff);
   };
 
-  // ── Relative keywords ────────────────────────────────────────────────────
-  if (/\btoday\b/.test(lower))     { date = startOfDay(clone(now)); timeText = "today"; }
-  else if (/\btomorrow\b/.test(lower)) { date = startOfDay(addDays(now, 1)); timeText = "tomorrow"; }
-  else if (/\byesterday\b/.test(lower)){ date = startOfDay(addDays(now,-1)); timeText = "yesterday"; }
+  if (/\btoday\b/.test(lower))      { date = startOfDay(clone(now)); timeText = "today"; }
+  else if (/\btomorrow\b/.test(lower))  { date = startOfDay(addDays(now, 1)); timeText = "tomorrow"; }
+  else if (/\byesterday\b/.test(lower)) { date = startOfDay(addDays(now,-1)); timeText = "yesterday"; }
 
-  // "in N days/weeks/months"
   if (!date) {
     const m = lower.match(/\bin\s+(\d+|a|an|one|two|three|four|five|six|seven|eight|nine|ten)\s+(day|week|month)s?\b/);
     if (m) {
@@ -171,22 +171,17 @@ function parseDateTime(text: string, now: Date = new Date()): ParsedDateTime {
     }
   }
 
-  // "next {weekday|week|month}"
   if (!date) {
     const m = lower.match(/\bnext\s+(week|month|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/);
     if (m) {
       const token = m[1];
-      if (token === "week")  { date = startOfDay(addDays(now, 7)); }
-      else if (token === "month") {
-        const d = clone(now); d.setMonth(d.getMonth() + 1); date = startOfDay(d);
-      } else {
-        date = startOfDay(nextWeekday(now, WEEKDAYS.indexOf(token)));
-      }
+      if (token === "week")       { date = startOfDay(addDays(now, 7)); }
+      else if (token === "month") { const d = clone(now); d.setMonth(d.getMonth() + 1); date = startOfDay(d); }
+      else                        { date = startOfDay(nextWeekday(now, WEEKDAYS.indexOf(token))); }
       timeText = m[0].trim();
     }
   }
 
-  // "this {weekday}"
   if (!date) {
     const m = lower.match(/\bthis\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/);
     if (m) {
@@ -197,7 +192,6 @@ function parseDateTime(text: string, now: Date = new Date()): ParsedDateTime {
     }
   }
 
-  // "on {weekday}"
   if (!date) {
     const m = lower.match(/\bon\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/);
     if (m) {
@@ -206,7 +200,6 @@ function parseDateTime(text: string, now: Date = new Date()): ParsedDateTime {
     }
   }
 
-  // "{month} {d}[st|nd|rd|th]"  or  "{d}[st|nd|rd|th] of {month}"
   if (!date) {
     const patterns = [
       /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:st|nd|rd|th)?\b/,
@@ -229,7 +222,6 @@ function parseDateTime(text: string, now: Date = new Date()): ParsedDateTime {
     }
   }
 
-  // ── Time component  "at 3pm", "at 14:30", "at 9 in the morning" ──────────
   const timeMatch = lower.match(
     /\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm|in the morning|in the afternoon|in the evening|at night)?\b/
   );
@@ -239,7 +231,6 @@ function parseDateTime(text: string, now: Date = new Date()): ParsedDateTime {
     const period = timeMatch[3] ?? "";
     if (/pm|afternoon|evening|night/.test(period) && hours < 12) hours += 12;
     if (/am|morning/.test(period) && hours === 12) hours = 0;
-
     if (!date) date = startOfDay(clone(now));
     date.setHours(hours, mins, 0, 0);
     timeText = timeMatch[0].trim();
@@ -249,23 +240,86 @@ function parseDateTime(text: string, now: Date = new Date()): ParsedDateTime {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// People extractor  (heuristic, no NLP library)
+// Deadline window detector
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Finds capitalised proper-noun sequences (≥ 2 chars, ≤ 3 words) that follow
- * task-relational prepositions. Works for "Call John Smith about the report".
- * Intentionally conservative to avoid false positives.
+ * FIX: Detects deadline window phrases like "3 days", "a week", etc.
+ * Returns total days in the window, or null if none found.
+ * This is separate from parseDateTime so we can use it for spreading
+ * without it being assigned as a single task's due date.
  */
+function detectDeadlineWindow(text: string): number | null {
+  const lower = text.toLowerCase();
+  const wordToNum: Record<string,number> = {
+    a:1, an:1, one:1, two:2, three:3, four:4, five:5,
+    six:6, seven:7, eight:8, nine:9, ten:10,
+  };
+
+  // "X days/weeks to finalise/complete/finish" — deadline window, not task date
+  const m = lower.match(
+    /\b(?:just\s+)?(\d+|a|an|one|two|three|four|five|six|seven|eight|nine|ten)\s+(day|week)s?\s+to\b/
+  );
+  if (m) {
+    const n = wordToNum[m[1]] ?? parseInt(m[1], 10);
+    return m[2] === "week" ? n * 7 : n;
+  }
+
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Task spreader
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * FIX: Takes an ordered list of tasks and distributes undated ones evenly
+ * across a deadline window. Preserves insertion order (Day 1, Day 2, Day 3…).
+ *
+ * @param tasks   Ordered array of tasks (order = speech order = work order)
+ * @param windowDays  Total days available (from detectDeadlineWindow)
+ * @param now     Reference date
+ */
+function spreadTasksOverWindow(
+  tasks: ExtractedTask[],
+  windowDays: number,
+  now: Date
+): ExtractedTask[] {
+  const unscheduled = tasks.filter(t => !t.date);
+  const scheduled   = tasks.filter(t =>  t.date);
+
+  if (unscheduled.length === 0) return tasks;
+
+  // Distribute evenly: if 3 tasks over 3 days → Day 0, Day 1, Day 2
+  // if 2 tasks over 3 days → Day 0, Day 1 (leave buffer before deadline)
+  const step = windowDays / unscheduled.length;
+
+  unscheduled.forEach((task, i) => {
+    const d = new Date(now);
+    // First task starts today; subsequent tasks step forward
+    d.setDate(d.getDate() + Math.floor(i * step));
+    d.setHours(9, 0, 0, 0);
+    task.date = d;
+    task.timeText = `Day ${i + 1} of ${windowDays}`;
+  });
+
+  // Merge and sort by date
+  return [...scheduled, ...unscheduled].sort((a, b) =>
+    (a.date?.getTime() ?? Infinity) - (b.date?.getTime() ?? Infinity)
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// People extractor  (heuristic, no NLP library)
+// ─────────────────────────────────────────────────────────────────────────────
+
 function extractPeople(original: string): string[] {
   const people = new Set<string>();
 
-  // Pattern: (with|call|email|message|meet|from|to|notify|tell|ask|remind) [Name ...]
   const pattern = /\b(?:with|call(?:ing)?|email(?:ing)?|message|meet(?:ing)?|from|to|notify|tell|ask|remind|contact|cc)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})/g;
   let m: RegExpExecArray | null;
   while ((m = pattern.exec(original)) !== null) {
     const name = m[1].trim();
-    // Exclude words that are common non-names even when capitalised
     const EXCLUDE = new Set(["Monday","Tuesday","Wednesday","Thursday","Friday",
       "Saturday","Sunday","January","February","March","April","May","June",
       "July","August","September","October","November","December","Today",
@@ -287,9 +341,11 @@ const TAG_RULES: Array<{ tag: string; keywords: string[] }> = [
   { tag: "health",   keywords: ["doctor","dentist","hospital","appointment","medicine","prescription","gym","workout","exercise","therapy","therapist","physio","diet","nutrition","sleep","medication","pill","dose"] },
   { tag: "personal", keywords: ["family","friend","birthday","anniversary","gift","party","vacation","holiday","travel","home","house","clean","repair","grocery","shopping","errand"] },
   { tag: "learning", keywords: ["course","study","read","book","tutorial","lecture","research","learn","practice","training","certification","exam","assignment","homework"] },
-  { tag: "design",   keywords: ["design","logo","ui","ux","mockup","wireframe","figma","sketch","prototype","banner","icon","illustration","animation","branding","visual","creative"] },
-  { tag: "dev",      keywords: ["code","bug","feature","deploy","push","commit","branch","merge","pr","test","api","database","server","build","ci","cd","lint","refactor","endpoint","component"] },
+  { tag: "design",   keywords: ["design","logo","ui","ux","mockup","wireframe","figma","sketch","prototype","banner","icon","illustration","animation","branding","visual","creative","portfolio"] },
+  { tag: "dev",      keywords: ["code","bug","feature","deploy","push","commit","branch","merge","pr","test","api","database","server","build","ci","cd","lint","refactor","endpoint","component","develop","development","launch"] },
   { tag: "comms",    keywords: ["email","message","call","text","slack","reply","respond","follow up","followup","reach out","contact","ping","dm","chat"] },
+  // FIX: agency/web-specific tag
+  { tag: "agency",   keywords: ["agency","portfolio","web design","web development","website","landing page","client work","branding","showcase"] },
 ];
 
 function extractTags(lower: string): string[] {
@@ -297,7 +353,7 @@ function extractTags(lower: string): string[] {
   for (const rule of TAG_RULES) {
     if (rule.keywords.some(kw => lower.includes(kw))) {
       tags.push(rule.tag);
-      if (tags.length === 3) break; // cap at 3 tags
+      if (tags.length === 3) break;
     }
   }
   return tags;
@@ -331,22 +387,19 @@ function detectPriority(lower: string): Priority {
 function normalise(raw: string): string {
   let text = raw.trim();
 
-  // Collapse multiple whitespace / newlines
   text = text.replace(/[\r\n\t]+/g, " ").replace(/\s{2,}/g, " ");
 
-  // Strip filler words (whole-word, case-insensitive)
   for (const filler of FILLER_WORDS) {
     const re = new RegExp(`(?<![a-z])${filler.replace(/\s+/g, "\\s+")}(?![a-z])`, "gi");
     text = text.replace(re, " ");
   }
 
-  // Normalise punctuation
   text = text
     .replace(/['']/g, "'")
     .replace(/[""]/g, '"')
     .replace(/…/g, "...")
-    .replace(/\s+([,.;:!?])/g, "$1")   // no space before punctuation
-    .replace(/([,.;:!?])\s*/g, "$1 ")  // single space after punctuation
+    .replace(/\s+([,.;:!?])/g, "$1")
+    .replace(/([,.;:!?])\s*/g, "$1 ")
     .replace(/\s{2,}/g, " ")
     .trim();
 
@@ -354,17 +407,10 @@ function normalise(raw: string): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Segmenter — splits a paragraph into individual task sentences
+// Segmenter
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Strategy:
- * 1. Split on sentence-ending punctuation (. ! ?)
- * 2. Within each sentence, split on conjunctive splitters
- * 3. Remove empty / too-short fragments
- */
 function segment(text: string): string[] {
-  // Step 1 — sentence split
   const sentences = text
     .split(/(?<=[.!?])\s+/)
     .map(s => s.replace(/[.!?]+$/, "").trim())
@@ -373,12 +419,10 @@ function segment(text: string): string[] {
   const fragments: string[] = [];
 
   for (const sentence of sentences) {
-    // Step 2 — conjunction split (case-insensitive, bounded)
     let parts = [sentence];
     for (const splitter of SEGMENT_SPLITTERS) {
       parts = parts.flatMap(p =>
         p.toLowerCase().includes(splitter.trim().toLowerCase())
-          // Preserve original casing by splitting on index
           ? splitPreserveCase(p, splitter)
           : [p]
       );
@@ -386,11 +430,9 @@ function segment(text: string): string[] {
     fragments.push(...parts.map(p => p.trim()).filter(Boolean));
   }
 
-  // Step 3 — filter
   return fragments.filter(f => f.split(/\s+/).length >= 2);
 }
 
-/** Split `str` on `splitter` while preserving original casing of the parts */
 function splitPreserveCase(str: string, splitter: string): string[] {
   const lower = str.toLowerCase();
   const idx = lower.indexOf(splitter.toLowerCase());
@@ -405,24 +447,18 @@ function splitPreserveCase(str: string, splitter: string): string[] {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Converts a raw fragment into a clean imperative task title.
- *
- * Steps:
- *  1. Strip task-introducing prefixes ("I need to", "remind me to" …)
- *  2. Strip date/time phrases that are already captured in `date`
- *  3. Strip trailing filler / punctuation
- *  4. Capitalise first word
- *  5. Trim to a reasonable length (≤ 80 chars, whole word)
+ * FIX: Expanded prefix list to catch sequential workflow markers.
+ * Converts raw fragment into a clean imperative title.
  */
 function buildTitle(fragment: string, timeText: string | null): string {
   let t = fragment.trim();
 
-  // 1. Strip prefixes
+  // 1. Strip all task-introducing prefixes (order matters — most specific first)
   for (const prefix of TASK_PREFIXES) {
     t = t.replace(prefix, "").trim();
   }
 
-  // 2. Strip the matched time expression to avoid redundancy in the title
+  // 2. Strip the matched time expression
   if (timeText) {
     const escaped = timeText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     t = t.replace(new RegExp(`\\b${escaped}\\b`, "i"), "").trim();
@@ -434,19 +470,28 @@ function buildTitle(fragment: string, timeText: string | null): string {
     /\b(this|next)\s+(week|month|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi,
     /\bin\s+(a\s+)?(few\s+)?\d*\s*(day|week|month)s?\b/gi,
     /\b(asap|immediately|right away|urgently)\b/gi,
+    // FIX: strip deadline window phrases ("i have just 3 days to…")
+    /\b(i have )?(just\s+)?\d+\s+(day|week)s?\s+to\s+(finali[sz]e|complete|finish|do)\s+(the\s+)?(design|development|it|everything|all|this)\b/gi,
   ];
   for (const re of DATE_NOISE) t = t.replace(re, "").trim();
 
-  // 4. Strip leading conjunctions left over from splitting
-  t = t.replace(/^(and|also|then|but|so|or|nor)\b\s*/i, "").trim();
+  // 4. Strip leading conjunctions / transitional words left over from splitting
+  t = t.replace(/^(and|also|then|but|so|or|nor|finally|after that|after this)[,.]?\s*/i, "").trim();
 
   // 5. Strip trailing punctuation / stray words
   t = t.replace(/[,;:\-–—]+$/, "").trim();
 
-  // 6. Capitalise
+  // 6. FIX: Strip vague pronoun-only tails to avoid "Design it" style titles
+  // e.g. "design the portfolio" is fine; "develop it" → keep as is since verb is meaningful
+  // But "Launch it" is acceptable — just ensure the verb is present
+  if (/^[a-z]+\s+(it|this|that|them)$/i.test(t)) {
+    // keep — short imperative is OK ("Launch it", "Deploy it")
+  }
+
+  // 7. Capitalise
   t = t.charAt(0).toUpperCase() + t.slice(1);
 
-  // 7. Trim to 80 chars at a word boundary
+  // 8. Trim to 80 chars at a word boundary
   if (t.length > 80) {
     t = t.slice(0, 80).replace(/\s+\S+$/, "") + "…";
   }
@@ -455,7 +500,53 @@ function buildTitle(fragment: string, timeText: string | null): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Verb detector  (used for both scoring and "is this a task?" gate)
+// Description builder  (FIX: new — never duplicates the title)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Generates a short, human-readable description that gives context
+ * beyond the title. It pulls together people, tags, time, and priority
+ * into a single natural sentence. If nothing useful can be added, it
+ * returns a fallback that expands the title slightly.
+ *
+ * Guaranteed not to be identical to the title.
+ */
+function buildDescription(
+  title: string,
+  originalText: string,
+  people: string[],
+  tags: string[],
+  timeText: string | null,
+  priority: Priority,
+): string {
+  const parts: string[] = [];
+
+  if (people.length)     parts.push(`Involves ${people.join(", ")}`);
+  if (tags.length)       parts.push(`Tagged: ${tags.join(", ")}`);
+  if (timeText)          parts.push(`Due: ${timeText}`);
+  if (priority === "high") parts.push("⚡ High priority");
+  if (priority === "low")  parts.push("🕐 Low priority");
+
+  if (parts.length > 0) {
+    return parts.join(" · ");
+  }
+
+  // Fallback: use originalText if it adds meaningful context over the title
+  const original = originalText.trim();
+  if (original.toLowerCase() !== title.toLowerCase() && original.length > title.length + 5) {
+    // Truncate to avoid long rambling descriptions
+    const truncated = original.length > 120
+      ? original.slice(0, 120).replace(/\s+\S+$/, "") + "…"
+      : original;
+    return truncated;
+  }
+
+  // Last resort: generic expansion
+  return `Complete: ${title}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Verb detector
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface VerbMatch {
@@ -463,27 +554,21 @@ interface VerbMatch {
   tier: 1 | 2;
 }
 
-/**
- * Finds the first task verb in a lowercased fragment.
- * Handles common conjugations: -ing, -ed, -s, -es, -ies → base form.
- */
 function findTaskVerb(lower: string): VerbMatch | null {
   const words = lower.match(/\b[a-z]+\b/g) ?? [];
 
   for (const word of words) {
-    // Try exact match first
     if (TASK_VERBS_T1.has(word)) return { verb: word, tier: 1 };
     if (TASK_VERBS_T2.has(word)) return { verb: word, tier: 2 };
 
-    // Try stemmed forms
     const stems = [
-      word.replace(/ing$/, ""),      // calling → call
-      word.replace(/ing$/, "e"),     // writing → write
-      word.replace(/ed$/, ""),       // reviewed → review
-      word.replace(/ed$/, "e"),      // scheduled → schedule
-      word.replace(/s$/, ""),        // sends → send
-      word.replace(/ies$/, "y"),     // tries → try
-      word.replace(/ves$/, "f"),     // halves → half
+      word.replace(/ing$/, ""),
+      word.replace(/ing$/, "e"),
+      word.replace(/ed$/, ""),
+      word.replace(/ed$/, "e"),
+      word.replace(/s$/, ""),
+      word.replace(/ies$/, "y"),
+      word.replace(/ves$/, "f"),
     ];
     for (const stem of stems) {
       if (TASK_VERBS_T1.has(stem)) return { verb: stem, tier: 1 };
@@ -498,18 +583,6 @@ function findTaskVerb(lower: string): VerbMatch | null {
 // Confidence scorer
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Scores a candidate on a 0–1 scale. Candidates below MIN_CONFIDENCE are
- * discarded so noise phrases don't generate spurious tasks.
- *
- * Weights:
- *   tier-1 verb     +0.35
- *   tier-2 verb     +0.20
- *   date found      +0.20
- *   person found    +0.10
- *   tag found       +0.10
- *   title length    +0.05  (titles 5–60 chars score max)
- */
 const MIN_CONFIDENCE = 0.35;
 
 function scoreConfidence({
@@ -530,9 +603,9 @@ function scoreConfidence({
   if (verbMatch?.tier === 1) score += 0.35;
   else if (verbMatch?.tier === 2) score += 0.20;
 
-  if (date) score += 0.20;
+  if (date)          score += 0.20;
   if (people.length) score += 0.10;
-  if (tags.length) score += 0.10;
+  if (tags.length)   score += 0.10;
 
   const tLen = title.trim().length;
   if (tLen >= 5 && tLen <= 60) score += 0.05;
@@ -541,18 +614,31 @@ function scoreConfidence({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ID generator
+// ─────────────────────────────────────────────────────────────────────────────
+
+function generateId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Core parser for a single candidate fragment
 // ─────────────────────────────────────────────────────────────────────────────
 
-function parseCandidate(fragment: string): ExtractedTask | null {
+/** Internal: parseCandidate with an explicit `now` for date resolution */
+function parseCandidateWithNow(fragment: string, now: Date): ExtractedTask | null {
   const lower = fragment.toLowerCase();
 
-  const verbMatch = findTaskVerb(lower);
-  const { date, timeText } = parseDateTime(fragment);
-  const people = extractPeople(fragment);
-  const tags   = extractTags(lower);
-  const priority = detectPriority(lower);
-  const title  = buildTitle(fragment, timeText);
+  const verbMatch  = findTaskVerb(lower);
+  const { date, timeText } = parseDateTime(fragment, now);
+  const people     = extractPeople(fragment);
+  const tags       = extractTags(lower);
+  const priority   = detectPriority(lower);
+  const title      = buildTitle(fragment, timeText);
+  const description = buildDescription(title, fragment, people, tags, timeText, priority); // FIX
 
   const confidence = scoreConfidence({ verbMatch, date, people, tags, title });
 
@@ -561,6 +647,7 @@ function parseCandidate(fragment: string): ExtractedTask | null {
   return {
     id: generateId(),
     title,
+    description,     // FIX: new field
     originalText: fragment,
     date,
     timeText,
@@ -569,19 +656,6 @@ function parseCandidate(fragment: string): ExtractedTask | null {
     priority,
     confidence,
   };
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ID generator  (no crypto.randomUUID dependency — works in all envs)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function generateId(): string {
-  // Use crypto.randomUUID when available (browsers, Node 15+), otherwise fallback
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  // Fallback: timestamp + random hex
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -595,14 +669,19 @@ function generateId(): string {
  *
  * @param text  Raw transcript from SpeechRecognition or typed input
  * @param now   Override "now" for date resolution (useful in tests)
- * @returns     Array of ExtractedTask, sorted by confidence descending
+ * @returns     Array of ExtractedTask, sorted by date ascending (after spreading)
  *
  * @example
  * const tasks = extractTasksFromText(
- *   "Call John tomorrow and send the invoice to the client by Friday"
+ *   "I want to create a portfolio design for my web design agency. " +
+ *   "After that I will develop the code then finally launch it. " +
+ *   "I have just 3 days to finalise the design and development"
  * );
- * // → [ { title: "Call John", date: <tomorrow>, ... },
- * //      { title: "Send the invoice to the client", date: <friday>, ... } ]
+ * // → [
+ * //   { title: "Create a portfolio design for my web design agency", date: Day 1, ... },
+ * //   { title: "Develop the code",                                   date: Day 2, ... },
+ * //   { title: "Launch it",                                          date: Day 3, ... },
+ * // ]
  */
 export function extractTasksFromText(
   text: string,
@@ -613,54 +692,39 @@ export function extractTasksFromText(
   const normalised = normalise(text);
   const fragments  = segment(normalised);
 
-  const tasks: ExtractedTask[] = [];
+  // FIX: Detect deadline window from the full original text BEFORE per-task parsing
+  const windowDays = detectDeadlineWindow(normalised);
 
+  // Parse each fragment — preserve insertion order (= speech order = work order)
+  const tasks: ExtractedTask[] = [];
   for (const fragment of fragments) {
-    // Re-parse dates with the caller's `now` reference
     const candidate = parseCandidateWithNow(fragment, now);
     if (candidate) tasks.push(candidate);
   }
 
-  // Sort: high confidence first, then by earliest date
-  return tasks.sort((a, b) => {
-    if (b.confidence !== a.confidence) return b.confidence - a.confidence;
-    if (a.date && b.date) return a.date.getTime() - b.date.getTime();
-    if (a.date) return -1;
-    if (b.date) return 1;
-    return 0;
-  });
-}
+  // FIX: If a deadline window was found, spread undated tasks across it
+  if (windowDays !== null && tasks.length > 0) {
+    spreadTasksOverWindow(tasks, windowDays, now);
+    // Sort by date after spreading
+    tasks.sort((a, b) =>
+      (a.date?.getTime() ?? Infinity) - (b.date?.getTime() ?? Infinity)
+    );
+  } else {
+    // Default sort: high confidence first, then earliest date
+    tasks.sort((a, b) => {
+      if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+      if (a.date && b.date) return a.date.getTime() - b.date.getTime();
+      if (a.date) return -1;
+      if (b.date) return 1;
+      return 0;
+    });
+  }
 
-/** Internal: parseCandidate with an explicit `now` for date resolution */
-function parseCandidateWithNow(fragment: string, now: Date): ExtractedTask | null {
-  const lower = fragment.toLowerCase();
-
-  const verbMatch = findTaskVerb(lower);
-  const { date, timeText } = parseDateTime(fragment, now);
-  const people = extractPeople(fragment);
-  const tags   = extractTags(lower);
-  const priority = detectPriority(lower);
-  const title  = buildTitle(fragment, timeText);
-
-  const confidence = scoreConfidence({ verbMatch, date, people, tags, title });
-
-  if (confidence < MIN_CONFIDENCE) return null;
-
-  return {
-    id: generateId(),
-    title,
-    originalText: fragment,
-    date,
-    timeText,
-    people,
-    tags,
-    priority,
-    confidence,
-  };
+  return tasks;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Convenience re-exports kept for backward compat with existing callers
 // ─────────────────────────────────────────────────────────────────────────────
 export type { ParsedDateTime };
-export { parseDateTime, extractPeople, extractTags, detectPriority };
+export { parseDateTime, extractPeople, extractTags, detectPriority, detectDeadlineWindow };

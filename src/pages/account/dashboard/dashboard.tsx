@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useTasks } from "../../../context/tasksContext";
 import { useUser } from "../../../context/authContext";
 import Calendar from "react-calendar";
-import { ArrowLeft, ArrowRight, CalendarDate } from "@solar-icons/react";
+import { AddCircle, ArrowLeft, ArrowRight, CalendarDate } from "@solar-icons/react";
 import TasksList from "../../../components/ui/tasksList";
 import TasksPerDay from "../../../components/charts/TasksPerDay";
 import { todo } from "../../../interface/todo";
@@ -69,9 +69,12 @@ function Dashboard() {
         </div>
 
         <div className="flex flex-col bg-white dark:bg-dark-bg border border-gray-500/[0.1] rounded-[10px]">
-          <div className="flex justify-between items-center border-b border-gray-500/[0.1] md:px-6 p-4">
+          <div className="flex justify-between items-center flex-wrap border-b border-gray-500/[0.1] md:px-6 p-4">
             <h2 className="font-semibold">Recent tasks</h2>
-            <Button href={"/account/tasks"} variant="secondary" size="small" className="">View all</Button>
+            <div className="flex items-center gap-2">
+              <Button href="/account/tasks/new" size="small"><AddCircle /> Convert voice to tasks</Button>
+              <Button href={"/account/tasks"} variant="secondary" size="small" className="">View all</Button>
+            </div>
           </div>
           {/* Task Details Modal (for list/grid/calendar clicks) */}
           {selectedTask && (

@@ -149,7 +149,7 @@ function CreateTask() {
         Continue from where you stopped yesterday and add today's tasks
       </p>
 
-      <div className="flex flex-col gap-2 p-4 rounded-[10px] border border-border-gray-100/[0.5] shadow-[0px_4px_8px_0px_#80808010] dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50">
+      <div className="flex flex-col gap-2 p-4 rounded-[10px] border border-gray-500/[0.2] shadow-[0px_4px_12px_0px_#80808010]">
         <div className="flex gap-2 w-full">
           <Formik
             initialValues={{ search: displayText }}
@@ -159,7 +159,7 @@ function CreateTask() {
             {({ handleSubmit }) => (
               <form onSubmit={handleSubmit} className="flex-1 relative">
                 <textarea
-                  placeholder="Start speaking or writing..."
+                  placeholder="Click recorder to start speaking or type your task here..."
                   name="search"
                   value={displayText}
                   onChange={(e) => {
@@ -207,6 +207,7 @@ function CreateTask() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
+                title="Upload recorded file"
                 disabled={isTranscribingFile || isRecording}
                 className={`p-4 rounded-full border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50 text-sm ${
                   isTranscribingFile || isRecording ? "opacity-60 cursor-not-allowed" : ""

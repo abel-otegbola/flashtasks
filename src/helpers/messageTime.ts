@@ -4,6 +4,8 @@ const DAY_MS = 24 * HOUR_MS;
 const WEEK_MS = 7 * DAY_MS;
 const THREE_WEEKS_MS = 3 * WEEK_MS;
 
+type TimeDirection = "past" | "future";
+
 function getOrdinal(day: number): string {
   const mod100 = day % 100;
 
@@ -34,6 +36,7 @@ function formatLongDateWithOrdinal(date: Date): string {
 export function formatDeliveredTime(
   dateTime?: string | null,
   referenceTime?: number,
+  direction: TimeDirection = "past",
 ): string {
   if (!dateTime) return "";
 
@@ -42,31 +45,41 @@ export function formatDeliveredTime(
 
   const now = referenceTime ?? Date.now();
   const timestamp = parsedDate.getTime();
-  const diff = Math.max(0, now - timestamp);
+  const diff = Math.abs(now - timestamp);
+  const isFuture = direction === "future";
 
   if (diff < MINUTE_MS) {
+    if (isFuture) {
+      return "soon";
+    }
+
     return "just now";
   }
 
   if (diff < HOUR_MS) {
     const minutes = Math.floor(diff / MINUTE_MS);
-    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+    const unit = minutes === 1 ? "minute" : "minutes";
+    return isFuture ? `in ${minutes} ${unit}` : `${minutes} ${unit} ago`;
   }
 
   if (diff < DAY_MS) {
     const hours = Math.floor(diff / HOUR_MS);
-    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    const unit = hours === 1 ? "hour" : "hours";
+    return isFuture ? `in ${hours} ${unit}` : `${hours} ${unit} ago`;
   }
 
   if (diff < WEEK_MS) {
     const days = Math.floor(diff / DAY_MS);
-    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+    const unit = days === 1 ? "day" : "days";
+    return isFuture ? `in ${days} ${unit}` : `${days} ${unit} ago`;
   }
 
   if (diff <= THREE_WEEKS_MS) {
     const weeks = Math.floor(diff / WEEK_MS);
-    return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+    const unit = weeks === 1 ? "week" : "weeks";
+    return isFuture ? `in ${weeks} ${unit}` : `${weeks} ${unit} ago`;
   }
 
-  return formatLongDateWithOrdinal(parsedDate);
+  const longDate = formatLongDateWithOrdinal(parsedDate);
+  return isFuture ? `due ${longDate}` : longDate;
 }
