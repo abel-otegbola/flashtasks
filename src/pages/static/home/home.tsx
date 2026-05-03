@@ -12,9 +12,9 @@ function Home() {
   const theme = useTheme();
   return (
     <main className="w-full dark:bg-[#101010] dark:text-gray-100 pb-20">
-      <header className="flex flex-col justify-center items-center w-full bg-[#F6F6F6]/[0.4] dark:bg-[#191919] py-20 px-6">
+      <header className="flex flex-col justify-center items-center w-full bg-[#F6F6F6]/[0.4] dark:bg-[#191919] py-20">
         
-        <div className="flex flex-col text-center items-center justify-center gap-4 ">
+        <div className="flex flex-col text-center items-center justify-center gap-4 px-6">
           <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] animate-bounce">
             <LogoIcon className="w-[14px]"  />
           </div>
@@ -52,9 +52,9 @@ function Home() {
         </div>
         
         <div className="flex flex-col justify-center items-center py-[60px] p-4 md:w-[65%] w-full">
-          <div className='shadow-lg rounded-[24px] w-full flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-[#161616] p-4'>
-            <video autoPlay loop muted playsInline className="w-full h-full rounded-[16px] shadow-2xl">
-              <source src={`/hero-video-${theme === 'dark' ? 'dark' : 'light'}.mp4`} type="video/mp4" />
+          <div className='shadow-lg md:rounded-[24px] rounded w-full flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-[#161616] md:p-4 p-1'>
+            <video autoPlay loop muted playsInline className="w-full h-full md:rounded-[16px] rounded-[8px] border border-gray-500/[0.07]">
+              <source src={`/hero-video-${theme === 'dark' ? 'dark' : 'light'}.webm`} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
