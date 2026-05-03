@@ -22,11 +22,9 @@ function Home() {
             
             <BlurReveal preset="slide-right"><h1>Get tasks done</h1></BlurReveal>
 
-            <BlurReveal preset="slide-right">
               <h1 className="">
                 Faster and more <span className="underline decoration-[#22FF7E]">Efficiently</span>
               </h1>
-            </BlurReveal>
             <img src="/arrow.svg" alt="sparkle" width={200} height={64} className="md:block hidden absolute top-0 -right-24 animate-bounce" />
           </div>
           <div className="text-gray dark:text-gray-300 mb-6">
