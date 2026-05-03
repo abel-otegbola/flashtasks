@@ -63,7 +63,7 @@ function Home() {
       </header>
 
       
-      <section className="flex flex-col gap-10 lg:px-[6%] md:px-[3%] p-4">
+      <section className="flex flex-col gap-10 lg:px-[6%] md:px-[3%] p-4 py-[60px]">
 
         <div className="flex flex-col justify-center items-center mx-auto max-w-3xl gap-[19px] mb-10 text-center">
           <BlurReveal preset="slide-right" className="font-medium flex items-center gap-2 border border-gray-500/[0.2] rounded-full px-6 py-2">
