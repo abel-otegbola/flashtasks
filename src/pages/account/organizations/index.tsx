@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useOrganizations } from '../../../context/organizationContext';
 import Button from '../../../components/button/button';
 import Input from '../../../components/input/input';
@@ -9,13 +9,79 @@ import { Formik } from 'formik';
 import { createOrganizationSchema } from '../../../schema/organizationSchema';
 import { GridFourIcon, PencilSimpleLineIcon, TrashIcon } from '@phosphor-icons/react';
 import { OrganizationSkeletonLoader } from '../../../components/skeletons';
+import Confirmationmessage from '../../../components/modals/confirmation';
 
 export default function OrganizationsPage() {
-  const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, loading } = useOrganizations();
+  const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, addMemberToOrg, removeMemberFromOrg, updateOrganization, deleteOrganization, loading } = useOrganizations();
   const [teamName, setTeamName] = useState('');
+  const [memberName, setMemberName] = useState('');
+  const [memberEmail, setMemberEmail] = useState('');
+  const [memberRole, setMemberRole] = useState('member');
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState<any>(null);
+  const [selectedTab, setSelectedTab] = useState("About");
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
+  const [editingTeamName, setEditingTeamName] = useState('');
+  const [editingTeamMembers, setEditingTeamMembers] = useState<string[]>([]);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editingMemberRole, setEditingMemberRole] = useState('member');
+  const [settingsName, setSettingsName] = useState('');
+  const [settingsSlug, setSettingsSlug] = useState('');
+  const [settingsDescription, setSettingsDescription] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const initialLoading = loading && organizations.length === 0 && !currentOrg;
+
+  const organizationMembers = currentOrg
+    ? [
+        ...(currentOrg.members || []),
+        ...(currentOrg.ownerEmail && !(currentOrg.members || []).some((member) => member.email === currentOrg.ownerEmail)
+          ? [{ $id: currentOrg.ownerEmail, name: currentOrg.ownerEmail, email: currentOrg.ownerEmail, role: 'owner' as const }]
+          : []),
+      ]
+    : [];
+
+  useEffect(() => {
+    if (!currentOrg) return;
+    setSettingsName(currentOrg.name || '');
+    setSettingsSlug(currentOrg.slug || '');
+    setSettingsDescription(currentOrg.description || '');
+  }, [currentOrg]);
+
+  const getTeamMemberLabel = (memberId: string) => {
+    const member = organizationMembers.find((item) => item.$id === memberId);
+    return member?.name || member?.email || memberId;
+  };
+
+  const openTeamEditor = (team: any) => {
+    setEditingTeamId(team.$id);
+    setEditingTeamName(team.name || '');
+    setEditingTeamMembers(team.members || []);
+  };
+
+  const closeTeamEditor = () => {
+    setEditingTeamId(null);
+    setEditingTeamName('');
+    setEditingTeamMembers([]);
+  };
+
+  const handleSaveTeam = async () => {
+    if (!currentOrg || !editingTeamId) return;
+
+    const nextTeams = (currentOrg.teams || []).map((team) => {
+      if (team.$id !== editingTeamId) return team;
+
+      return {
+        ...team,
+        name: editingTeamName.trim() || team.name,
+        members: editingTeamMembers,
+      };
+    });
+
+    await updateOrganization(currentOrg.$id, { teams: nextTeams });
+    closeTeamEditor();
+  };
 
   const handleAddTeam = async () => {
     if (!teamName || !currentOrg) return;
@@ -23,7 +89,72 @@ export default function OrganizationsPage() {
     setTeamName('');
   };
 
-  if (loading) {
+  const handleAddMember = async () => {
+    if (!currentOrg || !memberEmail.trim()) return;
+
+    await addMemberToOrg(currentOrg.$id, {
+      $id: memberEmail.trim().toLowerCase(),
+      name: memberName.trim() || memberEmail.trim(),
+      email: memberEmail.trim().toLowerCase(),
+      role: memberRole,
+    });
+
+    setMemberName('');
+    setMemberEmail('');
+    setMemberRole('member');
+  };
+
+  const openMemberEditor = (member: any) => {
+    setEditingMemberId(member.$id);
+    setEditingMemberRole(member.role || 'member');
+  };
+
+  const closeMemberEditor = () => {
+    setEditingMemberId(null);
+    setEditingMemberRole('member');
+  };
+
+  const handleSaveMemberRole = async () => {
+    if (!currentOrg || !editingMemberId) return;
+
+    const nextMembers = (currentOrg.members || []).map((member) =>
+      member.$id === editingMemberId ? { ...member, role: editingMemberRole } : member
+    );
+
+    await updateOrganization(currentOrg.$id, { members: nextMembers });
+    closeMemberEditor();
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    if (!currentOrg) return;
+    await removeMemberFromOrg(currentOrg.$id, memberId);
+  };
+
+  const handleSaveSettings = async () => {
+    if (!currentOrg) return;
+
+    const nextName = settingsName.trim();
+    const nextSlug = settingsSlug.trim() || nextName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+    await updateOrganization(currentOrg.$id, {
+      name: nextName,
+      slug: nextSlug,
+      description: settingsDescription.trim(),
+    });
+  };
+
+  const handleCopyOrganizationId = async () => {
+    if (!currentOrg?.$id || !navigator.clipboard) return;
+    await navigator.clipboard.writeText(currentOrg.$id);
+  };
+
+  const handleDeleteOrganization = async () => {
+    if (!currentOrg) return;
+    await deleteOrganization(currentOrg.$id);
+    setShowDeleteConfirm(false);
+  };
+
+  if (initialLoading) {
     return <OrganizationSkeletonLoader />;
   }
 
@@ -59,53 +190,324 @@ export default function OrganizationsPage() {
             <div className="text-gray-500">Select an organization to manage teams and members.</div>
           ) : (
             <div className="py-8 max-w-2xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="font-semibold">{currentOrg.name}</h2>
-                  <div className="text-xs text-gray-500">{currentOrg.description}</div>
+
+              <div className='flex gap-4 justify-between flex-wrap mb-6'>
+                <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1'>
+                {
+                  ["About", "teams", "members", "settings"].map((tab) => (
+                    <button key={tab} onClick={() => setSelectedTab(tab)} className={`py-2 px-1 text-sm capitalize rounded-tl rounded-tr ${tab === selectedTab ? 'border-b border-primary text-primary' : 'text-gray-500'}`}>
+                      {tab}
+                    </button>
+                  ))
+                }
                 </div>
-                <div>
-                  <button className='p-2 border border-gray-500/[0.1] rounded' onClick={() => { setSelectedOrg(currentOrg); setShowEdit(true); }}>
-                    <PencilSimpleLineIcon size={14} />
-                  </button>
-                </div>
+              
+
               </div>
 
-              <div className="mb-4 border border-gray-500/[0.1] rounded-lg">
-                <div className="flex justify-between items-center gap-2 p-4 border-b border-gray-500/[0.1]">
-                <h4 className="text-sm font-medium">Teams</h4>
-                  {/* <Input value={teamName} className='flex-1 py-[2px]' leftIcon={<GridFourIcon />} onKeyDown={(e) => (["Enter"].includes(e.key)) ? handleAddTeam : {}} onChange={(e:any) => setTeamName(e.target.value)} placeholder="Add team and press Enter" /> */}
-                </div>
-                <div className="flex flex-col gap-2 p-4">
-                  {(currentOrg.teams || []).map(team => (
-                    <div key={team.$id} className="flex items-center justify-between p-2 border border-gray-500/[0.2] rounded">
-                      <div>{team.name}</div>
-                      <div className="flex gap-2">
-                        <button onClick={() => removeTeam(currentOrg.$id, team.$id)}><TrashIcon color='red' size={16} /></button>
+              {
+                selectedTab === "About" && (
+                  <div className="mb-4">
+                    <h2 className="font-semibold text-lg mb-2">{currentOrg.name}</h2>
+                    <p className="text-gray-500">{currentOrg.description}</p>
+                    
+                    <div className="my-4">
+                      <p>{currentOrg.members?.length || 0} members </p>
+                      <p>{currentOrg.teams?.length || 0} teams</p>
+                    </div>
+                    
+                    <div>
+                      <Button variant='secondary' size="small" className='p-2 border border-gray-500/[0.1] rounded' onClick={() => { setSelectedOrg(currentOrg); setShowEdit(true); }}>
+                        Edit Organization <PencilSimpleLineIcon size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                )
+              }
+              {
+                selectedTab === "teams" && (
+                  <div className="mb-4">
+                    <div className="mb-4">
+                      <div className="flex justify-between items-center gap-2">
+                        <h4 className="font-semibold text-lg mb-2">Teams</h4>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={teamName}
+                            className="flex-1 py-[2px] bg-transparent"
+                            leftIcon={<GridFourIcon />}
+                            onKeyDown={(e) => (["Enter"].includes(e.key) ? handleAddTeam() : undefined)}
+                            onChange={(e: any) => setTeamName(e.target.value)}
+                            placeholder="Add team and press Enter"
+                          />
+                          <Button size="small" onClick={handleAddTeam} disabled={!teamName.trim()}>
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 py-4">
+                        {(currentOrg.teams || []).map((team) => (
+                          <div key={team.$id} className="p-3 border border-gray-500/[0.2] rounded">
+                            {editingTeamId === team.$id ? (
+                              <div className="flex flex-col gap-4">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Input
+                                    value={editingTeamName}
+                                    onChange={(e: any) => setEditingTeamName(e.target.value)}
+                                    placeholder="Team name"
+                                    className="flex-1 py-[2px] min-w-[220px]"
+                                  />
+                                  <Button size="small" onClick={handleSaveTeam} disabled={!editingTeamName.trim()}>
+                                    Save
+                                  </Button>
+                                  <Button size="small" variant="secondary" onClick={closeTeamEditor}>
+                                    Cancel
+                                  </Button>
+                                </div>
+
+                                <div>
+                                  <h5 className="text-xs uppercase tracking-wide text-gray-500 mb-2">Team Members</h5>
+                                  {organizationMembers.length === 0 ? (
+                                    <div className="text-sm text-gray-500">No members available yet.</div>
+                                  ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                      {organizationMembers.map((member) => {
+                                        const checked = editingTeamMembers.includes(member.$id);
+
+                                        return (
+                                          <label key={member.$id} className="flex items-center gap-3 p-2 rounded border border-gray-500/[0.1] cursor-pointer">
+                                            <input
+                                              type="checkbox"
+                                              checked={checked}
+                                              onChange={(e) => {
+                                                setEditingTeamMembers((prev) =>
+                                                  e.target.checked
+                                                    ? [...prev, member.$id]
+                                                    : prev.filter((id) => id !== member.$id)
+                                                );
+                                              }}
+                                            />
+                                            <div className="min-w-0">
+                                              <div className="text-sm font-medium truncate">{member.name || member.email}</div>
+                                              <div className="text-xs text-gray-500 truncate">{member.email}</div>
+                                            </div>
+                                          </label>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="font-medium">{team.name}</div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {(team.members || []).length} member{(team.members || []).length === 1 ? '' : 's'}
+                                  </div>
+                                  {(team.members || []).length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-3">
+                                      {(team.members || []).map((memberId) => (
+                                        <span key={memberId} className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-[#1c1c1c]">
+                                          {getTeamMemberLabel(memberId)}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex gap-2 shrink-0">
+                                  <button onClick={() => openTeamEditor(team)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
+                                    Edit
+                                  </button>
+                                  <button onClick={() => removeTeam(currentOrg.$id, team.$id)}>
+                                    <TrashIcon color="red" size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                )
+              }
+              {
+                selectedTab === "members" && (
+                  <div className="mb-4">
+                    <h2 className="font-semibold text-lg mb-2">Members</h2>
 
-              <div className="border border-gray-500/[0.1] rounded-lg">
-                <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Members</h4>
-                <div className="flex flex-col gap-2 p-4">
-                  {(currentOrg.members || []).map(m => (
-                    <div key={m.$id} className="flex items-center justify-between p-2 border border-gray-500/[0.2] rounded">
+                    <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-[#101010]">
+                      <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Add member</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4">
+                        <Input
+                          value={memberName}
+                          onChange={(e: any) => setMemberName(e.target.value)}
+                          placeholder="Name"
+                          className="w-full flex-1 py-[2px]"
+                        />
+                        <Input
+                          value={memberEmail}
+                          onChange={(e: any) => setMemberEmail(e.target.value)}
+                          placeholder="Email"
+                          className="w-full flex-1 py-[2px]"
+                        />
+                        <Input
+                          value={memberRole}
+                          onChange={(e: any) => setMemberRole(e.target.value)}
+                          placeholder="Role (for example: member, admin, reviewer)"
+                          className="w-full flex-1 py-[2px]"
+                        />
+                        <Button size="small" onClick={handleAddMember} disabled={!memberEmail.trim()}>
+                          Add member
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-[#101010]">
+                      <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Organization owner</h4>
+                      <div className="flex flex-col gap-2 p-4">
+                          <div className="flex items-center justify-between p-2 border border-gray-500/[0.2] rounded">
+                            <div>
+                              <div className="font-medium">{currentOrg.ownerEmail}</div>
+                              <div className="text-xs text-gray-500">Owner</div>
+                            </div>
+                            <div className="text-xs text-gray-400">{currentOrg.ownerEmail}</div>
+                          </div>
+                      </div>
+                    </div>
+
+                    <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-[#101010]">
+                      <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Members</h4>
+                      <div className="flex flex-col gap-2 p-4">
+                        {(currentOrg.members || []).map(m => (
+                          <div key={m.$id} className="flex items-start justify-between gap-3 p-2 border border-gray-500/[0.2] rounded">
+                            {editingMemberId === m.$id ? (
+                              <div className="flex flex-col gap-3 flex-1">
+                                <div>
+                                  <div className="font-medium">{m.name || m.email}</div>
+                                  <div className="text-xs text-gray-500">{m.email}</div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Input
+                                    value={editingMemberRole}
+                                    onChange={(e: any) => setEditingMemberRole(e.target.value)}
+                                    placeholder="Role"
+                                    className="min-w-[180px] py-[2px]"
+                                  />
+                                  <Button size="small" onClick={handleSaveMemberRole}>
+                                    Save
+                                  </Button>
+                                  <Button size="small" variant="secondary" onClick={closeMemberEditor}>
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div>
+                                  <div className="font-medium">{m.name || m.email}</div>
+                                  <div className="text-xs text-gray-500">{m.role}</div>
+                                  <div className="text-xs text-gray-400 mt-1">{m.email}</div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <button onClick={() => openMemberEditor(m)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
+                                    Quick edit
+                                  </button>
+                                  {m.role !== 'owner' && (
+                                    <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
+                                      Remove
+                                    </button>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+              {
+                selectedTab === "settings" && (
+                  <div className="mb-4 space-y-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
                       <div>
-                        <div className="font-medium">{m.name || m.email}</div>
-                        <div className="text-xs text-gray-500">{m.role}</div>
+                        <h2 className="font-semibold text-lg">Settings</h2>
+                        <p className="text-sm text-gray-500">Update organization details and manage important actions.</p>
                       </div>
-                      <div className="text-xs text-gray-400">{m.email}</div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="secondary" size="small" onClick={handleCopyOrganizationId}>
+                          Copy Org ID
+                        </Button>
+                        <Button variant="secondary" size="small" onClick={() => { setSelectedOrg(currentOrg); setShowEdit(true); }}>
+                          Open Editor
+                        </Button>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+
+                    <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-[#101010]">
+                      <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Organization profile</h4>
+                      <div className="grid grid-cols-1 gap-4 p-4">
+                          <Input
+                            value={settingsName}
+                            onChange={(e: any) => setSettingsName(e.target.value)}
+                            placeholder="Organization name"
+                            className="w-full bg-transparent"
+                            label='Organization title'
+                          />
+                        <div className='flex flex-col gap-2'>
+                          <label className="text-sm font-medium">Description</label>
+                          <textarea
+                            value={settingsDescription}
+                            onChange={(e) => setSettingsDescription(e.target.value)}
+                            className="w-full min-h-[120px] p-3 rounded-md border border-gray-500/[0.2] bg-white dark:bg-dark-bg outline-none"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                          <div className="text-xs text-gray-500">
+                            {currentOrg.members?.length || 0} members · {currentOrg.teams?.length || 0} teams
+                          </div>
+                          <Button size="small" onClick={handleSaveSettings} disabled={!settingsName.trim()}>
+                            Save changes
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border border-red-500/20 rounded-lg bg-red-50 dark:bg-red-950/10">
+                      <div className="p-4 border-b border-red-500/20">
+                        <h4 className="text-sm font-medium text-red-700 dark:text-red-300">Danger zone</h4>
+                        <p className="text-sm text-red-700/80 dark:text-red-300/80">Deleting an organization removes it for all members.</p>
+                      </div>
+                      <div className="p-4 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          Delete the current organization if you no longer need this workspace.
+                        </div>
+                        <Button size="small" onClick={() => setShowDeleteConfirm(true)}>
+                          Delete Organization
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
+              
+
             </div>
           )}
         </div>
       </div>
+      {showDeleteConfirm && currentOrg && (
+        <Confirmationmessage
+          title={`Delete organization: ${currentOrg.name}?`}
+          text="This permanently deletes the organization and removes access for all members."
+          buttonText="Delete"
+          setOpen={setShowDeleteConfirm}
+          onConfirm={handleDeleteOrganization}
+        />
+      )}
     <CreateOrganizationModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
     <EditOrganizationModal isOpen={showEdit} onClose={() => setShowEdit(false)} org={selectedOrg} />
   </div>

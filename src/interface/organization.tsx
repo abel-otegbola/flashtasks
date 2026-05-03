@@ -3,7 +3,7 @@ export interface OrgMember {
   $id: string;
   name?: string;
   email?: string;
-  role?: 'owner' | 'admin' | 'member';
+  role?: string;
 }
 
 export interface Team {

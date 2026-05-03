@@ -16,6 +16,7 @@ type OrganizationContextValues = {
   removeTeam: (orgId: string, teamId: string) => Promise<boolean>;
   addMemberToOrg: (orgId: string, member: OrgMember) => Promise<boolean>;
   updateOrganization: (orgId: string, data: Partial<any>) => Promise<Organization>;
+  deleteOrganization: (orgId: string) => Promise<boolean>;
   removeMemberFromOrg: (orgId: string, memberId: string) => Promise<boolean>;
   updateTeamMembers: (orgId: string, teamId: string, memberIds: string[]) => Promise<boolean>;
 }
@@ -173,6 +174,26 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error updating organization', err);
       toast.error('Failed to update organization');
       throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteOrganization = async (orgId: string) => {
+    setLoading(true);
+    try {
+      await databases.deleteDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId);
+
+      const remainingOrganizations = organizations.filter((org) => org.$id !== orgId);
+      setOrganizations(remainingOrganizations);
+      setCurrentOrg(remainingOrganizations[0] || null);
+
+      toast.success('Organization deleted');
+      return true;
+    } catch (err) {
+      console.error('Error deleting organization', err);
+      toast.error('Failed to delete organization');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -350,7 +371,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <OrganizationContext.Provider value={{ organizations, currentOrg, loading, createOrganization, selectOrganization, addTeam, removeTeam, addMemberToOrg, updateOrganization, removeMemberFromOrg, updateTeamMembers }}>
+    <OrganizationContext.Provider value={{ organizations, currentOrg, loading, createOrganization, selectOrganization, addTeam, removeTeam, addMemberToOrg, updateOrganization, deleteOrganization, removeMemberFromOrg, updateTeamMembers }}>
       {children}
     </OrganizationContext.Provider>
   );
