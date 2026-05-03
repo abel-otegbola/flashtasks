@@ -43,6 +43,7 @@ export default function Login() {
                     type="email"
                     error={touched.email ? errors.email : ""}
                     placeholder="Email Address"
+                    label="Email Address"
                     leftIcon={<Letter />}
                   />
                   <Input
@@ -52,6 +53,7 @@ export default function Login() {
                     type="password"
                     error={touched.password ? errors.password : ""}
                     placeholder="Password"
+                    label="Password"
                     leftIcon={<Lock />}
                   />
                   <Button type="submit" className="w-full py-[12px]">

@@ -1,12 +1,10 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useOrganizations } from '../../../context/organizationContext';
 import Button from '../../../components/button/button';
 import Input from '../../../components/input/input';
 import CreateOrganizationModal from '../../../components/modals/createOrganizationModal';
 import EditOrganizationModal from '../../../components/modals/editOrganizationModal';
-import { Formik } from 'formik';
-import { createOrganizationSchema } from '../../../schema/organizationSchema';
 import { GridFourIcon, PencilSimpleLineIcon, TrashIcon } from '@phosphor-icons/react';
 import { OrganizationSkeletonLoader } from '../../../components/skeletons';
 import Confirmationmessage from '../../../components/modals/confirmation';

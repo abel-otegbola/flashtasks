@@ -49,8 +49,8 @@ export default function CreateOrganizationModal({ isOpen, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-end z-50">
-      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-full max-w-2xl h-screen">
-        <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-200 dark:border-gray-700 z-[2] p-4 flex items-center justify-between">
+      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-full max-w-2xl h-screen border-l border-gray-500/[0.2]">
+        <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-500/[0.2] z-[2] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
               <XIcon size={16} />
@@ -84,7 +84,7 @@ export default function CreateOrganizationModal({ isOpen, onClose }: Props) {
 
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Description</label>
-                            <textarea value={values.description} name='description' onChange={handleChange} className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-bg outline-none" />
+                            <textarea value={values.description} name='description' onChange={handleChange} className="w-full p-2 rounded-md border border-gray-500/[0.2] bg-white dark:bg-dark-bg outline-none" />
                             {touched.description && errors.description && <div className="text-red-500 text-sm">{errors.description}</div>}
                         </div>
 
@@ -100,7 +100,7 @@ export default function CreateOrganizationModal({ isOpen, onClose }: Props) {
                         </div>
                     </div>
 
-                    <div className="sticky bottom-0 bg-white dark:bg-[#0b0b0b] border-t border-gray-200 dark:border-gray-700 p-6 flex justify-end gap-3">
+                    <div className="sticky bottom-0 bg-white dark:bg-[#0b0b0b] border-t border-gray-500/[0.2] p-6 flex justify-end gap-3">
                         <Button variant='secondary' onClick={onClose}>Close</Button>
                         <Button type='submit' disabled={loading}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Create Organization'}</Button>
                     </div>

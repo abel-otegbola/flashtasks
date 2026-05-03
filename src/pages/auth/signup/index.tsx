@@ -49,6 +49,7 @@ export default function SignupPage() {
                       type="text"
                       error={touched.name ? errors.name : ""}
                       placeholder="User name"
+                      label="User name"
                       leftIcon={<User weight="Outline" />}
                     />
 
@@ -59,6 +60,7 @@ export default function SignupPage() {
                       type="email"
                       error={touched.email ? errors.email : ""}
                       placeholder="Email Address"
+                      label="Email Address"
                       leftIcon={<Letter weight="Outline" />}
                     />
 
@@ -69,6 +71,7 @@ export default function SignupPage() {
                       type="password"
                       error={touched.password ? errors.password : ""}
                       placeholder="Password"
+                      label="Password"
                       leftIcon={<Lock weight="Outline" />}
                     />
                   
