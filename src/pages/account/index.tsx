@@ -26,7 +26,7 @@ function AccountPages() {
     <div className="min-h-[400px] flex justify-between bg-bg-gray-100 dark:bg-dark/[0.6]">
         <Sidebar />
         <div className="flex flex-col flex-1 gap-4 md:mt-4 md:mr-4  ml-0">
-            <div className="flex p-4 sm:pr-4 pr-18 md:rounded-[10px] items-center justify-between bg-white dark:bg-dark-bg border border-gray-500/[0.1] md:static sticky top-0 z-[10]">
+            <div className="flex p-4 sm:pr-4 pr-18 md:rounded-[10px] items-center justify-between bg-white dark:bg-dark-bg border border-gray-500/[0.1] md:static sticky top-0 z-[3]">
                 <Formik
                     initialValues={{ search: "" }}
                     onSubmit={(values, { setSubmitting }) => {
