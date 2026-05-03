@@ -26,7 +26,7 @@ export default function Login() {
               <p className="text-gray-500 text-center">Enter your email and password to access your account</p>
             </div>
             <Formik
-              initialValues={{ email: "test@gmail.com", password: "password1" }}
+              initialValues={{ email: "", password: "" }}
               enableReinitialize={true}
               validationSchema={loginSchema}
               onSubmit={(values, { setSubmitting }) => {
