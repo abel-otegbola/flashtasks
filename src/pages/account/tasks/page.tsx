@@ -15,19 +15,19 @@ import TaskCheckbox from "../../../components/ui/taskCheckbox";
 import SwipeDeleteItem from "../../../components/ui/swipeDeleteItem";
 
 const sections = [
-  { key: "todo", title: "Todo", filter: "upcoming", color: "yellow" },
-  { key: "inProgress", title: "In Progress", filter: "in progress", color: "blue" },
+  { key: "todo", title: "Todo", filter: "upcoming", color: "blue" },
   { key: "reviewed", title: "Reviewed", filter: "pending", color: "orange" },
+  { key: "inProgress", title: "In Progress", filter: "in progress", color: "yellow" },
   { key: "completed", title: "Completed", filter: "completed", color: "green" },
   { key: "suspended", title: "Suspended", filter: "suspended", color: "red" },
 ] as const;
 
 const colorClasses: Record<string, string> = {
-  yellow: "border-yellow-200/[0.4] dark:border-gray-500/[0.2]",
-  blue: "border-blue-200/[0.4] dark:border-gray-500/[0.2]",
-  orange: "border-orange-200/[0.4] dark:border-gray-500/[0.2]",
-  green: "border-green-200/[0.4] dark:border-gray-500/[0.2]",
-  red: "border-red-200/[0.4] dark:border-gray-500/[0.2]",
+  yellow: "border-yellow-400/[0.2]",
+  blue: "border-blue-400/[0.2]",
+  orange: "border-orange-400/[0.2]",
+  green: "border-green-400/[0.2]",
+  red: "border-red-400/[0.2]",
 };
 
 type ViewMode = 'kanban' | 'list' | 'grid' | 'calendar';

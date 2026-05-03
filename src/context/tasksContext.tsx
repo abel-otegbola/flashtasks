@@ -81,7 +81,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
 
             // Only add optional fields if they exist
             if (task.dueDate) taskData.dueDate = task.dueDate;
-            if (task.assignee) taskData.assignee = task.assignee;
+            if (task.assignees) taskData.assignee = task.assignees;
             if (task.invites) taskData.invites = task.invites;
             if ((task as any).organizationId) taskData.organizationId = (task as any).organizationId;
             if ((task as any).teamId) taskData.teamId = (task as any).teamId;
@@ -134,7 +134,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
 
                 // Only add optional fields if they exist
                 if (task.dueDate) taskData.dueDate = task.dueDate;
-                if (task.assignee) taskData.assignee = task.assignee;
+                if (task.assignees) taskData.assignee = task.assignees;
                 if (task.invites) taskData.invites = task.invites;
                 if ((task as any).organizationId) taskData.organizationId = (task as any).organizationId;
                 if ((task as any).teamId) taskData.teamId = (task as any).teamId;
@@ -167,7 +167,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
 
     // Update a task
     const updateTask = async (taskId: string, updates: Partial<todo>): Promise<todo | null> => {
-        setLoading(true);
         setError(null);
         
         try {
@@ -185,8 +184,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             setTasks(prev => prev.map(task => task.$id === taskId ? updatedTask : task));
             toast.success('Task updated successfully!');
 
-                                    // update index
-                                    await indexTask('update', updatedTask);
+            // update index
+            await indexTask('update', updatedTask);
             return updatedTask;
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to update task';

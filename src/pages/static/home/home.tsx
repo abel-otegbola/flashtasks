@@ -52,7 +52,12 @@ function Home() {
         </div>
         
         <div className="flex flex-col justify-center items-center py-[60px] p-4 md:w-[65%] w-full">
-          <img src={`/hero-img-${theme === 'dark' ? 'dark' : 'light'}.webp`} width={1229} height={829} alt="hero" className="shadow-2xl rounded-[16px]" />
+          <div className='shadow-lg rounded-[24px] w-full flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-[#161616] p-4'>
+            <video autoPlay loop muted playsInline className="w-full h-full rounded-[16px] shadow-2xl">
+              <source src={`/hero-video-${theme === 'dark' ? 'dark' : 'light'}.mp4`} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
           <BlurReveal preset="slide-right"><h2 className="font-medium mt-20 mb-4 text-center">Join 500+ teams saving 10+ hours/week of quality time</h2></BlurReveal>
           <img src="/users.png" alt="users" width={240} height={64} className="" />
         </div>

@@ -77,10 +77,11 @@ function TodoCard(task: TodoCardProps) {
   return (
     <>
       <SwipeDeleteItem
-        className={`relative flex flex-col border-t-3 ${color.border} rounded-[10px] border border-gray-100/10 bg-white dark:bg-[#101010] overflow-hidden transition-all hover:shadow-md cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
+        className={`relative flex flex-col overflow-hidden transition-all hover:shadow-md cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
         onSwipeLeft={() => setShowDeleteConfirmation(true)}
       >
       <div
+        className={`border-t-3 ${color.border} border rounded-[10px] bg-white dark:bg-[#101010]`}
         onClick={() => setShowDetails(true)}
         draggable={task.draggable}
         onDragStart={(event) => {
@@ -176,7 +177,7 @@ function TodoCard(task: TodoCardProps) {
         <div className="flex justify-between gap-4 flex-wrap p-2 px-4 border-t border-gray-100 dark:border-gray-500/[0.2]">
           <div className="flex ml-2">
             {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => (
-              <span key={index} className="border-2 border-white -ml-2 flex items-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-500/[0.2] dark:border-[#151515] flex items-center justify-center text-[10px] text-gray-700">
+              <span key={index} className="border-2 border-white -ml-2 flex items-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-500/[0.2] dark:border-[#151515] flex items-center justify-center text-[10px]">
                 {String(initial).trim().charAt(0).toUpperCase()}
               </span>
             ))}
