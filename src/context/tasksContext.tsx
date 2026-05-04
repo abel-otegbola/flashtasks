@@ -80,7 +80,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
 
             // Only add optional fields if they exist
             if (task.dueDate) taskData.dueDate = task.dueDate;
-            if (task.assignees) taskData.assignee = task.assignees;
+            if (task.assignees) taskData.assignees = task.assignees;
             if (task.invites) taskData.invites = task.invites;
             if ((task as any).organizationId) taskData.organizationId = (task as any).organizationId;
             if ((task as any).teamId) taskData.teamId = (task as any).teamId;

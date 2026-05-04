@@ -59,8 +59,8 @@ export default function EditOrganizationModal({ isOpen, onClose, org }: Props) {
   }
 
   return (
-     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-end z-50">
-          <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-full max-w-2xl h-screen">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center sm:justify-end justify-center z-50">
+      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[80%] max-w-2xl sm:h-screen h-[80vh] border-l border-gray-500/[0.2] rounded-lg overflow-hidden">
             <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-500/[0.2] z-[2] p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
@@ -87,7 +87,7 @@ export default function EditOrganizationModal({ isOpen, onClose, org }: Props) {
                 >
                 {({ isSubmitting, handleSubmit, errors, touched, values, handleChange }) => (
                     <form onSubmit={handleSubmit} className='flex flex-col justify-between h-full'>
-                        <div className="p-6 space-y-6">
+                        <div className="p-6 space-y-6 overflow-y-auto pb-24">
                             <div className='flex flex-col gap-2'>
                                 <label className="text-sm font-medium">Name <span className="text-red-500">*</span></label>
                                 <Input value={values.name} name='name' onChange={handleChange} placeholder="Organization name" error={touched.name ? errors.name : ""} />

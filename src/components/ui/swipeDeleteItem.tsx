@@ -1,17 +1,12 @@
 import { useRef, useState } from "react";
-import { TrashIcon, CheckIcon } from "@phosphor-icons/react";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
 
 type SwipeActionItemProps = {
   children: React.ReactNode;
-  onSwipeLeft?: () => void;   // delete
-  onSwipeRight?: () => void;  // complete
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
   className?: string;
-  threshold?: number;         // px drag needed to trigger action (default 90)
-  maxReveal?: number;         // max px the item slides before snapping (default 100)
+  threshold?: number;
+  maxReveal?: number;
   disabled?: boolean;
 };
 
@@ -125,6 +120,7 @@ function SwipeActionItem({
       suppressClickRef.current = true;
       window.setTimeout(() => {
         onSwipeRight();
+        console.log("right")
         resetSwipe();
       }, 120);
       return;
@@ -136,72 +132,14 @@ function SwipeActionItem({
   const handlePointerCancel = () => {
     if (!disabled) resetSwipe();
   };
-
-  // ── Derived values for indicator rendering ────────────────────────────────
-
+  
   const leftProgress  = progress(translateX, threshold); // swipe-right (complete)
   const rightProgress = progress(translateX, threshold); // swipe-left  (delete)
   const isSwipingLeft  = translateX < 0;
   const isSwipingRight = translateX > 0;
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
     <div className={`relative overflow-hidden rounded-xl ${className}`}>
-
-      {/* ── Complete indicator (revealed on swipe right) ── */}
-      {onSwipeRight && (
-        <div
-          aria-hidden
-          className="absolute inset-y-0 left-0 flex items-center justify-start px-5"
-          style={{
-            width: maxReveal,
-            background: `rgba(34, 197, 94, ${isSwipingRight ? 0.12 + leftProgress * 0.15 : 0})`,
-            transition: isDragging ? "none" : "background 180ms ease-out",
-          }}
-        >
-          <div
-            style={{
-              opacity: isSwipingRight ? leftProgress : 0,
-              transform: `scale(${isSwipingRight ? 0.6 + leftProgress * 0.4 : 0.6})`,
-              transition: isDragging ? "none" : "opacity 180ms ease-out, transform 180ms ease-out",
-            }}
-          >
-            <CheckIcon
-              size={22}
-              weight="bold"
-              style={{ color: `rgba(34, 197, 94, ${0.4 + leftProgress * 0.6})` }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── Delete indicator (revealed on swipe left) ── */}
-      {onSwipeLeft && (
-        <div
-          aria-hidden
-          className="absolute inset-y-0 right-0 flex items-center justify-end px-5"
-          style={{
-            width: maxReveal,
-            background: `rgba(239, 68, 68, ${isSwipingLeft ? 0.12 + rightProgress * 0.15 : 0})`,
-            transition: isDragging ? "none" : "background 180ms ease-out",
-          }}
-        >
-          <div
-            style={{
-              opacity: isSwipingLeft ? rightProgress : 0,
-              transform: `scale(${isSwipingLeft ? 0.6 + rightProgress * 0.4 : 0.6})`,
-              transition: isDragging ? "none" : "opacity 180ms ease-out, transform 180ms ease-out",
-            }}
-          >
-            <TrashIcon
-              size={22}
-              weight="bold"
-              style={{ color: `rgba(239, 68, 68, ${0.4 + rightProgress * 0.6})` }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* ── Swipeable content ── */}
       <div
