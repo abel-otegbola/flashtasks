@@ -14,8 +14,6 @@ import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
 import {
   mapExtractedToTodo,
   mapTodoToSavePayload,
-  formatRecordingTime,
-  formatRecordingLimit,
   getMaxRecordingTime,
 } from "../../../helpers/createTaskHelpers";
 
@@ -232,7 +230,7 @@ function CreateTask() {
 
         <div className="flex justify-between flex-wrap gap-4 items-end">
           <p className="text-gray-400 text-sm">
-            {formatRecordingTime(recordingTime)} / {formatRecordingLimit(userRole, maxRecordingTime)} mins
+            5 mins
             {isRecording && (
               <span className="ml-2 text-red-400 text-xs font-medium">● Recording</span>
             )}
