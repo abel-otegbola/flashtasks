@@ -14,14 +14,6 @@ import TaskListView from "../../../components/cards/taskListView";
 import TaskCheckbox from "../../../components/ui/taskCheckbox";
 import SwipeDeleteItem from "../../../components/ui/swipeDeleteItem";
 
-const sections = [
-  { key: "todo", title: "Todo", filter: "upcoming", color: "blue" },
-  { key: "reviewed", title: "Reviewed", filter: "pending", color: "orange" },
-  { key: "inProgress", title: "In Progress", filter: "in progress", color: "yellow" },
-  { key: "completed", title: "Completed", filter: "completed", color: "green" },
-  { key: "suspended", title: "Suspended", filter: "suspended", color: "red" },
-] as const;
-
 const colorClasses: Record<string, string> = {
   yellow: "border-yellow-400/[0.2]",
   blue: "border-blue-400/[0.2]",
@@ -45,6 +37,14 @@ function Tasks() {
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
     const [dragOverSectionKey, setDragOverSectionKey] = useState<string | null>(null);
     const { user } = useUser();
+
+    const sections = [
+    { key: "todo", title: "Todo", filter: "upcoming", color: "blue" },
+    { key: "reviewed", title: "Reviewed", filter: "pending", color: "orange" },
+    { key: "inProgress", title: "In Progress", filter: "in progress", color: "yellow" },
+    { key: "completed", title: "Completed", filter: "completed", color: "green" },
+    { key: "suspended", title: "Suspended", filter: "suspended", color: "red" },
+    ] as const;
 
     useEffect(() => {
     if (user) {
@@ -226,11 +226,13 @@ function Tasks() {
                         onClose={() => setShowModal(false)}
                     />
                 </div>
+                
+                <p className="md:hidden">Swipe a task to the left to <span className="font-semibold text-red-500">delete</span> and right to <span className="font-semibold text-green-500">complete</span></p>
             </div>
 
             {/* Kanban View */}
             {viewMode === 'kanban' && (
-                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start md:p-4 bg-gray-100/[0.2] dark:bg-dark-bg-secondary rounded-lg md:border border-gray-500/[0.1]">
+                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start rounded-lg">
                     {/* Task Statistics */}
                     {sections.map(({ key, title, filter, color }) => (
                         <div
@@ -246,7 +248,7 @@ function Tasks() {
                         >
                             <button 
                                 key={key} 
-                                className={`p-4 md:text-center text-start rounded-lg border ${colorClasses[color]} bg-white dark:bg-[#101010]`}
+                                className={`p-4 md:text-center text-start rounded-lg border ${colorClasses[color]} bg-gray-100/[0.2] dark:bg-dark-bg-secondary`}
                                 onClick={() => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))}                                
                             >
                                 <p className="text-gray-400 text-xs mb-1">{title}</p>
@@ -286,7 +288,7 @@ function Tasks() {
 
             {/* List View */}
             {viewMode === 'list' && (
-                <div className="flex flex-col gap-3 border border-gray-500/[0.1] rounded-lg p-4 bg-bg-gray-100/[0.2] dark:bg-dark-bg">
+                <div className="flex flex-col gap-3">
                     {tasks.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                             No tasks yet. Create your first task!
@@ -296,10 +298,10 @@ function Tasks() {
                             {/* List Header - Hidden on mobile */}
                             <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]">
                                 <div className="col-span-4">Task</div>
-                                <div className="col-span-2">Category</div>
-                                <div className="col-span-2">Status</div>
-                                <div className="col-span-2">Priority</div>
-                                <div className="col-span-2">Due Date</div>
+                                <div className="col-span-2 px-2">Category</div>
+                                <div className="col-span-2 px-2">Status</div>
+                                <div className="col-span-2 px-2">Priority</div>
+                                <div className="col-span-2 px-2">Due Date</div>
                             </div>
                             
                             {/* List Items */}
