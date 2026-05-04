@@ -25,7 +25,8 @@ export default function TaskListView({ task, openTaskDetails, index }: { task: t
             onConfirm={() => deleteTask(task.$id)}
         />
     )}
-    <SwipeDeleteItem onSwipeLeft={() => setShowDeleteConfirm(true)}>
+    <SwipeDeleteItem onSwipeLeft={() => setShowDeleteConfirm(true)} 
+            onSwipeRight={() => updateTask(task.$id, { status: checked ? 'completed' : 'pending' }) }>
     <div className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark'}`}
         
     >
