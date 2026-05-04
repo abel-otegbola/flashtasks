@@ -34,10 +34,7 @@ const slides = [
   return (
     <div className="min-h-[400px] flex justify-between">
 
-      <div className="relative md:w-[45%] h-[96vh] rounded-[12px] m-4 sticky top-0 md:block hidden">
-        <video autoPlay loop muted className="absolute w-full h-full object-cover rounded-[12px]">
-          <source src="/dancing.mp4" type="video/mp4" />
-        </video>
+      <div className="relative bg-[url('/hero-bg.jpg')] bg-cover bg-center md:w-[45%] h-[96vh] rounded-[12px] m-4 sticky top-0 md:block hidden">
         <div className="flex flex-col gap-6 p-[10%] h-full justify-end w-full rounded-[12px]">
 
           <div className="flex flex-col gap-6 text-white w-full">

@@ -118,9 +118,7 @@ function Sidebar() {
                     {user && (
                         <div className={`flex items-center gap-3 p-1`}>
                             {/* User Avatar */}
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-fuchsia-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                                {getUserInitial()}
-                            </div>
+                            <img src="/profile_pic.png" width={40} height={40} alt="avatar" className="rounded-full" />
                             
                             {/* User Details */}
                             <div className={`flex-1 min-w-0 ${open ? "sm:hidden" : ""}`}>

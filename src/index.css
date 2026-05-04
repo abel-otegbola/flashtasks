@@ -4,7 +4,7 @@
 @variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --color-primary: oklch(58.41% 0.232 283.19);
+  --color-primary: #45b44b;
   --color-text-gray: oklch(52.78% 0.037 304.86);
   --color-text-black: oklch(23.51% 0.029 313.23);
   --color-bg-gray-100: oklch(98.81% 0.000 0);
@@ -36,7 +36,7 @@
 
 /* Manual light theme override */
 :root[data-theme="light"] {
-  --color-primary: oklch(58.41% 0.232 283.19);
+  --color-primary: #45b44b;
   --color-text-gray: oklch(52.78% 0.037 304.86);
   --color-text-black: #292B38;
   --color-bg-gray-100: oklch(98.81% 0.000 0);
