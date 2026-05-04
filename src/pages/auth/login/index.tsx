@@ -15,7 +15,7 @@ export default function Login() {
   const callbackURL = URLSearchParams.get("callbackURL") || ""
 
   return (
-      <div className="flex md:w-[60%] h-auto w-full items-center justify-center">
+      <div className="flex md:w-[60%] h-auto w-full max-w-lg mx-auto items-center justify-center">
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%] md:py-[5%] py-[80px]">
             <div className="flex flex-col items-center gap-4">
@@ -66,6 +66,10 @@ export default function Login() {
 
             <Link to="/auth/signup" className="text-center mt-4 text-[14px]">
               Don't have an account? <span className="text-primary">Register</span>
+            </Link>
+            
+            <Link to="/" className="text-center mt-4 text-[14px] underline">
+              Back to Home
             </Link>
 
           </div>

@@ -34,7 +34,7 @@ const slides = [
   return (
     <div className="min-h-[400px] flex justify-between">
 
-      <div className="relative bg-[url('/hero-bg.jpg')] bg-cover bg-center md:w-[45%] h-[96vh] rounded-[12px] m-4 sticky top-0 md:block hidden">
+      <div className="relative bg-[url('/hero-bg.png')] bg-cover bg-center md:w-[45%] h-[96vh] rounded-[12px] m-4 sticky top-0 md:block hidden">
         <div className="flex flex-col gap-6 p-[10%] h-full justify-end w-full rounded-[12px]">
 
           <div className="flex flex-col gap-6 text-white w-full">

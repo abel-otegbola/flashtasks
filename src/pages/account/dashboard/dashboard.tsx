@@ -69,7 +69,7 @@ function Dashboard() {
         </div>
 
         <div className="flex flex-col bg-white dark:bg-dark-bg border border-gray-500/[0.1] rounded-[10px]">
-          <div className="flex justify-between items-center flex-wrap border-b border-gray-500/[0.1] md:px-6 p-4">
+          <div className="flex justify-between items-center gap-4 flex-wrap border-b border-gray-500/[0.1] md:px-6 p-4">
             <h2 className="font-semibold">Recent tasks</h2>
             <div className="flex items-center gap-2">
               <Button href="/account/tasks/new" size="small"><AddCircle /> Convert voice to tasks</Button>
