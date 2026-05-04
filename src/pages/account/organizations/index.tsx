@@ -170,7 +170,7 @@ export default function OrganizationsPage() {
             {organizations.map(org => (
               <button 
                 key={org.$id} 
-                className={`p-3 text-start flex items-center gap-2 rounded-lg border ${currentOrg?.$id === org.$id ? 'border-primary bg-bg-gray-100' : 'border-border-gray-100'}`}
+                className={`p-3 text-start flex items-center gap-2 rounded-lg ${currentOrg?.$id === org.$id ? 'border border-gray-500/[0.2] bg-bg-gray-100' : ''}`}
                 onClick={() => { selectOrganization(org.$id); setSelectedOrg(org); }} 
               >
                 <span className="w-12 h-12 flex items-center justify-center bg-primary/10 text-primary rounded-full font-bold">{org.name.charAt(0).toUpperCase()}</span>

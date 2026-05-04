@@ -44,13 +44,11 @@ export default function EditTaskModal({
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
       <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[94%] max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-500/[0.2] rounded-lg overflow-hidden">
-        <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-500/[0.2] z-[2] p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
-              <XIcon size={16} />
-            </button>
-            <h2 className="px-4 border-l border-gray-500/[0.1] opacity-[0.7] leading-4">Update Current Task</h2>
-          </div>
+        <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-500/[0.1] z-[2] p-4 flex items-center justify-between">
+          <h2 className="px-2 opacity-[0.7] leading-4">Update Current Task</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
+            <XIcon size={16} />
+          </button>
         </div>
         <Formik
           initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignees: task?.assignees || [], invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: toDateTimeLocalValue(task?.dueDate), comments: task?.comments || '' }}

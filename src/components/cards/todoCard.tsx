@@ -78,12 +78,12 @@ function TodoCard(task: TodoCardProps) {
   return (
     <>
       <SwipeDeleteItem
-        className={`relative flex flex-col overflow-hidden transition-all hover:shadow-md cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
+        className={`relative flex flex-col overflow-hidden transition-all cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
         onSwipeLeft={() => setShowDeleteConfirmation(true)}
         onSwipeRight={() => updateTask(task.$id, { status: status === 'completed' ? 'pending' : 'completed' }) }
       >
       <div
-        className={`border-t-3 ${color.border} border rounded-[10px] bg-white dark:bg-[#101010]`}
+        className={`border-t-3 ${color.border} border rounded-[10px] bg-white dark:bg-[#101010] hover:shadow-md `}
         onClick={() => setShowDetails(true)}
         draggable={task.draggable}
         onDragStart={(event) => {
