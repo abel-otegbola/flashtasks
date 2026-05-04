@@ -26,7 +26,7 @@ const colorClasses: Record<string, string> = {
 type ViewMode = 'kanban' | 'list' | 'grid' | 'calendar';
 
 function Tasks() {
-    const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+    const [openSections, setOpenSections] = useState<string>("");
     const [showModal, setShowModal] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -76,7 +76,7 @@ function Tasks() {
             return;
         }
 
-        setOpenSections(prev => ({ ...prev, [sectionKey]: true }));
+        setOpenSections(sectionKey);
         await updateTask(draggedTaskId, { status: taskStatus });
         setDraggedTaskId(null);
         setDragOverSectionKey(null);
@@ -131,7 +131,7 @@ function Tasks() {
     return (
         <>
         <div className="flex flex-col gap-6 md:m-0 mx-4 h-full mb-4">
-            <div className="flex justify-between gap-6 items-start rounded-[10px] border border-gray-500/[0.1] flex-wrap p-6 bg-white dark:bg-dark-bg">
+            <div className="flex justify-between gap-6 items-start rounded-[10px] border border-gray-500/[0.1] flex-wrap md:p-6 p-4 bg-white dark:bg-dark-bg">
                 <div className="flex gap-4 items-center">
                     <h1 className="font-medium md:text-[24px] text-[18px] leading-[120%]">
                         Your Tasks
@@ -253,12 +253,12 @@ function Tasks() {
 
             {/* Kanban View */}
             {viewMode === 'kanban' && (
-                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-start rounded-lg">
+                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-stretch rounded-lg max-h-[72vh] overflow-y-auto">
                     {/* Task Statistics */}
                     {sections.map(({ key, title, filter, color }) => (
                         <div
                             key={key}
-                            className={`flex flex-col gap-2 rounded-lg transition-all ${dragOverSectionKey === key ? 'ring-2 ring-primary/30 bg-primary/[0.03]' : ''}`}
+                            className={`flex flex-col h-full gap-2 rounded-lg transition-all ${dragOverSectionKey === key ? 'ring-2 ring-primary/30 bg-primary/[0.03]' : ''}`}
                             onDragOver={(event) => event.preventDefault()}
                             onDragEnter={() => setDragOverSectionKey(key)}
                             onDragLeave={() => setDragOverSectionKey((current) => current === key ? null : current)}
@@ -269,15 +269,15 @@ function Tasks() {
                         >
                             <button 
                                 key={key} 
-                                className={`p-4 md:text-center text-start rounded-lg border ${colorClasses[color]} bg-gray-100/[0.2] dark:bg-dark-bg-secondary`}
-                                onClick={() => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))}                                
+                                className={`p-4 md:text-center text-start z-[2] sticky top-0 rounded-lg border ${colorClasses[color]} bg-gray-100/[0.2] dark:bg-dark-bg-secondary`}
+                                onClick={() => setOpenSections(prev => prev === key ? '' : key)}                                
                             >
                                 <p className="text-gray-400 text-xs mb-1">{title}</p>
                                 <p className="text-2xl font-bold">{tasks.filter((t) => t.status === filter).length}</p>
                             </button>
                             <div
-                                className={`flex flex-col gap-4 overflow-hidden transition-all duration-300 
-                                    ${openSections[key] ? "max-h-[2000px]" : "max-h-0 md:max-h-none"}
+                                className={`flex flex-col gap-4 overflow-hidden transition-all duration-300
+                                    ${openSections === key ? "max-h-[2000px]" : "max-h-0 md:max-h-none"}
                                 `}
                             >
                                 {filteredTasks.filter((t) => t.status === filter).length === 0 ? (
