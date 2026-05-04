@@ -3,46 +3,21 @@ import { useRef, useState, useCallback } from "react";
 export type TranscriptionStatus = "idle" | "recording" | "error";
 
 export interface UseRealtimeTranscriptionOptions {
-  /**
-   * Called for every recognised chunk.
-   * `isFinal = false` → interim (in-progress words, show in grey)
-   * `isFinal = true`  → committed text, safe to persist
-   */
   onChunkTranscribed?: (text: string, isFinal: boolean) => void;
   onError?: (error: string) => void;
-  /** BCP-47 language tag, e.g. "en-US". Defaults to navigator.language. */
   lang?: string;
 }
 
 export interface UseRealtimeTranscriptionReturn {
   status: TranscriptionStatus;
-  recordingTime: number; // seconds elapsed since startRecording()
-  isSupported: boolean;  // false → hide the mic button entirely
+  recordingTime: number;
+  isSupported: boolean;
   startRecording: () => void;
   stopRecording: () => void;
   transcribeFile: (file: File) => Promise<string>;
   error: string | null;
 }
 
-/**
- * useRealtimeTranscription
- * ─────────────────────────
- * Wraps the browser's built-in Web Speech API (SpeechRecognition).
- * Works fully on-device: no network, no API key, no extra packages.
- *
- * How it streams:
- *   SpeechRecognition fires two kinds of results –
- *     • interim  → words the engine is still deciding on  (isFinal = false)
- *     • final    → committed words, ready to store         (isFinal = true)
- *   Both are forwarded through onChunkTranscribed so the UI can show
- *   live feedback in grey while appending only the final segments.
- *
- * Browser support:
- *   Chrome ✓  |  Edge ✓  |  Safari 15+ ✓  |  Firefox ✗ (flag only)
- *   Check `isSupported` before rendering the mic button.
- *
- * Drop-in placement: src/hooks/useRealtimeTranscription.ts
- */
 export function useRealtimeTranscription({
   onChunkTranscribed,
   onError,
@@ -63,10 +38,16 @@ export function useRealtimeTranscription({
   const [recordingTime, setRecordingTime] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  // ── Refs (not state — changes must not trigger re-renders) ─────────────────
+  // ── Refs ───────────────────────────────────────────────────────────────────
   const recognitionRef = useRef<any>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const statusRef = useRef<TranscriptionStatus>("idle"); // mirror of status for closures
+  const statusRef = useRef<TranscriptionStatus>("idle");
+
+  const lastCommittedIndexRef = useRef(0);
+
+  const seenFinalTextsRef = useRef<Set<string>>(new Set());
+
+  const isRestartingRef = useRef(false);
 
   // ── Timer helpers ──────────────────────────────────────────────────────────
   const startTimer = () => {
@@ -90,59 +71,88 @@ export function useRealtimeTranscription({
     stopTimer();
   };
 
-  // ── buildRecognition — creates and wires a SpeechRecognition instance ──────
+  // ── buildRecognition ───────────────────────────────────────────────────────
   const buildRecognition = useCallback(() => {
     const recognition = new SpeechRecognitionAPI();
 
-    recognition.continuous = true;      // keep listening across pauses
-    recognition.interimResults = true;  // surface in-progress words
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = lang ?? navigator.language ?? "en-US";
 
     recognition.onstart = () => {
       setStatus("recording");
       statusRef.current = "recording";
-      startTimer();
+      // Only reset the timer on the very first start, not on auto-restarts.
+      if (!isRestartingRef.current) {
+        startTimer();
+      }
+      isRestartingRef.current = false;
     };
 
     recognition.onresult = (event: any) => {
       let interimText = "";
-      let finalText = "";
 
-      // event.resultIndex tells us which results are new this event
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = lastCommittedIndexRef.current; i < event.results.length; i++) {
         const transcript: string = event.results[i][0].transcript;
+
         if (event.results[i].isFinal) {
-          finalText += transcript;
+          // Normalise: lowercase + collapse whitespace for dedup key
+          const key = transcript.trim().toLowerCase().replace(/\s+/g, " ");
+
+          if (!seenFinalTextsRef.current.has(key)) {
+            seenFinalTextsRef.current.add(key);
+            onChunkTranscribed?.(transcript.trim(), true);
+          }
+
+          // Always advance the pointer past committed results
+          lastCommittedIndexRef.current = i + 1;
         } else {
           interimText += transcript;
         }
       }
 
-      if (finalText.trim()) onChunkTranscribed?.(finalText.trim(), true);
-      if (interimText.trim()) onChunkTranscribed?.(interimText.trim(), false);
+      if (interimText.trim()) {
+        onChunkTranscribed?.(interimText.trim(), false);
+      }
     };
 
     recognition.onerror = (event: any) => {
-      // "no-speech" fires after silence — benign, just keep listening
       if (event.error === "no-speech" || event.error === "aborted") return;
 
       const ERROR_MESSAGES: Record<string, string> = {
         "audio-capture": "No microphone found. Please connect one and try again.",
-        "not-allowed":   "Microphone access denied. Allow permissions and try again.",
-        network:         "Network error during speech recognition.",
+        "not-allowed": "Microphone access denied. Allow permissions and try again.",
+        network: "Network error during speech recognition.",
       };
 
       emitError(ERROR_MESSAGES[event.error] ?? `Recognition error: ${event.error}`);
     };
 
     recognition.onend = () => {
-      // Chrome auto-stops after ~60 s of silence.
-      // If we're still supposed to be recording, restart transparently.
+      // Only auto-restart if we're still supposed to be recording.
       if (
         recognitionRef.current === recognition &&
-        statusRef.current === "recording"
+        statusRef.current === "recording" &&
+        !isRestartingRef.current
       ) {
-        try { recognition.start(); } catch { /* already starting */ }
+        isRestartingRef.current = true;
+
+        // FIX 3: 300 ms cooldown prevents rapid restart loops on mobile.
+        setTimeout(() => {
+          if (
+            recognitionRef.current === recognition &&
+            statusRef.current === "recording"
+          ) {
+            try {
+              recognition.start();
+            } catch {
+              // Already starting — safe to ignore.
+              isRestartingRef.current = false;
+            }
+          } else {
+            isRestartingRef.current = false;
+          }
+        }, 300);
       }
     };
 
@@ -155,9 +165,15 @@ export function useRealtimeTranscription({
       emitError("Speech recognition is not supported in this browser.");
       return;
     }
-    if (statusRef.current === "recording") return; // already running
+    if (statusRef.current === "recording") return;
 
     setError(null);
+
+    // Reset dedup state for a fresh session.
+    lastCommittedIndexRef.current = 0;
+    seenFinalTextsRef.current = new Set();
+    isRestartingRef.current = false;
+
     const recognition = buildRecognition();
     recognitionRef.current = recognition;
     recognition.start();
@@ -168,9 +184,13 @@ export function useRealtimeTranscription({
     const recognition = recognitionRef.current;
     if (!recognition) return;
 
-    // Clear the ref before calling stop() so onend doesn't auto-restart
     recognitionRef.current = null;
     statusRef.current = "idle";
+    isRestartingRef.current = false;
+
+    // Clear dedup state so a subsequent session starts fresh.
+    lastCommittedIndexRef.current = 0;
+    seenFinalTextsRef.current = new Set();
 
     recognition.stop();
     stopTimer();
@@ -178,14 +198,6 @@ export function useRealtimeTranscription({
   }, []);
 
   // ── transcribeFile ─────────────────────────────────────────────────────────
-  /**
-   * Pipes an audio File through an AudioContext + MediaStream so that
-   * SpeechRecognition can hear it as if it were a live microphone.
-   *
-   * Works in Chrome/Edge. Safari's implementation ignores the audioTrack
-   * override, so file transcription falls back to a plain <audio> play-through
-   * that the user hears while the mic stays open — still useful offline.
-   */
   const transcribeFile = useCallback(
     (file: File): Promise<string> =>
       new Promise((resolve, reject) => {
@@ -203,11 +215,18 @@ export function useRealtimeTranscription({
         recognition.lang = lang ?? navigator.language ?? "en-US";
 
         const segments: string[] = [];
+        // Dedup for file transcription too.
+        const seen = new Set<string>();
 
         recognition.onresult = (event: any) => {
           for (let i = event.resultIndex; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
-              segments.push(event.results[i][0].transcript);
+              const text = event.results[i][0].transcript.trim();
+              const key = text.toLowerCase().replace(/\s+/g, " ");
+              if (!seen.has(key)) {
+                seen.add(key);
+                segments.push(text);
+              }
             }
           }
         };
