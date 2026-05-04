@@ -234,3 +234,22 @@ html {
     margin-left: auto;
 }
 /*  */
+
+/* Custom Scrollbar Styles */
+/* For Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 6px;
+  background: #ffffff00;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 4px;
+  padding: 2px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #46464600;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}

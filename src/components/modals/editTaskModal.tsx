@@ -42,8 +42,8 @@ export default function EditTaskModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center sm:justify-end justify-center z-50">
-      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[80%] max-w-2xl sm:h-screen h-[80vh] border-l border-gray-500/[0.2] rounded-lg overflow-hidden">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[94%] max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-500/[0.2] rounded-lg overflow-hidden">
         <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-500/[0.2] z-[2] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
@@ -64,7 +64,7 @@ export default function EditTaskModal({
             >
             {({ isSubmitting, handleSubmit, errors, touched, values, setFieldValue, handleChange }) => (
                 <form onSubmit={handleSubmit} className='flex flex-col justify-between h-full'>
-                    <div className="p-6 space-y-6 overflow-y-auto pb-24">
+                    <div className="p-6 space-y-6 pb-24 flex-1">
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Title <span className="text-red-500">*</span></label>
                             <Input value={values.title} name='title' onChange={handleChange} placeholder="Task title" error={touched.title ? errors.title : ""} />
@@ -141,7 +141,7 @@ export default function EditTaskModal({
 
                     </div>
 
-                    <div className="sticky bottom-0 bg-white dark:bg-[#0b0b0b] border-t border-gray-500/[0.2] p-6 flex justify-end gap-3">
+                    <div className="sticky bottom-0 bg-white dark:bg-[#0b0b0b] border-t border-gray-500/[0.2] py-4 p-6 flex justify-end gap-3">
                         <Button variant='secondary' onClick={onClose}>Close</Button>
                         <Button type='submit' disabled={loading}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
                     </div>

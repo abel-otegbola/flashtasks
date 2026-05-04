@@ -13,6 +13,7 @@ import { TaskSkeletonLoader } from "../../../components/skeletons";
 import TaskListView from "../../../components/cards/taskListView";
 import TaskCheckbox from "../../../components/ui/taskCheckbox";
 import SwipeDeleteItem from "../../../components/ui/swipeDeleteItem";
+import Dropdown from "../../../components/dropdown/dropdown";
 
 const colorClasses: Record<string, string> = {
   yellow: "border-yellow-400/[0.2]",
@@ -36,6 +37,7 @@ function Tasks() {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
     const [dragOverSectionKey, setDragOverSectionKey] = useState<string | null>(null);
+    const [filterStatus, setFilterStatus] = useState<string>('all');
     const { user } = useUser();
 
     const sections = [
@@ -51,6 +53,8 @@ function Tasks() {
         getTasks(user.email || "");
     }
     }, [user]);
+
+    const filteredTasks = filterStatus === 'all' ? tasks : tasks.filter(task => task.status === filterStatus);
 
     const openTaskDetails = (task: todo) => {
         setSelectedTask(task);
@@ -126,9 +130,9 @@ function Tasks() {
 
     return (
         <>
-        <div className="flex flex-col gap-6 bg-white dark:bg-dark-bg md:rounded-[10px] p-6 md:m-0 mx-4 h-full mb-4">
-            <div className="flex justify-between gap-6 items-start flex-wrap">
-                <div>
+        <div className="flex flex-col gap-6 md:m-0 mx-4 h-full mb-4">
+            <div className="flex justify-between gap-6 items-start rounded-[10px] border border-gray-500/[0.1] flex-wrap p-6 bg-white dark:bg-dark-bg">
+                <div className="flex gap-4 items-center">
                     <h1 className="font-medium md:text-[24px] text-[18px] leading-[120%]">
                         Your Tasks
                     </h1>
@@ -164,6 +168,23 @@ function Tasks() {
                             onConfirm={handleDeleteTask}
                         />
                     )}
+                    {/* Filter by status */}
+                    <div className="flex items-center gap-2">
+                        <Dropdown
+                            options={[
+                                { id: 'all', title: 'All' },
+                                { id: 'pending', title: 'Pending' },
+                                { id: 'in progress', title: 'In Progress' },
+                                { id: 'completed', title: 'Completed' },
+                                { id: 'suspended', title: 'Suspended' },
+                            ]}
+                            value={filterStatus}
+                            onChange={(value) => setFilterStatus(value)}
+                            placeholder="Filter by status"
+                            className="w-[150px]"
+                        />
+                    </div>
+
                     {/* View Toggle */}
                     <div className="flex items-center gap-1 bg-bg-gray-100 dark:bg-dark-bg-secondary p-1 rounded-lg border border-gray-500/[0.2]">
                         <button
@@ -259,12 +280,12 @@ function Tasks() {
                                     ${openSections[key] ? "max-h-[2000px]" : "max-h-0 md:max-h-none"}
                                 `}
                             >
-                                {tasks.filter((t) => t.status === filter).length === 0 ? (
+                                {filteredTasks.filter((t) => t.status === filter).length === 0 ? (
                                     <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                                         No tasks in {title.toLowerCase()}
                                     </div>
                                 ) : (
-                                    tasks
+                                    filteredTasks
                                         .filter((t) => t.status === filter)
                                         .map((task) => (
                                             <TodoCard
@@ -289,7 +310,7 @@ function Tasks() {
             {/* List View */}
             {viewMode === 'list' && (
                 <div className="flex flex-col gap-3">
-                    {tasks.length === 0 ? (
+                    {filteredTasks.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                             No tasks yet. Create your first task!
                         </div>
@@ -305,7 +326,7 @@ function Tasks() {
                             </div>
                             
                             {/* List Items */}
-                            {tasks.map((task, index) => (
+                            {filteredTasks.map((task, index) => (
                                 <TaskListView
                                     key={task.$id}
                                     task={task}
@@ -321,12 +342,12 @@ function Tasks() {
             {/* Grid View */}
             {viewMode === 'grid' && (
                 <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-4">
-                    {tasks.length === 0 ? (
+                    {filteredTasks.length === 0 ? (
                         <div className="col-span-full text-center py-8 text-gray-400 dark:text-gray-500">
                             No tasks yet. Create your first task!
                         </div>
                     ) : (
-                        tasks.map((task) => (
+                        filteredTasks.map((task) => (
                             <TodoCard key={task.$id} {...task} />
                         ))
                     )}

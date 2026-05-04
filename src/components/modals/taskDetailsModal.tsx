@@ -53,8 +53,8 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center sm:justify-end justify-center z-50">
-      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[80%] max-w-2xl sm:h-screen h-[80vh] border-l border-gray-500/[0.2] rounded-lg overflow-hidden">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[94%] max-w-2xl max-h-[80vh] border border-gray-500/[0.2] rounded-lg overflow-hidden">
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-[#101010] border-b border-gray-500/[0.2] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -88,44 +88,43 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             <h3 className="text-xl font-medium">{task.title}</h3>
           </div>
 
-          {/* Description */}
-          <div className="">
-            <label className="text-sm font-semibold mb-3 flex items-center gap-2">
-              Description
-            </label>
-            <p className="p-3 rounded-lg text-sm border border-gray-500/[0.2] bg-gray-500/[0.04] whitespace-pre-wrap">{task.description || 'No description provided'}</p>
-          </div>
-
           {/* Task Details Grid */}
-          <div className="p-3 rounded-lg border border-gray-500/[0.2] bg-gray-500/[0.04]">
-            <div className="grid grid-cols-3 gap-4">
+          <div className="p-3 rounded-lg border border-gray-500/[0.2]">
+            <div className="grid sm:grid-cols-4 grid-cols-2 gap-4">
               {/* Category */}
-                <label className="text-sm font-semibold py-1 flex items-center gap-2">
-                  <GridFourIcon size={16} /> Category
+              <div className="flex flex-col gap-2">
+                <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
+                  Category
                 </label>
                 <span className="col-span-2 inline-block py-1 rounded-lg text-sm">
                   {task.category}
-                </span>                  
+                </span>
+              </div>                  
 
               {/* Status */}
-                <label className="text-sm font-semibold flex items-center gap-2">
-                  <InfoIcon size={16} /> Status
+              <div className="flex flex-col gap-2">
+                <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
+                  Status
                 </label>
                 <span className={`col-span-2 inline-block px-3 py-1 rounded-lg text-sm w-fit font-medium ${getStatusColor(task.status)}`}>
                   {task.status}
                 </span>
+              </div>
 
               {/* Priority */}
-                <label className="text-sm font-semibold flex items-center gap-2">
-                  <Flag size={16} /> Priority
+              <div className="flex flex-col gap-2">
+                <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
+                  Priority
                 </label>
                 <span className={`col-span-2 inline-block px-3 py-1 rounded-lg w-fit text-sm font-medium ${getPriorityColor(task.priority)}`}>
                   {task.priority || 'medium'}
                 </span>
+              </div>
 
               {/* Due Date */}
-                <label className="text-sm font-semibold flex items-center gap-2">
-                  <Calendar size={16} /> Due Date
+              <div className="flex flex-col gap-2">
+                <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
+                  Due Date
                 </label>
                 <p className="col-span-2 text-gray-700 dark:text-gray-300">
                   {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { 
@@ -134,29 +133,39 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
                     day: 'numeric' 
                   }) : 'No due date'}
                 </p>
+              </div>
             </div>
+          </div>
+          
+
+          {/* Description */}
+          <div className="flex flex-col gap-2">
+            <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
+              Description
+            </label>
+            <p className="whitespace-pre-wrap">{task.description || 'No description provided'}</p>
           </div>
 
           {/* Organization / Team Display */}
-          <div className="">
-            <label className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
               Organization
             </label>
             <div>
               {taskOrg ? (
-                <div className="flex items-center gap-2 p-3 rounded-lg text-sm border border-gray-500/[0.2] bg-gray-500/[0.04]">
+                <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{taskOrg.name}</span>
                   {taskTeam && <span className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">{taskTeam.name}</span>}
                 </div>
               ) : (
-                <div className="p-3 rounded-lg text-sm border border-gray-500/[0.2] bg-gray-500/[0.04] mt-2">Personal / No organization</div>
+                <div className="mt-2">Personal / No organization</div>
               )}
             </div>
           </div>
 
           {/* Assignees Section */}
-          <div className="">
-            <label className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
               Assignees
             </label>
 
@@ -164,7 +173,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             <div className="space-y-2 ">
               {/* Main Assignee */}
               {task.assignees && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-dark-bg border border-gray-500/[0.2] bg-gray-500/[0.04]">
+                <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-fuchsia-400 flex items-center justify-center text-white font-bold text-sm">
                     {task?.assignees[0]?.charAt(0).toUpperCase()}
                   </div>
@@ -182,11 +191,11 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           </div>
 
           {/* Comments Count */}
-          <div className="">
-            <label className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
               Comments
             </label>
-            <p className="p-3 rounded-lg text-sm border border-gray-500/[0.2] bg-gray-500/[0.04]">{task.comments || 0} comments</p>
+            <p className="">{task.comments || 0} comments</p>
           </div>
         </div>
 

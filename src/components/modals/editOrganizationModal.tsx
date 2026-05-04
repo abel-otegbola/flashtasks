@@ -59,8 +59,8 @@ export default function EditOrganizationModal({ isOpen, onClose, org }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center sm:justify-end justify-center z-50">
-      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[80%] max-w-2xl sm:h-screen h-[80vh] border-l border-gray-500/[0.2] rounded-lg overflow-hidden">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[94%] max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-500/[0.2] rounded-lg overflow-hidden">
             <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-500/[0.2] z-[2] p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">

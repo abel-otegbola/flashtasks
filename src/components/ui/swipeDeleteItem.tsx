@@ -139,7 +139,7 @@ function SwipeActionItem({
   const isSwipingRight = translateX > 0;
 
   return (
-    <div className={`relative overflow-hidden rounded-xl ${className}`}>
+    <div className={`relative overflow-hidden ${className}`}>
 
       {/* ── Swipeable content ── */}
       <div
