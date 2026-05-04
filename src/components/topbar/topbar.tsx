@@ -18,7 +18,13 @@ function Topbar() {
         if (user && (user as any).name) {
         const initial = ((user as any).name || (user as any).email || 'U')[0].toUpperCase();
         return (
-            <Link to={"/account/dashboard"} className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">{initial}</Link>
+            <Link to={"/account/dashboard"} className="flex gap-2 items-center">
+                <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">{initial}</div>
+                <div>
+                    <span className="md:hidden block font-semibold">{(user as any).name || (user as any).email}</span>
+                    <span className="block md:hidden text-sm">Dashboard</span>
+                </div>
+            </Link>
         );
         }
 
@@ -68,9 +74,12 @@ function Topbar() {
             </Link>
             
             <ul className={`
-                lg:static fixed top-0 right-0 z-20 flex lg:flex-row flex-col lg:px-0 md:py-0 py-12 px-6 bg-white dark:bg-[#101010] lg:w-auto md:h-full h-screen w-full overflow-hidden
+                lg:static fixed top-0 right-0 z-20 flex lg:flex-row flex-col lg:px-0 md:py-0 py-6 px-6 bg-white dark:bg-[#101010] lg:w-auto md:h-full h-screen w-full overflow-hidden
                 ${open ? "translate-y-[0px] w-full" : "lg:translate-y-[0] -translate-y-[120%] lg:w-auto w-0"} duration-500
             `}>
+                <Link to={"/"} className="md:hidden px-4 mx-6 rounded-lg border border-gray-500/[0.2] w-fit mb-4">
+                    <LogoIcon className="w-[12px]" />
+                </Link>
                 {
                     [
                         { id: 0, title: "Features", href: "#features" },

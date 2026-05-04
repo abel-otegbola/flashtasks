@@ -84,7 +84,9 @@ export default function SignupPage() {
             </Formik>
 
             <Link to="/auth/login" className="text-center mt-4 text-[14px]">
-              Already have an account? <span className="text-primary">Login</span>
+              <BlurReveal preset="slide-left">
+                Already have an account? <span className="text-primary">Login</span>
+              </BlurReveal>
             </Link>
           </div>
         </div>

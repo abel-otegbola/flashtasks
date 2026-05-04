@@ -8,6 +8,7 @@ import { loginSchema } from "../../../schema/auth";
 import Input from "../../../components/input/input";
 import LogoIcon from "../../../assets/icons/logo";
 import { Letter, Lock } from "@solar-icons/react";
+import BlurReveal from "../../../components/animations/blurReveal";
 
 export default function Login() {
   const { signIn, loading } = useContext(AuthContext);
@@ -22,8 +23,13 @@ export default function Login() {
               <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] w-fit">
                 <LogoIcon className="w-[14px]"  />
               </div>
-              <h1 className="font-bold text-[28px] text-dark-500">Welcome back</h1>
-              <p className="text-gray-500 text-center">Enter your email and password to access your account</p>
+              
+              <BlurReveal preset="slide-left">
+                <h1 className="font-bold text-[28px] text-dark-500">Welcome back</h1>
+              </BlurReveal>
+              <BlurReveal preset="slide-left">
+                <p className="text-gray-500 text-center">Enter your email and password to access your account</p>
+              </BlurReveal>
             </div>
             <Formik
               initialValues={{ email: "", password: "" }}
@@ -65,7 +71,9 @@ export default function Login() {
             </Formik>
 
             <Link to="/auth/signup" className="text-center mt-4 text-[14px]">
-              Don't have an account? <span className="text-primary">Register</span>
+              <BlurReveal preset="slide-left">
+                Don't have an account? <span className="text-primary">Register</span>
+              </BlurReveal>
             </Link>
             
             <Link to="/" className="text-center mt-4 text-[14px] underline">
