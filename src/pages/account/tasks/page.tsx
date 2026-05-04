@@ -269,7 +269,7 @@ function Tasks() {
                         >
                             <button 
                                 key={key} 
-                                className={`p-4 md:text-center text-start z-[2] sticky top-0 rounded-lg border ${colorClasses[color]} bg-gray-100/[0.2] dark:bg-dark-bg-secondary`}
+                                className={`p-4 md:text-center text-start z-[2] sticky top-0 rounded-lg border ${colorClasses[color]} bg-white dark:bg-dark-bg-secondary`}
                                 onClick={() => setOpenSections(prev => prev === key ? '' : key)}                                
                             >
                                 <p className="text-gray-400 text-xs mb-1">{title}</p>
