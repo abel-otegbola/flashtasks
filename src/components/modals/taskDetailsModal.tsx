@@ -7,6 +7,7 @@ import { useOrganizations } from '../../context/organizationContext';
 import { GridFourIcon, InfoIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import Confirmationmessage from "./confirmation";
 import EditTaskModal from "./editTaskModal";
+import { useOutsideClick } from "../../customHooks/useOutsideClick";
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const { deleteTask } = useTasks();
   const { organizations } = useOrganizations();
+  const modalRef = useOutsideClick(onClose, false);
 
   // determine user's role in the task's organization (if any)
   const taskOrg = organizations.find(o => o.$id === (task as any).organizationId);
@@ -54,7 +56,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[94%] max-w-2xl max-h-[80vh] border border-gray-500/[0.2] rounded-lg overflow-hidden">
+      <div ref={modalRef} className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[94%] max-w-2xl max-h-[80vh] border border-gray-500/[0.2] rounded-lg overflow-hidden">
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-[#101010] border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">

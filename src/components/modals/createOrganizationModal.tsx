@@ -12,6 +12,7 @@ import { CloseCircle } from '@solar-icons/react';
 import LoadingIcon from '../../assets/icons/loading';
 import { XIcon } from '@phosphor-icons/react';
 import TagInput from '../input/tagInput';
+import { useOutsideClick } from '../../customHooks/useOutsideClick';
 
 interface Props {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export default function CreateOrganizationModal({ isOpen, onClose }: Props) {
   const [teamsText, setTeamsText] = useState('');
   const { user } = useUser();
   const ownerEmail = (user as any)?.email;
+  const modalRef = useOutsideClick(onClose, false)
 
   if (!isOpen) return null;
 
@@ -49,7 +51,7 @@ export default function CreateOrganizationModal({ isOpen, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[94%] max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-500/[0.2] rounded-lg overflow-hidden">
+      <div ref={modalRef} className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[94%] max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-500/[0.2] rounded-lg overflow-hidden">
         <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-500/[0.1] z-[2] p-4 flex items-center justify-between">
           <h2 className="px-2 opacity-[0.7] leading-4">Create organization</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
