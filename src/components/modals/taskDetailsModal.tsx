@@ -1,10 +1,10 @@
 'use client';
 import { useState } from "react";
 import { todo } from "../../interface/todo";
-import { Calendar, Flag, PenNewSquare } from "@solar-icons/react";
+import { PenNewSquare } from "@solar-icons/react";
 import { useTasks } from "../../context/tasksContext";
 import { useOrganizations } from '../../context/organizationContext';
-import { GridFourIcon, InfoIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
+import { TrashIcon, XIcon } from "@phosphor-icons/react";
 import Confirmationmessage from "./confirmation";
 import EditTaskModal from "./editTaskModal";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
