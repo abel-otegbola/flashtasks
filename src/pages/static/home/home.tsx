@@ -35,7 +35,7 @@ function Home() {
             <Button href="/auth/signup" variant='secondary' className='py-[2px] sm:w-fit w-full'><BlurReveal preset="slide-right">Learn more</BlurReveal></Button>
           </div>
 
-          <div className='grid sm:grid-cols-3 gap-4 w-3.5xl mt-6'>
+          <div className='sm:grid hidden sm:grid-cols-3 gap-4 w-3.5xl mt-6'>
             {
               ["Real-time collaboration", "Intelligent task automation", "Customizable analytics dashboard"].map((feature) => (
                 <div key={feature} className='flex gap-2 items-center justify-center'>
