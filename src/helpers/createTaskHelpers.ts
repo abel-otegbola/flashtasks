@@ -12,7 +12,7 @@ export function mapExtractedToTodo(
     $id: task.id,
     id: task.id,
     title: task.title,
-    description: task.originalText,
+    description: task.description || task.originalText,
     comments: "0",
     category: task.tags?.[0] || "General",
     userId,

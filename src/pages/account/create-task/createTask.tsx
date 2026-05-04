@@ -105,22 +105,23 @@ function CreateTask() {
       extractTasksFromText(textToProcess)
       .then(response => {
         if (response.length === 0) {
-                setTaskError("This doesn't seem to be a task. Try describing something you need to do!");
-                setGeneratedTasks(null);
-              } else {
-                setGeneratedTasks(
-                  response.map((task) =>
-                    mapExtractedToTodo(task, user?.$id ?? "", user?.email ?? "", currentOrg?.$id)
-                  )
-                );
-              }
+          setTaskError("This doesn't seem to be a task. Try describing something you need to do!");
+          setGeneratedTasks(null);
+          setIsGenerating(false);
+        } else {
+          setGeneratedTasks(
+            response.map((task) =>
+              mapExtractedToTodo(task, user?.$id ?? "", user?.email ?? "", currentOrg?.$id)
+            )
+          );
+          setIsGenerating(false);
+        }
       })
       
     } catch (err) {
       setTaskError(err instanceof Error ? err.message : "Failed to generate tasks.");
       setGeneratedTasks(null);
     } finally {
-      setIsGenerating(false);
     }
   };
 
