@@ -31,7 +31,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     const [loading, setLoading] = useState(false);
     const router = useNavigate();
 
-    const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
+    const DATABASE_ID = import.meta.env.VITE_APPWRITE_USERS_DATABASE_ID || '';
     const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORG_COLLECTION_ID || 'organizations';
     const USERS_TABLE_ID = import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users';
 
@@ -44,13 +44,13 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                 tableId: USERS_TABLE_ID,
             });
 
-            const existing = (response.rows || []).find((row: any) => row.userId === accountUser.$id || row.email?.toLowerCase() === accountUser.email.toLowerCase());
+            const existing = (response.rows || []).find((row: any) => row.$id === accountUser.$id || row.email?.toLowerCase() === accountUser.email.toLowerCase());
             const userData = {
-                userId: accountUser.$id,
+                $id: accountUser.$id,
                 email: accountUser.email,
-                fullname: accountUser.name || accountUser.fullname || accountUser.email,
-                createdAt: accountUser.$createdAt || new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
+                name: accountUser.name || accountUser.name || accountUser.email,
+                $createdAt: accountUser.$createdAt || new Date().toISOString(),
+                $updatedAt: new Date().toISOString(),
             };
 
             if (existing?.$id) {
