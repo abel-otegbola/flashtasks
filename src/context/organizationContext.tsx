@@ -110,27 +110,9 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const createOrganization = async (payload: CreateOrganizationPayload) => {
     setLoading(true);
     try {
-      // Ensure creator is always included as owner in members
-      const ownerMember: OrgMember = {
-        $id: (user as any)?.$id || ID.unique(),
-        name: (user as any)?.name || (user as any)?.fullname || '',
-        email: (user as any)?.email,
-        role: 'owner',
-        permissions: ADMIN_PERMISSIONS,
-      };
-
       let members: OrgMember[] = [];
       if (payload.members && payload.members.length > 0) {
         members = payload.members.map(m => ({ $id: m.$id || ID.unique(), name: m.name, email: m.email, role: m.role, permissions: m.permissions || [] }));
-        // If owner not present in provided members, add them
-        const hasOwner = members.some(m => m.email === ownerMember.email || m.$id === ownerMember.$id);
-        if (!hasOwner) members.unshift(ownerMember);
-        else {
-          // make sure the owner member has role 'owner'
-          members = members.map(m => (m.email === ownerMember.email || m.$id === ownerMember.$id) ? { ...m, role: 'owner', permissions: ADMIN_PERMISSIONS } : m);
-        }
-      } else {
-        members = [ownerMember];
       }
 
       const teams = payload.teams && payload.teams.length > 0 ? payload.teams.map(t => ({ $id: ID.unique(), name: t.name, members: t.members || [] })) : [];
@@ -146,23 +128,15 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
 
       const res = await databases.createDocument(DATABASE_ID, ORG_COLLECTION_ID, ID.unique(), orgData);
 
-      // fetch authoritative document to ensure nested fields (members/teams) are present
-      let full: any = res;
-      try {
-        full = await databases.getDocument(DATABASE_ID, ORG_COLLECTION_ID, res.$id);
-      } catch (e) {
-        // ignore: fall back to create response
-      }
-
       const newOrg: Organization = {
-        $id: full.$id,
-        name: full.name,
-        ownerEmail: full.ownerEmail || (user as any)?.email,
-        slug: full.slug,
-        description: full.description,
-        members: full.members || [],
-        teams: full.teams || [],
-        createdAt: full.$createdAt,
+        $id: res.$id,
+        name: res.name,
+        ownerEmail: res.ownerEmail || (user as any)?.email,
+        slug: res.slug,
+        description: res.description,
+        members: res.members || [],
+        teams: res.teams || [],
+        createdAt: res.$createdAt,
       };
 
       setOrganizations(prev => [newOrg, ...prev]);

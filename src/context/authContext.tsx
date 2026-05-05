@@ -79,10 +79,10 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     const acceptTeamInvite = async (teamId: string, membershipId: string, userId: string, secret: string) => {
         setLoading(true);
         try {
-            const membership = await teams.updateMembershipStatus({ teamId, membershipId, userId, secret });
             const loggedIn = await account.get();
 
             await ensureMainUserRow(loggedIn);
+            const membership = await teams.updateMembershipStatus({ teamId, membershipId, userId, secret });
 
             const res = await databases.listDocuments(
                 DATABASE_ID,
@@ -112,6 +112,8 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             ];
 
             await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId, { members: nextMembers });
+
+
             window.dispatchEvent(new Event('organizations:changed'));
             toast.success(`Joined ${res.documents[0]?.name || 'organization'}`);
             return true;
