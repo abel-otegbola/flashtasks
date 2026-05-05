@@ -195,7 +195,7 @@ export default function OrganizationsPage() {
             {organizations.map(org => (
               <button 
                 key={org.$id} 
-                className={`p-3 text-start flex items-center gap-2 rounded-lg ${currentOrg?.$id === org.$id ? 'border border-gray-500/[0.2] bg-bg-gray-100' : ''}`}
+                className={`p-3 text-start flex items-center gap-2 rounded-lg ${currentOrg?.$id === org.$id ? 'border border-gray-500/[0.2] bg-dark/[0.4]' : ''}`}
                 onClick={() => { selectOrganization(org.$id); setSelectedOrg(org); }} 
               >
                 <span className="w-12 h-12 flex items-center justify-center bg-primary/10 text-primary rounded-full font-bold">{org.name.charAt(0).toUpperCase()}</span>
@@ -393,10 +393,10 @@ export default function OrganizationsPage() {
                       ): null}
                     </div>
                     
-                    <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-dark-bg">
+                    <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-dark/[0.4]">
                       <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Organization owner</h4>
                       <div className="flex flex-col gap-2 p-4">
-                          <div className="flex items-center justify-between p-2 border border-gray-500/[0.2] rounded">
+                          <div className="flex items-center justify-between rounded">
                             <div>
                               <div className="font-medium">{currentOrg.ownerEmail}</div>
                               <div className="text-xs text-gray-500">Owner</div>
@@ -406,11 +406,11 @@ export default function OrganizationsPage() {
                       </div>
                     </div>
 
-                    <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-dark-bg">
+                    <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-dark/[0.4]">
                       <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Members</h4>
                       <div className="flex flex-col gap-2 p-4">
                         {(currentOrg.members || []).map(m => (
-                          <div key={m.$id} className="flex items-start justify-between gap-3 p-2 border border-gray-500/[0.2] rounded">
+                          <div key={m.$id} className="flex items-start justify-between gap-3 p-4 rounded bg-gray-100 dark:bg-dark-bg">
                             {editingMemberId === m.$id && (isOwner || isAdmin) ? (
                               <div className="flex flex-col gap-3 flex-1">
                                 <div>
@@ -434,13 +434,29 @@ export default function OrganizationsPage() {
                               </div>
                             ) : (
                               <>
-                                <div>
-                                  <div className="font-medium">{m.name || m.email}</div>
-                                  <div className="text-xs text-gray-500">{m.role}</div>
+                                <div className='w-full'>
+                                  <div className='flex justify-between w-full'>
+                                    <div>
+                                      <div className="font-medium">{m.name || m.email}</div>
+                                      <div className="text-xs text-gray-500">{m.role}</div>
+                                    </div>
+                                    {(isOwner || (isAdmin && m.role !== 'owner')) && (
+                                      <div className="flex items-center gap-2 shrink-0">
+                                        <button onClick={() => openMemberEditor(m)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
+                                          Quick edit
+                                        </button>
+                                        {m.role !== 'owner' && (
+                                          <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
+                                            Remove
+                                          </button>
+                                        )}
+                                      </div>
+                                      )}
+                                  </div>
                                   {m.permissions?.length ? (
                                     <div className="mt-2 flex flex-wrap gap-1">
                                       {m.permissions.map((permission) => (
-                                        <span key={permission} className="rounded-full bg-gray-100 px-2 py-1 text-[10px] text-gray-600 dark:bg-[#1c1c1c] dark:text-gray-300">
+                                        <span key={permission} className="rounded-full bg-gray-100 px-4 py-[6px] text-[10px] dark:bg-[#202022]">
                                           {permission}
                                         </span>
                                       ))}
@@ -448,18 +464,7 @@ export default function OrganizationsPage() {
                                   ) : null}
                                   <div className="text-xs text-gray-400 mt-1">{m.email}</div>
                                 </div>
-                                {(isOwner || (isAdmin && m.role !== 'owner')) && (
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <button onClick={() => openMemberEditor(m)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
-                                    Quick edit
-                                  </button>
-                                  {m.role !== 'owner' && (
-                                    <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
-                                      Remove
-                                    </button>
-                                  )}
-                                </div>
-                                )}
+                                
                               </>
                             )}
                           </div>

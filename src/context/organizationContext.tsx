@@ -174,6 +174,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       const updatedOrg: Organization = {
         $id: updated.$id,
         name: updated.name,
+        ownerEmail: updated.ownerEmail || currentOrg?.ownerEmail,
         slug: updated.slug,
         description: updated.description,
         members: updated.members || [],
@@ -234,6 +235,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       const updatedOrg: Organization = {
         $id: updated.$id,
         name: updated.name,
+        ownerEmail: updated.ownerEmail || currentOrg?.ownerEmail || (user as any)?.email,
         slug: updated.slug,
         description: updated.description,
         members: updated.members || [],
@@ -266,6 +268,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       const updatedOrg: Organization = {
         $id: updated.$id,
         name: updated.name,
+        ownerEmail: updated.ownerEmail || org.ownerEmail || (user as any)?.email,
         slug: updated.slug,
         description: updated.description,
         members: updated.members || [],
@@ -313,6 +316,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       const updatedOrg: Organization = {
         $id: updated.$id,
         name: updated.name,
+        ownerEmail: updated.ownerEmail || org.ownerEmail || (user as any)?.email,
         slug: updated.slug,
         description: updated.description,
         members: updated.members || [],
@@ -389,6 +393,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       const updatedOrg: Organization = {
         $id: updated.$id,
         name: updated.name,
+        ownerEmail: updated.ownerEmail || org.ownerEmail || (user as any)?.email,
         slug: updated.slug,
         description: updated.description,
         members: updated.members || [],
@@ -422,6 +427,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       const updatedOrg: Organization = {
         $id: updated.$id,
         name: updated.name,
+        ownerEmail: updated.ownerEmail || org.ownerEmail || (user as any)?.email,
         slug: updated.slug,
         description: updated.description,
         members: updated.members || [],

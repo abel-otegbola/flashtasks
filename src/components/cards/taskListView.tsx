@@ -29,7 +29,7 @@ export default function TaskListView({ task, openTaskDetails, index }: { task: t
         onSwipeLeft={() => setShowDeleteConfirm(true)} 
         onSwipeRight={() => updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' }) }
     >
-    <div className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark'}`}
+    <div className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark/[0.4]'}`}
         
     >
         <div className="flex items-start md:items-center p-4 pr-0 md:col-span-1">
