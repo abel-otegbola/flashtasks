@@ -53,26 +53,14 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         ]
       );
 
-      const organizationsForUser = (res.documents || []).filter((org: any) => {
-        if (org.ownerEmail === user.email) return true;
-
-        return Array.isArray(org.members) && org.members.some((member: any) => {
-          if (typeof member === 'string') {
-            return member === user.$id || member === user.email;
-          }
-
-          return member?.email === user.email || member?.$id === user.$id || member?.userId === user.$id;
-        });
-      });
-
-      if (!organizationsForUser.length) {
+      if (!res.documents.length) {
         setOrganizations([]);
         setCurrentOrg(null);
         return;
       }
 
-      setOrganizations(organizationsForUser as unknown as Organization[]);
-      setCurrentOrg(organizationsForUser[0] as unknown as Organization);
+      setOrganizations(res.documents as unknown as Organization[]);
+      setCurrentOrg(res.documents[0] as unknown as Organization);
     } catch (err) {
       console.error('Error loading organizations', err);
       toast.error('Failed to load organizations');

@@ -1,7 +1,7 @@
 'use client'
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import toast, { Toaster } from "react-hot-toast";
-import { ID } from "appwrite";
+import { ID, Query } from "appwrite";
 import { useNavigate } from "react-router-dom";
 import { account, databases, tablesDB, teams } from "../appwrite/appwrite";
 import { useLocalStorage } from '../customHooks/useLocaStorage';
@@ -84,15 +84,20 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
 
             await ensureMainUserRow(loggedIn);
 
-            const org = await databases.getDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId);
-            const nextRole = membership.roles?.[0] || 'member';
-            const nextPermissions = nextRole === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS;
+            const res = await databases.listDocuments(
+                DATABASE_ID,
+                ORG_COLLECTION_ID,
+                [
+                    Query.select(["*", "teams.*", "members.*"]),
+                    Query.limit(100),
+                ]
+                );
+            const nextRole = membership.roles[0] || 'member';
+            const nextPermissions = membership.roles?.[0] === "admin" ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS;
 
-            const existingMembers = Array.isArray(org.members)
-                ? org.members
-                : org.members
-                  ? [org.members]
-                  : [];
+            const existingMembers = Array.isArray(res.documents)
+                ? res.documents.find(org => org.$id === teamId)?.members || []
+                : [];
 
             const nextMember = {
                 $id: loggedIn.$id,
@@ -101,7 +106,6 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                 role: nextRole,
                 permissions: nextPermissions,
             };
-
             const nextMembers = [
                 ...existingMembers,
                 nextMember,
@@ -109,7 +113,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
 
             await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId, { members: nextMembers });
             window.dispatchEvent(new Event('organizations:changed'));
-            toast.success(`Joined ${org.name || 'organization'}`);
+            toast.success(`Joined ${res.documents[0]?.name || 'organization'}`);
             return true;
         } catch (error) {
             console.error('Error accepting team invite', error);
