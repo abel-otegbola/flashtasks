@@ -45,7 +45,7 @@ export default function EditOrganizationModal({ isOpen, onClose, org }: Props) {
     if (!members.trim()) return [];
     return members.split(',').map(s => {
       const email = s.trim();
-      return { $id: ID.unique(), email, name: email.split('@')[0], role: 'member' } as OrgMember;
+      return { $id: ID.unique(), email, name: email.split('@')[0], role: 'member', permissions: [] } as OrgMember;
     });
   }
 

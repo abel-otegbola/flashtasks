@@ -33,7 +33,7 @@ export default function CreateOrganizationModal({ isOpen, onClose }: Props) {
     if (!membersText.trim()) return [];
     return membersText.split(',').map(s => {
       const email = s.trim();
-      return { $id: ID.unique(), email, name: email.split('@')[0], role: 'member' } as OrgMember;
+      return { $id: ID.unique(), email, name: email.split('@')[0], role: 'member', permissions: [] } as OrgMember;
     });
   }
 

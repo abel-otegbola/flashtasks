@@ -5,18 +5,24 @@ import Button from '../../../components/button/button';
 import Input from '../../../components/input/input';
 import CreateOrganizationModal from '../../../components/modals/createOrganizationModal';
 import EditOrganizationModal from '../../../components/modals/editOrganizationModal';
+import AddMemberModal from '../../../components/modals/addMemberModal';
 import { GridFourIcon, PencilSimpleLineIcon, TrashIcon } from '@phosphor-icons/react';
 import { OrganizationSkeletonLoader } from '../../../components/skeletons';
 import Confirmationmessage from '../../../components/modals/confirmation';
+import { ADMIN_PERMISSIONS } from '../../../interface/organization';
+import { useUser } from '../../../context/authContext';
+import { useTasks } from '../../../context/tasksContext';
+import TaskListView from '../../../components/cards/taskListView';
+import { todo } from '../../../interface/todo';
+import TaskDetailsModal from '../../../components/modals/taskDetailsModal';
 
 export default function OrganizationsPage() {
-  const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, addMemberToOrg, removeMemberFromOrg, updateOrganization, deleteOrganization, loading } = useOrganizations();
+  const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, updateOrganization, deleteOrganization, loading } = useOrganizations();
+  const { tasks } = useTasks(); 
   const [teamName, setTeamName] = useState('');
-  const [memberName, setMemberName] = useState('');
-  const [memberEmail, setMemberEmail] = useState('');
-  const [memberRole, setMemberRole] = useState('member');
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState<any>(null);
   const [selectedTab, setSelectedTab] = useState("About");
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
@@ -28,6 +34,10 @@ export default function OrganizationsPage() {
   const [settingsSlug, setSettingsSlug] = useState('');
   const [settingsDescription, setSettingsDescription] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<todo | null>(null);
+  const [viewMode, setViewMode] = useState<string>('kanban');
+  const { user } = useUser();
 
   const initialLoading = loading && organizations.length === 0 && !currentOrg;
 
@@ -35,7 +45,7 @@ export default function OrganizationsPage() {
     ? [
         ...(currentOrg.members || []),
         ...(currentOrg.ownerEmail && !(currentOrg.members || []).some((member) => member.email === currentOrg.ownerEmail)
-          ? [{ $id: currentOrg.ownerEmail, name: currentOrg.ownerEmail, email: currentOrg.ownerEmail, role: 'owner' as const }]
+          ? [{ $id: currentOrg.ownerEmail, name: currentOrg.ownerEmail, email: currentOrg.ownerEmail, role: 'owner' as const, permissions: ADMIN_PERMISSIONS }]
           : []),
       ]
     : [];
@@ -46,6 +56,15 @@ export default function OrganizationsPage() {
     setSettingsSlug(currentOrg.slug || '');
     setSettingsDescription(currentOrg.description || '');
   }, [currentOrg]);
+
+  const isOwner = currentOrg?.ownerEmail === user?.email;
+
+  const isAdmin = currentOrg?.members?.some(m => m.email === user?.email && m.role === 'admin');
+
+  const openTaskDetails = (task: todo) => {
+      setSelectedTask(task);
+      setDetailsOpen(true);
+  };
 
   const getTeamMemberLabel = (memberId: string) => {
     const member = organizationMembers.find((item) => item.$id === memberId);
@@ -85,21 +104,6 @@ export default function OrganizationsPage() {
     if (!teamName || !currentOrg) return;
     await addTeam({ name: teamName });
     setTeamName('');
-  };
-
-  const handleAddMember = async () => {
-    if (!currentOrg || !memberEmail.trim()) return;
-
-    await addMemberToOrg(currentOrg.$id, {
-      $id: memberEmail.trim().toLowerCase(),
-      name: memberName.trim() || memberEmail.trim(),
-      email: memberEmail.trim().toLowerCase(),
-      role: memberRole,
-    });
-
-    setMemberName('');
-    setMemberEmail('');
-    setMemberRole('member');
   };
 
   const openMemberEditor = (member: any) => {
@@ -192,17 +196,40 @@ export default function OrganizationsPage() {
               <div className='flex gap-4 justify-between flex-wrap mb-6'>
                 <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1'>
                 {
-                  ["About", "teams", "members", "settings"].map((tab) => (
-                    <button key={tab} onClick={() => setSelectedTab(tab)} className={`py-2 px-1 text-sm capitalize rounded-tl rounded-tr ${tab === selectedTab ? 'border-b border-primary text-primary' : 'text-gray-500'}`}>
-                      {tab}
-                    </button>
-                  ))
+                  ["Tasks", "About", "teams", "members", "settings"].map((tab) => {
+                    if (tab === "settings" && !(isOwner || isAdmin)) return null;
+                    else return (
+                      <button key={tab} onClick={() => setSelectedTab(tab)} className={`py-2 px-1 text-sm capitalize rounded-tl rounded-tr ${tab === selectedTab ? 'border-b border-primary text-primary' : 'text-gray-500'}`}>
+                        {tab}
+                      </button>
+                    )
+                  })
                 }
                 </div>
               
 
               </div>
-
+              {
+                selectedTab === "Tasks" && (
+                  <div className="mb-4">
+                    <h2 className="font-semibold text-lg mb-2">Organization Tasks</h2>
+                    {tasks.filter(t => t.organizationId === currentOrg.$id).length === 0 ? (
+                      <div className="text-gray-500">No tasks in this organization yet.</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {tasks.filter(t => t.organizationId === currentOrg.$id).map((task, index) => (
+                          <TaskListView
+                              key={task.$id}
+                              task={task}
+                              openTaskDetails={openTaskDetails}
+                              index={index}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
               {
                 selectedTab === "About" && (
                   <div className="mb-4">
@@ -332,33 +359,13 @@ export default function OrganizationsPage() {
               {
                 selectedTab === "members" && (
                   <div className="mb-4">
-                    <h2 className="font-semibold text-lg mb-2">Members</h2>
-
-                    <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-[#101010]">
-                      <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Add member</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4">
-                        <Input
-                          value={memberName}
-                          onChange={(e: any) => setMemberName(e.target.value)}
-                          placeholder="Name"
-                          className="w-full flex-1 py-[2px]"
-                        />
-                        <Input
-                          value={memberEmail}
-                          onChange={(e: any) => setMemberEmail(e.target.value)}
-                          placeholder="Email"
-                          className="w-full flex-1 py-[2px]"
-                        />
-                        <Input
-                          value={memberRole}
-                          onChange={(e: any) => setMemberRole(e.target.value)}
-                          placeholder="Role (for example: member, admin, reviewer)"
-                          className="w-full flex-1 py-[2px]"
-                        />
-                        <Button size="small" onClick={handleAddMember} disabled={!memberEmail.trim()}>
-                          Add member
+                    <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+                      <h2 className="font-semibold text-lg">Members</h2>
+                      {isOwner || isAdmin ? (
+                        <Button size="small" onClick={() => setShowAddMember(true)}>
+                          Add new member
                         </Button>
-                      </div>
+                      ): null}
                     </div>
                     
                     <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-[#101010]">
@@ -379,7 +386,7 @@ export default function OrganizationsPage() {
                       <div className="flex flex-col gap-2 p-4">
                         {(currentOrg.members || []).map(m => (
                           <div key={m.$id} className="flex items-start justify-between gap-3 p-2 border border-gray-500/[0.2] rounded">
-                            {editingMemberId === m.$id ? (
+                            {editingMemberId === m.$id && (isOwner || isAdmin) ? (
                               <div className="flex flex-col gap-3 flex-1">
                                 <div>
                                   <div className="font-medium">{m.name || m.email}</div>
@@ -405,8 +412,18 @@ export default function OrganizationsPage() {
                                 <div>
                                   <div className="font-medium">{m.name || m.email}</div>
                                   <div className="text-xs text-gray-500">{m.role}</div>
+                                  {m.permissions?.length ? (
+                                    <div className="mt-2 flex flex-wrap gap-1">
+                                      {m.permissions.map((permission) => (
+                                        <span key={permission} className="rounded-full bg-gray-100 px-2 py-1 text-[10px] text-gray-600 dark:bg-[#1c1c1c] dark:text-gray-300">
+                                          {permission}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : null}
                                   <div className="text-xs text-gray-400 mt-1">{m.email}</div>
                                 </div>
+                                {(isOwner || (isAdmin && m.role !== 'owner')) && (
                                 <div className="flex items-center gap-2 shrink-0">
                                   <button onClick={() => openMemberEditor(m)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
                                     Quick edit
@@ -417,6 +434,7 @@ export default function OrganizationsPage() {
                                     </button>
                                   )}
                                 </div>
+                                )}
                               </>
                             )}
                           </div>
@@ -508,6 +526,15 @@ export default function OrganizationsPage() {
       )}
     <CreateOrganizationModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
     <EditOrganizationModal isOpen={showEdit} onClose={() => setShowEdit(false)} org={selectedOrg} />
+    <AddMemberModal isOpen={showAddMember} onClose={() => setShowAddMember(false)} />
+      {/* Task Details Modal (for list/grid/calendar clicks) */}
+              {selectedTask && (
+                  <TaskDetailsModal
+                      isOpen={detailsOpen}
+                      onClose={() => { setDetailsOpen(false); setSelectedTask(null);}}
+                      task={selectedTask}
+                  />
+              )}
   </div>
   )
 }

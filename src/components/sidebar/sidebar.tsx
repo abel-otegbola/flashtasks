@@ -78,6 +78,20 @@ function Sidebar() {
                         {
                         otherLinks.map(link => {
                                 // For Logout, render a button that triggers the auth logout flow
+                                if (link.label === 'Notifications') {
+                                    return (
+                                        <button
+                                            key={link.id}
+                                            onClick={() => { setOpen(false); navigate('/account/notifications'); }}
+                                            className={`relative w-full text-left flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium cursor-pointer ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
+                                            <div className="flex items-center gap-1">
+                                                <span className="w-[24px] opacity-[0.6]">{link.icon}</span>
+                                                <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""}`}>{link.label} </span>
+                                            </div>
+                                        </button>
+                                    )
+                                }
+
                                 if (link.label === 'Logout') {
                                     return (
                                         <button

@@ -3,9 +3,10 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 import toast, { Toaster } from "react-hot-toast";
 import { ID } from "appwrite";
 import { useNavigate } from "react-router-dom";
-import { account, tablesDB } from "../appwrite/appwrite";
+import { account, databases, tablesDB, teams } from "../appwrite/appwrite";
 import { useLocalStorage } from '../customHooks/useLocaStorage';
 import { User } from '../interface/auth';
+import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, OrgMember } from '../interface/organization';
 
 type values = {
     user: User;
@@ -15,6 +16,7 @@ type values = {
     signIn: (email: string, password: string, callbackURL: string) => void; 
     signUp: ( name: string, email: string, password: string, callbackURL: string) => void;
     logOut: () => void;
+    acceptTeamInvite: (teamId: string, membershipId: string, userId: string, secret: string) => Promise<boolean>;
 }
 
 export const AuthContext = createContext({} as values);
@@ -29,6 +31,86 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     const [loading, setLoading] = useState(false);
     const router = useNavigate();
 
+    const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
+    const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORG_COLLECTION_ID || 'organizations';
+    const USERS_TABLE_ID = import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users';
+
+    const ensureMainUserRow = async (accountUser: any) => {
+        if (!accountUser?.$id || !accountUser?.email) return false;
+
+        try {
+            const response = await tablesDB.listRows({
+                databaseId: DATABASE_ID,
+                tableId: USERS_TABLE_ID,
+            });
+
+            const existing = (response.rows || []).find((row: any) => row.userId === accountUser.$id || row.email?.toLowerCase() === accountUser.email.toLowerCase());
+            const userData = {
+                userId: accountUser.$id,
+                email: accountUser.email,
+                fullname: accountUser.name || accountUser.fullname || accountUser.email,
+                createdAt: accountUser.$createdAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            if (existing?.$id) {
+                await tablesDB.updateRow({
+                    databaseId: DATABASE_ID,
+                    tableId: USERS_TABLE_ID,
+                    rowId: existing.$id,
+                    data: userData,
+                });
+            } else {
+                await tablesDB.createRow({
+                    databaseId: DATABASE_ID,
+                    tableId: USERS_TABLE_ID,
+                    rowId: accountUser.$id,
+                    data: userData,
+                });
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error syncing main user row', error);
+            return false;
+        }
+    };
+
+    const acceptTeamInvite = async (teamId: string, membershipId: string, userId: string, secret: string) => {
+        setLoading(true);
+        try {
+            const membership = await teams.updateMembershipStatus({ teamId, membershipId, userId, secret });
+            const loggedIn = await account.get();
+
+            await ensureMainUserRow(loggedIn);
+
+            const org = await databases.getDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId);
+            const nextRole = membership.roles?.[0] || 'member';
+            const nextPermissions = nextRole === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS;
+            const nextMembers = [
+                ...(org.members || []).filter((member: any) => member?.email?.toLowerCase() !== loggedIn.email.toLowerCase()),
+                {
+                    $id: loggedIn.$id,
+                    name: loggedIn.name || loggedIn.email,
+                    email: loggedIn.email,
+                    role: nextRole,
+                    permissions: nextPermissions,
+                } as OrgMember,
+            ];
+
+            await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId, { members: nextMembers });
+            window.dispatchEvent(new Event('organizations:changed'));
+            toast.success(`Joined ${org.name || 'organization'}`);
+            return true;
+        } catch (error) {
+            console.error('Error accepting team invite', error);
+            toast.error('Failed to accept invite');
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     async function signIn(email: string, password: string, callbackURL: string) {
         setLoading(true);
         try {
@@ -40,6 +122,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
 
             setPopup({ type: "success", msg: "Login successful" });
             setUser(loggedIn);
+            await ensureMainUserRow(loggedIn);
             router(callbackURL || "/account/dashboard");
         } catch (error: any) {
             setPopup({ type: "error", msg: error?.message || 'Login failed' });
@@ -96,6 +179,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
         try {
             const loggedIn = await account.get();
             setUser(loggedIn);
+            await ensureMainUserRow(loggedIn);
         } catch {
             setUser(null);
         }
@@ -116,7 +200,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     }, [popup])
 
     return (
-        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut }}>
+        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut, acceptTeamInvite }}>
             <Toaster containerClassName="p-8" />
             {children}
         </AuthContext.Provider>

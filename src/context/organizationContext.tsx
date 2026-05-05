@@ -1,7 +1,7 @@
 'use client'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
-import { Organization, OrgMember, Team, CreateOrganizationPayload, CreateTeamPayload } from '../interface/organization';
-import { databases } from '../appwrite/appwrite';
+import { ADMIN_PERMISSIONS, Organization, OrgInvite, OrgMember, Team, CreateOrganizationPayload, CreateTeamPayload } from '../interface/organization';
+import { databases, teams } from '../appwrite/appwrite';
 import { ID, Query } from 'appwrite';
 import toast from 'react-hot-toast';
 import { useUser } from './authContext';
@@ -15,6 +15,7 @@ type OrganizationContextValues = {
   addTeam: (payload: CreateTeamPayload) => Promise<Team>;
   removeTeam: (orgId: string, teamId: string) => Promise<boolean>;
   addMemberToOrg: (orgId: string, member: OrgMember) => Promise<boolean>;
+  createOrgInvite: (orgId: string, invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'>) => Promise<boolean>;
   updateOrganization: (orgId: string, data: Partial<any>) => Promise<Organization>;
   deleteOrganization: (orgId: string) => Promise<boolean>;
   removeMemberFromOrg: (orgId: string, memberId: string) => Promise<boolean>;
@@ -35,47 +36,55 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
 
   const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
   const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORG_COLLECTION_ID || 'organizations';
+  const loadOrganizations = async () => {
+    if (!user?.email) {
+      setOrganizations([]);
+      setCurrentOrg(null);
+      return;
+    }
 
-  // load organizations for current user on mount or when user changes
-  useEffect(() => {
-    const load = async () => {
-      if (!user?.email) {
+    try {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        ORG_COLLECTION_ID,
+        [
+          Query.select(["*", "teams.*", "members.*"]),
+          Query.limit(100),
+        ]
+      );
+
+      const organizationsForUser = (res.documents || []).filter((org: any) => {
+        if (org.ownerEmail === user.email) return true;
+
+        return Array.isArray(org.members) && org.members.some((member: any) => member?.email === user.email);
+      });
+
+      if (!organizationsForUser.length) {
         setOrganizations([]);
         setCurrentOrg(null);
         return;
       }
-      try {
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          ORG_COLLECTION_ID,
-          [
-              Query.select(["*", "teams.*", "members.*"]),
-              Query.limit(100),
-          ]
-        );
 
-        const organizationsForUser = (res.documents || []).filter((org: any) => {
-          if (org.ownerEmail === user.email) return true;
+      setOrganizations(organizationsForUser as unknown as Organization[]);
+      setCurrentOrg(organizationsForUser[0] as unknown as Organization);
+    } catch (err) {
+      console.error('Error loading organizations', err);
+      toast.error('Failed to load organizations');
+    }
+  };
 
-          return Array.isArray(org.members) && org.members.some((member: any) => member?.email === user.email);
-        });
-        
-        if (!organizationsForUser.length) {
-          setOrganizations([]);
-          setCurrentOrg(null);
-          return;
-        }
-        else {
-          setOrganizations(organizationsForUser as unknown as Organization[]);
-          setCurrentOrg(organizationsForUser[0] as unknown as Organization);
-        }
-      } catch (err) {
-        console.error('Error loading organizations', err);
-        toast.error('Failed to load organizations');
-      }
+  // load organizations for current user on mount or when user changes
+  useEffect(() => {
+    loadOrganizations();
+  }, [user]);
+
+  useEffect(() => {
+    const refreshOrganizations = () => {
+      loadOrganizations();
     };
 
-    load();
+    window.addEventListener('organizations:changed', refreshOrganizations);
+    return () => window.removeEventListener('organizations:changed', refreshOrganizations);
   }, [user]);
 
   const createOrganization = async (payload: CreateOrganizationPayload) => {
@@ -86,18 +95,19 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         $id: (user as any)?.$id || ID.unique(),
         name: (user as any)?.name || (user as any)?.fullname || '',
         email: (user as any)?.email,
-        role: 'owner'
+        role: 'owner',
+        permissions: ADMIN_PERMISSIONS,
       };
 
       let members: OrgMember[] = [];
       if (payload.members && payload.members.length > 0) {
-        members = payload.members.map(m => ({ $id: m.$id || ID.unique(), name: m.name, email: m.email, role: m.role }));
+        members = payload.members.map(m => ({ $id: m.$id || ID.unique(), name: m.name, email: m.email, role: m.role, permissions: m.permissions || [] }));
         // If owner not present in provided members, add them
         const hasOwner = members.some(m => m.email === ownerMember.email || m.$id === ownerMember.$id);
         if (!hasOwner) members.unshift(ownerMember);
         else {
           // make sure the owner member has role 'owner'
-          members = members.map(m => (m.email === ownerMember.email || m.$id === ownerMember.$id) ? { ...m, role: 'owner' } : m);
+          members = members.map(m => (m.email === ownerMember.email || m.$id === ownerMember.$id) ? { ...m, role: 'owner', permissions: ADMIN_PERMISSIONS } : m);
         }
       } else {
         members = [ownerMember];
@@ -276,7 +286,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     try {
       const org = organizations.find(o => o.$id === orgId);
       if (!org) return false;
-      const memberWithId = { $id: (member as any)?.$id || ID.unique(), name: member.name, email: member.email, role: member.role };
+      const memberWithId = { $id: (member as any)?.$id || ID.unique(), name: member.name, email: member.email, role: member.role, permissions: member.permissions || [] };
       const newMembers = [...(org.members || []), memberWithId];
       const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, { members: newMembers });
 
@@ -298,6 +308,47 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error('Error adding member', err);
       toast.error('Failed to add member');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createOrgInvite = async (
+    orgId: string,
+    invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'>
+  ) => {
+    setLoading(true);
+    try {
+      const org = organizations.find((item) => item.$id === orgId);
+      if (!org) return false;
+
+      const normalizedEmail = invite.email.trim().toLowerCase();
+      const existingMember = (org.members || []).some((member) => member.email?.toLowerCase() === normalizedEmail);
+      if (existingMember || org.ownerEmail?.toLowerCase() === normalizedEmail) {
+        toast.error('Member already belongs to this organization');
+        return false;
+      }
+
+      try {
+        await teams.get({ teamId: orgId });
+      } catch {
+        await teams.create({ teamId: orgId, name: org.name, roles: ['owner'] });
+      }
+
+      await teams.createMembership({
+        teamId: orgId,
+        roles: [invite.role],
+        email: normalizedEmail,
+        name: invite.name,
+        url: `${window.location.origin}/account/notifications?teamId=${encodeURIComponent(orgId)}`,
+      });
+
+      toast.success('Invite sent');
+      return true;
+    } catch (err) {
+      console.error('Error creating invite', err);
+      toast.error('Failed to create invite');
       return false;
     } finally {
       setLoading(false);
@@ -371,7 +422,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <OrganizationContext.Provider value={{ organizations, currentOrg, loading, createOrganization, selectOrganization, addTeam, removeTeam, addMemberToOrg, updateOrganization, deleteOrganization, removeMemberFromOrg, updateTeamMembers }}>
+    <OrganizationContext.Provider value={{ organizations, currentOrg, loading, createOrganization, selectOrganization, addTeam, removeTeam, addMemberToOrg, createOrgInvite, updateOrganization, deleteOrganization, removeMemberFromOrg, updateTeamMembers }}>
       {children}
     </OrganizationContext.Provider>
   );
