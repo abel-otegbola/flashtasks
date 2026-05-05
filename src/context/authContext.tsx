@@ -85,7 +85,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             const membership = await teams.updateMembershipStatus({ teamId, membershipId, userId, secret });
 
             const res = await databases.listDocuments(
-                DATABASE_ID,
+                import.meta.env.VITE_APPWRITE_DATABASE_ID,
                 ORG_COLLECTION_ID,
                 [
                     Query.select(["*", "teams.*", "members.*"]),
