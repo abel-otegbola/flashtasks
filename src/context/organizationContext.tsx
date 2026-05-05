@@ -56,7 +56,13 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       const organizationsForUser = (res.documents || []).filter((org: any) => {
         if (org.ownerEmail === user.email) return true;
 
-        return Array.isArray(org.members) && org.members.some((member: any) => member?.email === user.email);
+        return Array.isArray(org.members) && org.members.some((member: any) => {
+          if (typeof member === 'string') {
+            return member === user.$id || member === user.email;
+          }
+
+          return member?.email === user.email || member?.$id === user.$id;
+        });
       });
 
       if (!organizationsForUser.length) {
@@ -286,8 +292,22 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     try {
       const org = organizations.find(o => o.$id === orgId);
       if (!org) return false;
-      const memberWithId = { $id: (member as any)?.$id || ID.unique(), name: member.name, email: member.email, role: member.role, permissions: member.permissions || [] };
-      const newMembers = [...(org.members || []), memberWithId];
+      const memberWithId = {
+        $id: (member as any)?.$id || ID.unique(),
+        name: member.name,
+        email: member.email,
+        role: member.role,
+        permissions: member.permissions || [],
+      };
+      const existingMembers = (org.members || []).map((item: any) =>
+        typeof item === 'string'
+          ? { $id: item, name: item, email: item, role: 'member', permissions: [] }
+          : item
+      );
+      const newMembers = [
+        ...existingMembers.filter((item: any) => item?.$id !== memberWithId.$id),
+        memberWithId,
+      ];
       const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, { members: newMembers });
 
       const updatedOrg: Organization = {
@@ -360,7 +380,9 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     try {
       const org = organizations.find(o => o.$id === orgId);
       if (!org) return false;
-      const newMembers = (org.members || []).filter(m => m.$id !== memberId);
+      const newMembers = (org.members || [])
+        .map((member: any) => (typeof member === 'string' ? { $id: member, name: member, email: member, role: 'member', permissions: [] } : member))
+        .filter((member) => member?.$id !== memberId);
 
       const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, { members: newMembers });
 

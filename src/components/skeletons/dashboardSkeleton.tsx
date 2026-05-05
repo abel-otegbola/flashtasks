@@ -7,7 +7,7 @@ export function DashboardSkeletonLoader() {
             <div className="h-7 w-64 rounded bg-gray-200 dark:bg-gray-700" />
             <div className="h-4 w-72 rounded bg-gray-200 dark:bg-gray-700" />
           </div>
-          <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-dark-bg-secondary rounded-lg">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-dark-bg rounded-lg">
             {Array.from({ length: 3 }).map((_, index) => (
               <div key={`dashboard-stat-skeleton-${index}`} className="text-center p-4 bg-white dark:bg-dark rounded-md border border-gray-500/[0.1] space-y-2">
                 <div className="h-3 w-12 mx-auto rounded bg-gray-200 dark:bg-gray-700" />

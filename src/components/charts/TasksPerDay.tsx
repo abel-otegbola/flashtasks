@@ -44,7 +44,7 @@ export default function TasksPerDay({ days = 14 }: { days?: number }) {
   const max = Math.max(...values, 1);
 
   return (
-    <div className="p-4 rounded-lg border border-border-gray-100 dark:border-gray-500/[0.2] bg-white dark:bg-dark-bg-secondary/50">
+    <div className="p-4 rounded-lg border border-border-gray-100 dark:border-gray-500/[0.2] bg-white dark:bg-dark-bg/50">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold">Tasks created ({days}d)</h3>
         <div className="text-xs text-gray-400">{loading ? 'Loading...' : ''}</div>

@@ -52,7 +52,7 @@ function Dashboard() {
             <h1 className="font-semibold text-2xl">Welcome back, {user.name}</h1>
             <p className="text-sm text-gray-500">Here's a quick overview of your tasks</p>
           </div>
-          <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-dark-bg-secondary rounded-lg">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-dark-bg rounded-lg">
             <div className="text-center p-4 bg-gray-50 bg-white dark:bg-dark rounded-md border border-gray-500/[0.1]">
               <div className="text-xs text-gray-500">Total</div>
               <div className="font-bold text-xl">{total}</div>

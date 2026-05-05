@@ -189,7 +189,7 @@ function CreateTask() {
                   className={`p-4 rounded-full border transition-colors ${
                     isRecording
                       ? "bg-red-500 border-red-500 text-white animate-pulse"
-                      : "border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50"
+                      : "border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg/50"
                   }`}
                 >
                   {isRecording ? (
@@ -211,7 +211,7 @@ function CreateTask() {
                 onClick={() => fileInputRef.current?.click()}
                 title="Upload recorded file"
                 disabled={isTranscribingFile || isRecording}
-                className={`p-4 rounded-full border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg-secondary/50 text-sm ${
+                className={`p-4 rounded-full border border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg/50 text-sm ${
                   isTranscribingFile || isRecording ? "opacity-60 cursor-not-allowed" : ""
                 }`}
               >
@@ -267,7 +267,7 @@ function CreateTask() {
       )}
 
       {isGenerating && (
-        <div className="flex flex-col items-center justify-center gap-4 p-8 rounded-lg border border-border-gray-100 dark:border-gray-700 bg-bg-gray-100 dark:bg-dark-bg-secondary/50">
+        <div className="flex flex-col items-center justify-center gap-4 p-8 rounded-lg border border-border-gray-100 dark:border-gray-700 bg-bg-gray-100 dark:bg-dark-bg/50">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-gray-200 dark:border-gray-700 rounded-full" />
             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0" />

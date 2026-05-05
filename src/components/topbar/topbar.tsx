@@ -67,14 +67,14 @@ function Topbar() {
 
     return (
         <>
-        <div className={`flex justify-between items-center w-full md:px-[6%] px-4 py-3 z-[3] sticky top-0 bg-white dark:bg-[#101010] backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'border-b border-gray-500/[0.1]' : ''}`}>
+        <div className={`flex justify-between items-center w-full md:px-[6%] px-4 py-3 z-[3] sticky top-0 bg-white dark:bg-dark-bg backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'border-b border-gray-500/[0.1]' : ''}`}>
             <Link to={"/"} className="md:w-[25%] text-start flex gap-2 items-center">
                 <LogoIcon className="w-[14px]"  />
                 <BlurReveal preset="slide-right" duration={3}><h3 className="text-lg font-semibold">Flashtasks</h3></BlurReveal>
             </Link>
             
             <ul className={`
-                lg:static fixed top-0 right-0 z-20 flex lg:flex-row flex-col lg:px-0 md:py-0 py-6 px-6 bg-white dark:bg-[#101010] lg:w-auto md:h-full h-screen w-full overflow-hidden
+                lg:static fixed top-0 right-0 z-20 flex lg:flex-row flex-col lg:px-0 md:py-0 py-6 px-6 bg-white dark:bg-dark-bg lg:w-auto md:h-full h-screen w-full overflow-hidden
                 ${open ? "translate-y-[0px] w-full" : "lg:translate-y-[0] -translate-y-[120%] lg:w-auto w-0"} duration-500
             `}>
                 <Link to={"/"} className="md:hidden px-4 mx-6 rounded-lg border border-gray-500/[0.2] w-fit mb-4">

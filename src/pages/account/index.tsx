@@ -35,7 +35,7 @@ function AccountPages() {
                     }}
                 >
                     {({ handleSubmit }) => (
-                    <form onSubmit={handleSubmit} className="bg-bg-gray-100 dark:bg-dark-bg-secondary rounded-[10px] md:block hidden">
+                    <form onSubmit={handleSubmit} className="bg-bg-gray-100 dark:bg-dark-bg rounded-[10px] md:block hidden">
                         <SearchBar />
                     </form>
                     )

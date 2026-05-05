@@ -17,7 +17,7 @@ export default function Confirmationmessage({ title, text, buttonText = "Delete"
             <div ref={modalRef} className="bg-white dark:bg-dark flex flex-col justify-between min-w-[300px] max-[460px]:w-[80%] rounded-lg shadow-lg border border-gray-500/[0.2]">
                 <div className="sticky top-0 border-b border-gray-500/[0.2] z-[2] p-4 flex items-center justify-between">
                     <h2 className="px-2 opacity-[0.7] leading-4">{title}</h2>
-                    <button onClick={() => setOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
+                    <button onClick={() => setOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-lg transition-colors">
                         <XIcon size={16} />
                     </button>
                 </div>

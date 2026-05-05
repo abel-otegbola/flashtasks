@@ -11,7 +11,7 @@ function Home() {
   const { user } = useUser();
   const theme = useTheme();
   return (
-    <main className="w-full dark:bg-[#101010] dark:text-gray-100 pb-20">
+    <main className="w-full dark:bg-dark-bg dark:text-gray-100 pb-20">
       <header className="flex flex-col justify-center items-center w-full bg-[#F6F6F6]/[0.4] dark:bg-[#191919] py-20">
         
         <div className="flex flex-col text-center items-center justify-center gap-4 px-6">

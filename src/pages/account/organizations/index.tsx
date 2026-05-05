@@ -38,6 +38,21 @@ export default function OrganizationsPage() {
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
   const { user } = useUser();
 
+  const normalizeMember = (member: any) => {
+    if (typeof member === 'string') {
+      return { $id: member, name: member, email: member, role: 'member', permissions: [] };
+    }
+
+    return {
+      ...member,
+      $id: member?.$id || member?.userId || member?.email,
+      name: member?.name || member?.fullname || member?.email || member?.$id || member?.userId || '',
+      email: member?.email || member?.userId || member?.$id || '',
+      role: member?.role || 'member',
+      permissions: member?.permissions || [],
+    };
+  };
+
   useEffect(() => {
   if (user) {
       getTasks(user.email || "");
@@ -48,8 +63,8 @@ export default function OrganizationsPage() {
 
   const organizationMembers = currentOrg
     ? [
-        ...(currentOrg.members || []),
-        ...(currentOrg.ownerEmail && !(currentOrg.members || []).some((member) => member.email === currentOrg.ownerEmail)
+        ...(currentOrg.members || []).map(normalizeMember),
+        ...(currentOrg.ownerEmail && !(currentOrg.members || []).some((member) => normalizeMember(member).email === currentOrg.ownerEmail)
           ? [{ $id: currentOrg.ownerEmail, name: currentOrg.ownerEmail, email: currentOrg.ownerEmail, role: 'owner' as const, permissions: ADMIN_PERMISSIONS }]
           : []),
       ]
@@ -64,7 +79,7 @@ export default function OrganizationsPage() {
 
   const isOwner = currentOrg?.ownerEmail === user?.email;
 
-  const isAdmin = currentOrg?.members?.some(m => m.email === user?.email && m.role === 'admin');
+  const isAdmin = currentOrg?.members?.some((member) => normalizeMember(member).email === user?.email && normalizeMember(member).role === 'admin');
 
   const openTaskDetails = (task: todo) => {
       setSelectedTask(task);
@@ -112,8 +127,9 @@ export default function OrganizationsPage() {
   };
 
   const openMemberEditor = (member: any) => {
-    setEditingMemberId(member.$id);
-    setEditingMemberRole(member.role || 'member');
+    const normalizedMember = normalizeMember(member);
+    setEditingMemberId(normalizedMember.$id);
+    setEditingMemberRole(normalizedMember.role || 'member');
   };
 
   const closeMemberEditor = () => {
@@ -125,7 +141,7 @@ export default function OrganizationsPage() {
     if (!currentOrg || !editingMemberId) return;
 
     const nextMembers = (currentOrg.members || []).map((member) =>
-      member.$id === editingMemberId ? { ...member, role: editingMemberRole } : member
+      normalizeMember(member).$id === editingMemberId ? { ...normalizeMember(member), role: editingMemberRole } : member
     );
 
     await updateOrganization(currentOrg.$id, { members: nextMembers });
@@ -377,7 +393,7 @@ export default function OrganizationsPage() {
                       ): null}
                     </div>
                     
-                    <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-[#101010]">
+                    <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-dark-bg">
                       <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Organization owner</h4>
                       <div className="flex flex-col gap-2 p-4">
                           <div className="flex items-center justify-between p-2 border border-gray-500/[0.2] rounded">
@@ -390,7 +406,7 @@ export default function OrganizationsPage() {
                       </div>
                     </div>
 
-                    <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-[#101010]">
+                    <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-dark-bg">
                       <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Members</h4>
                       <div className="flex flex-col gap-2 p-4">
                         {(currentOrg.members || []).map(m => (
@@ -471,7 +487,7 @@ export default function OrganizationsPage() {
                       </div>
                     </div>
 
-                    <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-[#101010]">
+                    <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-dark-bg">
                       <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Organization profile</h4>
                       <div className="grid grid-cols-1 gap-4 p-4">
                           <Input

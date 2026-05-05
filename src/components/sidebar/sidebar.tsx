@@ -49,7 +49,7 @@ function Sidebar() {
                 <span className={`duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "py-[0px] w-[0px] h-[0px] translate-x-[-12px]" : "translate-x-[4px] py-[0.5px] px-[4px] w-[8px] h-[0.5px]"}`}></span>
                 <span className={`w-[7px] h-[1px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "rotate-[-45deg] translate-y-[-4px]" : "rotate-[0deg]"}`}></span>
             </button>
-            <div className={`flex flex-col justify-between md:h-full bg-white dark:bg-dark-bg-secondary border border-gray-500/[0.1] dark:border-gray-500/[0.2] h-[100vh] md:rounded-[20px] md:sticky fixed md:top-0 top-0 py-4 px-4 right-0 overflow-y-auto overflow-x-hidden z-[5] transition-all duration-700 ${open ? "sm:w-[70px] w-[280px] translate-x-[0px] opacity-[1]": "sm:w-full translate-x-[400px] md:translate-x-[0px] md:opacity-[1] opacity-[0]"}`}>  
+            <div className={`flex flex-col justify-between md:h-full bg-white dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2] h-[100vh] md:rounded-[20px] md:sticky fixed md:top-0 top-0 py-4 px-4 right-0 overflow-y-auto overflow-x-hidden z-[5] transition-all duration-700 ${open ? "sm:w-[70px] w-[280px] translate-x-[0px] opacity-[1]": "sm:w-full translate-x-[400px] md:translate-x-[0px] md:opacity-[1] opacity-[0]"}`}>  
                 <Link to={"/"} className="px-4 rounded-lg border border-gray-500/[0.2] w-fit mb-4">
                     <LogoIcon className="w-[12px]" />
                 </Link>

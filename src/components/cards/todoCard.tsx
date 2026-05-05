@@ -83,7 +83,7 @@ function TodoCard(task: TodoCardProps) {
         onSwipeRight={() => updateTask(task.$id, { status: status === 'completed' ? 'pending' : 'completed' }) }
       >
       <div
-        className={`border-t-3 ${color.border} border rounded-[10px] bg-white dark:bg-[#101010] hover:shadow-md `}
+        className={`border-t-3 ${color.border} border rounded-[10px] bg-white dark:bg-dark-bg hover:shadow-md `}
         onClick={() => setShowDetails(true)}
         draggable={task.draggable}
         onDragStart={(event) => {
@@ -127,7 +127,7 @@ function TodoCard(task: TodoCardProps) {
               </button>
 
               {openMenu && (
-                <div className="absolute right-0 top-6 bg-white dark:bg-dark-bg-secondary border border-gray-100 dark:border-gray-700 rounded-lg shadow-md w-32 z-20 animate-fadeIn">
+                <div className="absolute right-0 top-6 bg-white dark:bg-dark-bg border border-gray-100 dark:border-gray-700 rounded-lg shadow-md w-32 z-20 animate-fadeIn">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

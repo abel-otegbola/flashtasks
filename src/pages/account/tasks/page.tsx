@@ -186,7 +186,7 @@ function Tasks() {
                     </div>
 
                     {/* View Toggle */}
-                    <div className="flex items-center gap-1 bg-bg-gray-100 dark:bg-dark-bg-secondary p-1 rounded-lg border border-gray-500/[0.2]">
+                    <div className="flex items-center gap-1 bg-bg-gray-100 dark:bg-dark-bg p-1 rounded-lg border border-gray-500/[0.2]">
                         <button
                             onClick={() => setViewMode('list')}
                             className={`p-1 rounded-md transition-all ${
@@ -269,7 +269,7 @@ function Tasks() {
                         >
                             <button 
                                 key={key} 
-                                className={`p-4 md:text-center text-start z-[2] sticky top-0 rounded-lg border ${colorClasses[color]} bg-white dark:bg-dark-bg-secondary`}
+                                className={`p-4 md:text-center text-start z-[2] sticky top-0 rounded-lg border ${colorClasses[color]} bg-white dark:bg-dark-bg`}
                                 onClick={() => setOpenSections(prev => prev === key ? '' : key)}                                
                             >
                                 <p className="text-gray-400 text-xs mb-1">{title}</p>
@@ -358,7 +358,7 @@ function Tasks() {
             {viewMode === 'calendar' && (
                 <div className="flex flex-col gap-4">
                     {/* Calendar Header */}
-                    <div className="flex items-center justify-between p-4 bg-bg-gray-100 dark:bg-dark-bg-secondary/50 rounded-lg border border-gray-500/[0.2]">
+                    <div className="flex items-center justify-between p-4 bg-bg-gray-100 dark:bg-dark-bg/50 rounded-lg border border-gray-500/[0.2]">
                         <button
                             onClick={() => changeMonth(-1)}
                             className="p-2 hover:bg-white dark:hover:bg-dark-bg rounded-lg transition-colors"
@@ -386,7 +386,7 @@ function Tasks() {
 
                         {/* Empty cells for days before month starts */}
                         {Array.from({ length: getFirstDayOfMonth(currentDate) }).map((_, i) => (
-                            <div key={`empty-${i}`} className="p-2 min-h-[100px] bg-gray-50 dark:bg-dark-bg-secondary/20 rounded-lg" />
+                            <div key={`empty-${i}`} className="p-2 min-h-[100px] bg-gray-50 dark:bg-dark-bg/20 rounded-lg" />
                         ))}
 
                         {/* Calendar days */}
@@ -402,7 +402,7 @@ function Tasks() {
                                     className={`p-2 min-h-[100px] border rounded-lg ${
                                         isToday 
                                             ? 'border-primary bg-primary/5 dark:bg-primary/10' 
-                                            : 'border-gray-500/[0.2] bg-bg-gray-100 dark:bg-dark-bg-secondary/50'
+                                            : 'border-gray-500/[0.2] bg-bg-gray-100 dark:bg-dark-bg/50'
                                     } hover:shadow-md transition-shadow`}
                                 >
                                     <div className={`text-sm font-semibold mb-2 ${isToday ? 'text-primary' : ''}`}>

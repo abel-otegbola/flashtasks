@@ -45,10 +45,10 @@ export default function EditTaskModal({
   
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white dark:bg-[#0b0b0b] shadow-xl w-[94%] max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-500/[0.2] rounded-lg overflow-hidden">
-        <div className="sticky top-0 bg-white dark:bg-[#0b0b0b] border-b border-gray-500/[0.1] z-[2] p-4 flex items-center justify-between">
+      <div ref={modalRef} className="bg-white dark:bg-dark-bg shadow-xl w-[94%] max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-500/[0.2] rounded-lg overflow-hidden">
+        <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] z-[2] p-4 flex items-center justify-between">
           <h2 className="px-2 opacity-[0.7] leading-4">Update Current Task</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-lg transition-colors">
             <XIcon size={16} />
           </button>
         </div>
@@ -141,7 +141,7 @@ export default function EditTaskModal({
 
                     </div>
 
-                    <div className="sticky bottom-0 bg-white dark:bg-[#0b0b0b] border-t border-gray-500/[0.2] py-4 p-6 flex justify-end gap-3">
+                    <div className="sticky bottom-0 bg-white dark:bg-dark-bg border-t border-gray-500/[0.2] py-4 p-6 flex justify-end gap-3">
                         <Button variant='secondary' onClick={onClose}>Close</Button>
                         <Button type='submit' disabled={loading}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
                     </div>

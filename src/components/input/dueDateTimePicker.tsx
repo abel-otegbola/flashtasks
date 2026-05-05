@@ -128,7 +128,7 @@ export default function DueDateTimePicker({
         <div className="z-[60] p-4 fixed sm:right-[32%] right-0 bottom-20">
           <div
             ref={popupRef}
-            className="w-full max-w-md rounded-2xl border border-gray-500/[0.2] bg-white dark:bg-dark-bg-secondary shadow-xl"
+            className="w-full max-w-md rounded-2xl border border-gray-500/[0.2] bg-white dark:bg-dark-bg shadow-xl"
           >
             <div className="flex items-center justify-between border-b border-gray-500/[0.2] p-4">
               <div>

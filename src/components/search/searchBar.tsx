@@ -55,7 +55,7 @@ export default function SearchBar({ onResults, placeholder = "Search tasks..." }
 
       {
         results.length > 0 && query && (
-        <div className="absolute top-[90%] left-0 mt-2 px-2 pb-2 w-full max-h-72 overflow-auto z-20 bg-white dark:bg-[#101010] border border-gray-200 dark:border-gray-500/[0.2] rounded-lg shadow-lg">
+        <div className="absolute top-[90%] left-0 mt-2 px-2 pb-2 w-full max-h-72 overflow-auto z-20 bg-white dark:bg-dark-bg border border-gray-200 dark:border-gray-500/[0.2] rounded-lg shadow-lg">
           {
             ["_tasks", "_organizations"].map((index) => (
               <div key={index}>
