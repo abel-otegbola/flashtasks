@@ -12,7 +12,7 @@ function Home() {
   const theme = useTheme();
   return (
     <main className="w-full dark:bg-dark-bg dark:text-gray-100 pb-20">
-      <header className="flex flex-col justify-center items-center w-full bg-[#F6F6F6]/[0.4] dark:bg-[#191919] py-20">
+      <header className="flex flex-col justify-center items-center w-full bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.4] py-20">
         
         <div className="flex flex-col text-center items-center justify-center gap-4 px-6">
           <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] animate-bounce">
@@ -50,7 +50,7 @@ function Home() {
         </div>
         
         <div className="flex flex-col justify-center items-center py-[60px] p-4 md:w-[65%] w-full">
-          <div className='shadow-lg md:rounded-[24px] rounded w-full flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-[#161616] md:p-4 p-1'>
+          <div className='shadow-lg md:rounded-[24px] rounded w-full flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.7] md:p-4 p-1'>
             <video autoPlay loop muted playsInline className="w-full h-full md:rounded-[16px] rounded-[8px] border border-gray-500/[0.07]">
               <source src={`/hero-video-${theme === 'dark' ? 'dark' : 'light'}.webm`} type="video/mp4" />
               Your browser does not support the video tag.
@@ -138,11 +138,11 @@ function Home() {
 
       <section className="flex flex-col gap-10 lg:px-[6%] md:px-[3%] p-4">
 
-        <div className="relative flex md:flex-nowrap flex-wrap w-full gap-8 bg-gray-100 dark:bg-[#191919] rounded-lg md:pl-[6%] p-6 pb-0 md:h-[400px]">
+        <div className="relative flex md:flex-nowrap flex-wrap w-full gap-8 bg-gray-100 dark:bg-dark/[0.4] rounded-lg md:pl-[6%] p-6 pb-0 md:h-[400px]">
           <div className="flex flex-col justify-between gap-8 md:w-[30%] py-[6%]">
-            <BlurReveal preset="slide-right"><h3 className="font-semibold text-lg">Clear Task Visibility</h3></BlurReveal>
+            <BlurReveal preset="slide-right"><h3 className="font-semibold text-lg">Voice to tasks</h3></BlurReveal>
 
-            <BlurReveal preset="slide-right"><p>Track projects, due dates, and priorities from a single dashboard so your team always knows what to do next.</p></BlurReveal>
+            <BlurReveal preset="slide-right"><p>Convert your spoken words into actionable tasks seamlessly</p></BlurReveal>
 
             <Button href="/auth/signup" variant="primary" className="">
               <BlurReveal preset="slide-right">Learn more</BlurReveal>
@@ -150,25 +150,25 @@ function Home() {
           </div>
 
           <div className="flex-1 flex items-end h-full justify-center">
-            <img
-              src={`/hero-img-${theme === 'dark' ? 'dark' : 'light'}.webp`}
-              width={500}
-              height={300}
-              className="object-cover md:w-[500px] w-full"
-            />
+            <div className='rounded-t-lg sm:w-[600px] w-[100%] h-auto flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.7] md:p-3 p-1'>
+              <video autoPlay loop muted playsInline className="w-full h-full md:rounded-[10px] rounded-[8px] border border-gray-500/[0.07]">
+                <source src={`/voice-to-tasks-${theme === 'dark' ? 'dark' : 'light'}.mp4`} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
 
             <div className="absolute bottom-0 left-0 w-full h-[90px] bg-gradient-to-t from-[gray-500/[0.1]  rounded-b-lg"></div>
           </div>
         </div>
 
         <div className="flex md:flex-nowrap flex-wrap gap-[32px]">
-          <div className="flex flex-col md:w-[50%] w-full gap-4 bg-gray-100 dark:bg-[#191919] rounded-lg md:p-[6%] p-6">
+          <div className="flex flex-col md:w-[50%] w-full gap-4 bg-gray-100 dark:bg-dark/[0.4] rounded-lg md:p-[6%] p-6">
             <BlurReveal preset="slide-right"><h3 className="font-medium text-[80px] font-semibold">AI</h3></BlurReveal>
 
             <BlurReveal preset="slide-right"><p>Intelligent task management powered by AI scheduling, prioritization, task organization, and productivity assistance.</p></BlurReveal>
           </div>
 
-          <div className="flex flex-col justify-between md:w-[50%] w-full gap-4 bg-gray-100 dark:bg-[#191919] rounded-lg md:p-[6%] p-6">
+          <div className="flex flex-col justify-between md:w-[50%] w-full gap-4 bg-gray-100 dark:bg-dark/[0.4] rounded-lg md:p-[6%] p-6">
             <BlurReveal preset="slide-right"><h3 className="font-semibold text-lg">Simple & Distraction-Free</h3></BlurReveal>
 
             <BlurReveal preset="slide-right"><p>Designed with clarity in mind. No overwhelming dashboards or bloated workflows — just a clean productivity system focused on helping you get work done faster.</p></BlurReveal>
