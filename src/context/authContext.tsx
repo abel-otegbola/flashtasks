@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { account, databases, tablesDB, teams } from "../appwrite/appwrite";
 import { useLocalStorage } from '../customHooks/useLocaStorage';
 import { User } from '../interface/auth';
-import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, OrgMember } from '../interface/organization';
+import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS } from '../interface/organization';
 
 type values = {
     user: User;
@@ -87,18 +87,18 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             const org = await databases.getDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId);
             const nextRole = membership.roles?.[0] || 'member';
             const nextPermissions = nextRole === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS;
-            const nextMembers = [
-                ...(org.members || []).filter((member: any) => member?.email?.toLowerCase() !== loggedIn.email.toLowerCase()),
-                {
-                    $id: loggedIn.$id,
-                    name: loggedIn.name || loggedIn.email,
-                    email: loggedIn.email,
-                    role: nextRole,
-                    permissions: nextPermissions,
-                } as OrgMember,
-            ];
 
-            await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId, { members: nextMembers });
+            const existingMemberIds = Array.isArray(org.members)
+                ? org.members
+                    .map((member: any) => (typeof member === 'string' ? member : member?.$id))
+                    .filter(Boolean)
+                : [];
+
+            if (!existingMemberIds.includes(loggedIn.$id)) {
+                existingMemberIds.push(loggedIn.$id);
+            }
+
+            await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId, { members: existingMemberIds });
             window.dispatchEvent(new Event('organizations:changed'));
             toast.success(`Joined ${org.name || 'organization'}`);
             return true;

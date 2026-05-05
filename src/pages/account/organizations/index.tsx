@@ -18,13 +18,13 @@ import TaskDetailsModal from '../../../components/modals/taskDetailsModal';
 
 export default function OrganizationsPage() {
   const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, updateOrganization, deleteOrganization, loading } = useOrganizations();
-  const { tasks } = useTasks(); 
+  const { tasks, getTasks } = useTasks(); 
   const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState<any>(null);
-  const [selectedTab, setSelectedTab] = useState("About");
+  const [selectedTab, setSelectedTab] = useState("Tasks");
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingTeamName, setEditingTeamName] = useState('');
   const [editingTeamMembers, setEditingTeamMembers] = useState<string[]>([]);
@@ -36,8 +36,13 @@ export default function OrganizationsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
-  const [viewMode, setViewMode] = useState<string>('kanban');
   const { user } = useUser();
+
+  useEffect(() => {
+  if (user) {
+      getTasks(user.email || "");
+  }
+  }, [user]);
 
   const initialLoading = loading && organizations.length === 0 && !currentOrg;
 
@@ -339,14 +344,18 @@ export default function OrganizationsPage() {
                                     </div>
                                   )}
                                 </div>
-                                <div className="flex gap-2 shrink-0">
-                                  <button onClick={() => openTeamEditor(team)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
-                                    Edit
-                                  </button>
-                                  <button onClick={() => removeTeam(currentOrg.$id, team.$id)}>
-                                    <TrashIcon color="red" size={16} />
-                                  </button>
-                                </div>
+                                {
+                                  isOwner || isAdmin ? (
+                                  <div className="flex gap-2 shrink-0">
+                                    <button onClick={() => openTeamEditor(team)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
+                                      Edit
+                                    </button>
+                                    <button onClick={() => removeTeam(currentOrg.$id, team.$id)}>
+                                      <TrashIcon color="red" size={16} />
+                                    </button>
+                                  </div>
+                                  ) : null
+                                }
                               </div>
                             )}
                           </div>
@@ -491,20 +500,24 @@ export default function OrganizationsPage() {
                       </div>
                     </div>
 
-                    <div className="border border-red-500/20 rounded-lg bg-red-50 dark:bg-red-950/10">
-                      <div className="p-4 border-b border-red-500/20">
-                        <h4 className="text-sm font-medium text-red-700 dark:text-red-300">Danger zone</h4>
-                        <p className="text-sm text-red-700/80 dark:text-red-300/80">Deleting an organization removes it for all members.</p>
-                      </div>
-                      <div className="p-4 flex items-center justify-between gap-3 flex-wrap">
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          Delete the current organization if you no longer need this workspace.
+                    {
+                      isOwner && (
+                        <div className="border border-red-500/20 rounded-lg bg-red-50 dark:bg-red-950/10">
+                          <div className="p-4 border-b border-red-500/20">
+                            <h4 className="text-sm font-medium text-red-700 dark:text-red-300">Danger zone</h4>
+                            <p className="text-sm text-red-700/80 dark:text-red-300/80">Deleting an organization removes it for all members.</p>
+                          </div>
+                          <div className="p-4 flex items-center justify-between gap-3 flex-wrap">
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                              Delete the current organization if you no longer need this workspace.
+                            </div>
+                            <Button size="small" onClick={() => setShowDeleteConfirm(true)}>
+                              Delete Organization
+                            </Button>
+                          </div>
                         </div>
-                        <Button size="small" onClick={() => setShowDeleteConfirm(true)}>
-                          Delete Organization
-                        </Button>
-                      </div>
-                    </div>
+                      )
+                    }
                   </div>
                 )
               }

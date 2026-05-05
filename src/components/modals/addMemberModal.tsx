@@ -64,7 +64,7 @@ export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps)
     const invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'> = {
       name: nextName,
       email: nextEmail,
-      role,
+      role: role as 'admin' | 'member',
       permissions,
     };
 

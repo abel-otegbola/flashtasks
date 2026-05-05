@@ -124,7 +124,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         teams
       };
 
-  const res = await databases.createDocument(DATABASE_ID, ORG_COLLECTION_ID, ID.unique(), orgData);
+      const res = await databases.createDocument(DATABASE_ID, ORG_COLLECTION_ID, ID.unique(), orgData);
 
       // fetch authoritative document to ensure nested fields (members/teams) are present
       let full: any = res;
@@ -341,7 +341,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         roles: [invite.role],
         email: normalizedEmail,
         name: invite.name,
-        url: `${window.location.origin}/account/notifications?teamId=${encodeURIComponent(orgId)}`,
+        url: `https://flashtasks.app/account/notifications?teamId=${encodeURIComponent(orgId)}`,
       });
 
       toast.success('Invite sent');
