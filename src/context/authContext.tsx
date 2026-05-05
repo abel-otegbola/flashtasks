@@ -94,26 +94,6 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                   ? [org.members]
                   : [];
 
-            const normalizeMember = (member: any) => {
-                if (typeof member === 'string') {
-                    return {
-                        $id: member,
-                        name: member,
-                        email: member,
-                        role: 'member',
-                        permissions: [],
-                    };
-                }
-
-                return {
-                    $id: member?.$id || member?.userId || member?.email,
-                    name: member?.name || member?.fullname || member?.email || member?.$id || member?.userId || '',
-                    email: member?.email || member?.userId || member?.$id || '',
-                    role: member?.role || 'member',
-                    permissions: Array.isArray(member?.permissions) ? member.permissions : [],
-                };
-            };
-
             const nextMember = {
                 $id: loggedIn.$id,
                 name: loggedIn.name || loggedIn.email,
@@ -123,9 +103,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             };
 
             const nextMembers = [
-                ...existingMembers
-                    .map(normalizeMember)
-                    .filter((member: any) => member.$id && member.$id !== nextMember.$id),
+                ...existingMembers,
                 nextMember,
             ];
 
