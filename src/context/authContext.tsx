@@ -88,45 +88,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             const nextRole = membership.roles?.[0] || 'member';
             const nextPermissions = nextRole === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS;
 
-            const memberKey = (member: any) => member?.$id || member?.userId || member?.email || '';
-
-            const existingMembers = Array.isArray(org.members)
-                ? org.members.map((member: any) => {
-                    if (typeof member === 'string') {
-                        return {
-                            $id: member,
-                            name: member,
-                            email: member,
-                            role: 'member',
-                            permissions: [],
-                        };
-                    }
-
-                    return {
-                        $id: member?.$id || member?.userId || member?.email,
-                        name: member?.name || member?.fullname || member?.email || member?.$id || member?.userId || '',
-                        email: member?.email || member?.userId || member?.$id || '',
-                        role: member?.role || 'member',
-                        permissions: Array.isArray(member?.permissions) ? member.permissions : [],
-                    };
-                })
-                : [];
-
-            const normalizedMembers = existingMembers.filter((member: any) => memberKey(member));
-            const nextMember = {
-                $id: loggedIn.$id,
-                name: loggedIn.name || loggedIn.email,
-                email: loggedIn.email,
-                role: nextRole,
-                permissions: nextPermissions,
-            };
-
-            const mergedMembers = [
-                ...normalizedMembers.filter((member: any) => memberKey(member) !== nextMember.$id),
-                nextMember,
-            ];
-
-            await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId, { members: mergedMembers });
+            await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId, { members: [ ...org.members, { $id: loggedIn.$id, name: loggedIn.name, email: loggedIn.email, role: nextRole, permissions: nextPermissions } ] });
             window.dispatchEvent(new Event('organizations:changed'));
             toast.success(`Joined ${org.name || 'organization'}`);
             return true;

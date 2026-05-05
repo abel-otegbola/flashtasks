@@ -56,7 +56,13 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       const organizationsForUser = (res.documents || []).filter((org: any) => {
         if (org.ownerEmail === user.email) return true;
 
-        return Array.isArray(org.members) && org.members.some((member: any) => member?.email === user.email);
+        return Array.isArray(org.members) && org.members.some((member: any) => {
+          if (typeof member === 'string') {
+            return member === user.$id || member === user.email;
+          }
+
+          return member?.email === user.email || member?.$id === user.$id || member?.userId === user.$id;
+        });
       });
 
       if (!organizationsForUser.length) {
