@@ -6,7 +6,7 @@ import Input from '../../../components/input/input';
 import CreateOrganizationModal from '../../../components/modals/createOrganizationModal';
 import EditOrganizationModal from '../../../components/modals/editOrganizationModal';
 import AddMemberModal from '../../../components/modals/addMemberModal';
-import { GridFourIcon, PencilSimpleLineIcon, TrashIcon } from '@phosphor-icons/react';
+import { GridFourIcon, PencilSimpleLineIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { OrganizationSkeletonLoader } from '../../../components/skeletons';
 import Confirmationmessage from '../../../components/modals/confirmation';
 import { ADMIN_PERMISSIONS } from '../../../interface/organization';
@@ -15,12 +15,14 @@ import { useTasks } from '../../../context/tasksContext';
 import TaskListView from '../../../components/cards/taskListView';
 import { todo } from '../../../interface/todo';
 import TaskDetailsModal from '../../../components/modals/taskDetailsModal';
+import CreateTaskModal from '../../../components/modals/createTaskModal';
 
 export default function OrganizationsPage() {
   const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, updateOrganization, deleteOrganization, loading } = useOrganizations();
   const { tasks, getTasks } = useTasks(); 
   const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [showCreateTask, setShowCreateTask] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
@@ -209,12 +211,12 @@ export default function OrganizationsPage() {
               </div>
               {
                 selectedTab === "Tasks" && (
-                  <div className="mb-4">
+                  <div className="mb-4 ">
                     <h2 className="font-semibold text-lg mb-2">Organization Tasks</h2>
                     {tasks.filter(t => t.organizationId === currentOrg.$id).length === 0 ? (
-                      <div className="text-gray-500">No tasks in this organization yet.</div>
+                      <div className="text-gray-500 mb-8">No tasks in this organization yet.</div>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-2 mb-8">
                         {tasks.filter(t => t.organizationId === currentOrg.$id).map((task, index) => (
                           <TaskListView
                               key={task.$id}
@@ -224,6 +226,17 @@ export default function OrganizationsPage() {
                           />
                         ))}
                       </div>
+                    )}
+                    <Button onClick={() => setShowCreateTask(true)} size="small">
+                      <PlusIcon />
+                      Create New Task
+                    </Button>
+                    {showCreateTask && (
+                      <CreateTaskModal
+                        isOpen={showCreateTask}
+                        task={{ organizationId: currentOrg?.$id } as todo}
+                        onClose={() => setShowCreateTask(false)}
+                      />
                     )}
                   </div>
                 )
@@ -387,7 +400,7 @@ export default function OrganizationsPage() {
                       <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Members</h4>
                       <div className="flex flex-col gap-2 p-4">
                         {(currentOrg.members || []).map(m => (
-                          <div key={m.$id} className="flex items-start justify-between gap-3 p-4 rounded bg-gray-100 dark:bg-dark-bg">
+                          <div key={m.$id} className="flex items-start justify-between gap-3 p-4 rounded-lg bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]">
                             <div className='w-full'>
                               <div className='flex justify-between w-full'>
                                 <div>

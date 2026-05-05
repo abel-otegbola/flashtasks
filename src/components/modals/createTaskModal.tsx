@@ -1,18 +1,19 @@
 'use client';
 import { todo } from "../../interface/todo";
-import { useOrganizations } from '../../context/organizationContext';
 import Button from "../button/button";
 import { useUser } from "../../context/authContext";
 import { XIcon } from "@phosphor-icons/react";
 import { Formik } from "formik";
 import Input from "../input/input";
-import TagInput from "../input/tagInput";
 import LoadingIcon from "../../assets/icons/loading";
 import { useTasks } from "../../context/tasksContext";
-import { Organization } from "../../interface/organization";
 import { createTaskSchema } from '../../schema/createTaskSchema';
 import DueDateTimePicker from "../input/dueDateTimePicker";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
+import TagInput from "../input/tagInput";
+import { Organization } from "../../interface/organization";
+import { useOrganizations } from "../../context/organizationContext";
+import Dropdown from "../dropdown/dropdown";
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -27,8 +28,8 @@ interface AddTaskModalProps {
 export default function CreateTaskModal({ 
   isOpen, 
   onClose, 
+  task = null,
 }: AddTaskModalProps) {
-
   const { organizations } = useOrganizations();
   const { addTask, loading } = useTasks();
   const { user } = useUser();
@@ -52,7 +53,7 @@ export default function CreateTaskModal({
             </button>
         </div>
         <Formik
-          initialValues={{ title: '', description: '', category: '', assignees: [] as string[], invites: '', organizationId: '', teamId: '', status: 'upcoming', priority: 'medium', dueDate: getLocalDateTimeValue(), comments: '' }}
+          initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignees: task?.assignees || [] as string[], invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: task?.dueDate || getLocalDateTimeValue(), comments: task?.comments || '' }}
           enableReinitialize
           validationSchema={createTaskSchema}
             onSubmit={async (values, { setSubmitting }) => {
@@ -89,11 +90,30 @@ export default function CreateTaskModal({
 
                       <div className='flex flex-col gap-2'>
                           <label className="text-sm font-medium">Priority <span className="text-red-500">*</span></label>
-                          <select value={values.priority} name='priority' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none">
-                              <option value="low">Low</option>
-                              <option value="medium">Medium</option>
-                              <option value="high">High</option>
-                          </select>
+                          <Dropdown
+                            variant="secondary"
+                            value={values.priority}
+                            onChange={(value) => setFieldValue('priority', value)}
+                            options={[
+                              { title: "Low", id: "low" },
+                              { title: "Medium", id: "medium" },
+                              { title: "High", id: "high" }
+                            ]}
+                          />
+                      </div>
+
+                       <div className='flex flex-col gap-2'>
+                          <label className="text-sm font-medium">Assignees</label>
+                          <TagInput tags={values.assignees} onChange={(e) => setFieldValue('assignees', e)} placeholder="Assign the task to members" />
+                          <Dropdown value={values.assignees[0] || ""} onChange={(value) => setFieldValue('assignees', (values.assignees).includes(value) ? values.assignees : [...values.assignees, value])}
+                              options=
+                            {
+                              (
+                                (organizations.find((org: Organization) => org.$id === values.organizationId)?.members ?? [])
+                                .concat(values.invites ? values.invites.split(",").filter(Boolean).map((email: string) => ({ $id: email, email, name: email })) : [])
+                              ).map((member: any) => ({ title: member.name || member.email, id: member.email }))
+                              }
+                            />
                       </div>
 
                   </div>

@@ -13,6 +13,7 @@ import { Organization } from "../../interface/organization";
 import { createTaskSchema } from '../../schema/createTaskSchema';
 import DueDateTimePicker from "../input/dueDateTimePicker";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
+import Dropdown from "../dropdown/dropdown";
 
 interface EditTaskModalProps {
   isOpen: boolean;
@@ -115,28 +116,30 @@ export default function EditTaskModal({
                          
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Add to an organization</label>
-                            <select value={values.organizationId} name='organizationId' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none">
-                                <option value="">Select an organization</option>
-                                {organizations.map((org: any) => (
-                                    <option key={org.$id} value={org.$id}>{org.name}</option>
-                                ))}
-                            </select>
+                            <Dropdown
+                              variant="secondary"
+                              value={values.priority}
+                              onChange={(value) => setFieldValue('priority', value)}
+                              options={[
+                                { title: "Low", id: "low" },
+                                { title: "Medium", id: "medium" },
+                                { title: "High", id: "high" }
+                              ]}
+                            />
                         </div>
 
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Assignees</label>
                             <TagInput tags={values.assignees} onChange={(e) => setFieldValue('assignees', e)} placeholder="Assign the task to members" />
-                            <select onChange={(e) => setFieldValue('assignees', (values.assignees).includes(e.target.value) ? values.assignees : [...values.assignees, e.target.value])} className="w-full p-2 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none">
-                              <option value="">Select a member</option>
-                              {
-                                (
-                                  (organizations.find((org: Organization) => org.$id === values.organizationId)?.members ?? [])
-                                  .concat(values.invites ? values.invites.split(",").filter(Boolean).map((email: string) => ({ $id: email, email, name: email })) : [])
-                                ).map((member: any) => (
-                                  <option key={member.$id} value={member.email}>{member.name}</option>
-                                ))
+                            <Dropdown value={values.assignees[0] || ""} onChange={(value) => setFieldValue('assignees', (values.assignees).includes(value) ? values.assignees : [...values.assignees, value])}
+                              options=
+                            {
+                              (
+                                (organizations.find((org: Organization) => org.$id === values.organizationId)?.members ?? [])
+                                .concat(values.invites ? values.invites.split(",").filter(Boolean).map((email: string) => ({ $id: email, email, name: email })) : [])
+                              ).map((member: any) => ({ title: member.name || member.email, id: member.email }))
                               }
-                            </select>
+                            />
                         </div>
 
                     </div>

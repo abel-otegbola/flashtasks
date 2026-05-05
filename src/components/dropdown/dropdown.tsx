@@ -46,11 +46,11 @@ export default function Dropdown({ variant = "primary", className, disabled, lab
         <div className={`relative flex flex-col gap-[2px] ${className}`} ref={dropdownRef}>
                 { label ? <label htmlFor={name} className={`font-semibold xl:text-[14px] text-[13px] ${isOpen ? "text-primary" : ""}`}>{label}</label> : "" }
 
-            <div className={`flex items-center relative rounded-[6px] w-full py-1 border duration-500 z-[1] 
-                ${error && !isOpen ?  "border-red-500 text-red-500 " : variant === "primary" ? "border-gray-500/[0.2]" : "border-none"}
+            <div className={`flex items-center relative rounded-[6px] w-full bg-gray-500/[0.04] py-1 border duration-500 
+                ${error && !isOpen ?  "border-red-500 text-red-500 " : "border-gray-500/[0.2]"}
                 ${isOpen ? "border-primary dark:border-primary shadow-input-active" : ""}
                 ${disabled ? "opacity-[0.25] cursor-not-allowed" : "cursor-pointer"}
-                ${variant === "primary" ? "pl-[12px] pr-[2px] py-[2px] " : ""}
+                ${variant === "primary" ? "pl-[12px] pr-[2px] py-[2px] " : "py-3 px-4 "}
             `}>
                 <button
                     type="button"
