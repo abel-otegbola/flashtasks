@@ -23,13 +23,12 @@ export default function OrganizationsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
   const [selectedOrg, setSelectedOrg] = useState<any>(null);
   const [selectedTab, setSelectedTab] = useState("Tasks");
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingTeamName, setEditingTeamName] = useState('');
   const [editingTeamMembers, setEditingTeamMembers] = useState<string[]>([]);
-  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
-  const [editingMemberRole, setEditingMemberRole] = useState('member');
   const [settingsName, setSettingsName] = useState('');
   const [settingsSlug, setSettingsSlug] = useState('');
   const [settingsDescription, setSettingsDescription] = useState('');
@@ -126,28 +125,6 @@ export default function OrganizationsPage() {
     setTeamName('');
   };
 
-  const openMemberEditor = (member: any) => {
-    const normalizedMember = normalizeMember(member);
-    setEditingMemberId(normalizedMember.$id);
-    setEditingMemberRole(normalizedMember.role || 'member');
-  };
-
-  const closeMemberEditor = () => {
-    setEditingMemberId(null);
-    setEditingMemberRole('member');
-  };
-
-  const handleSaveMemberRole = async () => {
-    if (!currentOrg || !editingMemberId) return;
-
-    const nextMembers = (currentOrg.members || []).map((member) =>
-      normalizeMember(member).$id === editingMemberId ? { ...normalizeMember(member), role: editingMemberRole } : member
-    );
-
-    await updateOrganization(currentOrg.$id, { members: nextMembers });
-    closeMemberEditor();
-  };
-
   const handleRemoveMember = async (memberId: string) => {
     if (!currentOrg) return;
     await removeMemberFromOrg(currentOrg.$id, memberId);
@@ -187,9 +164,9 @@ export default function OrganizationsPage() {
         <h1 className="text-2xl font-semibold">Organizations</h1>
         <Button onClick={() => setShowCreate(true)} size="small">Create Organization</Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 h-full bg-white dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2] rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-4 h-full bg-white dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2] rounded-lg">
         <div className="col-span-1 md:p-6 p-4">
-          <h3 className="mb-2 text-sm text-gray-400">Your organizations</h3>
+          <h3 className="mb-4 text-sm text-gray-400">Your organizations</h3>
           <div className="flex flex-col gap-2">
             {organizations.length === 0 && <div className="text-gray-500">No organizations yet</div>}
             {organizations.map(org => (
@@ -201,18 +178,18 @@ export default function OrganizationsPage() {
                 <span className="w-12 h-12 flex items-center justify-center bg-primary/10 text-primary rounded-full font-bold">{org.name.charAt(0).toUpperCase()}</span>
                 <div className="flex flex-col gap-2 text-start justify-start">
                     <div className="font-medium">{org.name}</div>
-                    <div className="text-xs text-gray-500">{org.description}</div>
+                    <div className="text-xs text-gray-500 line-clamp-2 md:line-clamp-1">{org.description}</div>
                 </div>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="col-span-2 md:border-l border-gray-500/[0.1] dark:border-gray-500/[0.2] md:p-6 p-4">
+        <div className="col-span-3 md:border-l border-gray-500/[0.1] dark:border-gray-500/[0.2] md:p-6 p-4">
           {!currentOrg ? (
             <div className="text-gray-500">Select an organization to manage teams and members.</div>
           ) : (
-            <div className="py-8 max-w-2xl mx-auto">
+            <div className="mx-auto">
 
               <div className='flex gap-4 justify-between flex-wrap mb-6'>
                 <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1'>
@@ -387,7 +364,7 @@ export default function OrganizationsPage() {
                     <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
                       <h2 className="font-semibold text-lg">Members</h2>
                       {isOwner || isAdmin ? (
-                        <Button size="small" onClick={() => setShowAddMember(true)}>
+                        <Button size="small" onClick={() => { setSelectedMember(null); setShowAddMember(true); }}>
                           Add new member
                         </Button>
                       ): null}
@@ -411,62 +388,36 @@ export default function OrganizationsPage() {
                       <div className="flex flex-col gap-2 p-4">
                         {(currentOrg.members || []).map(m => (
                           <div key={m.$id} className="flex items-start justify-between gap-3 p-4 rounded bg-gray-100 dark:bg-dark-bg">
-                            {editingMemberId === m.$id && (isOwner || isAdmin) ? (
-                              <div className="flex flex-col gap-3 flex-1">
+                            <div className='w-full'>
+                              <div className='flex justify-between w-full'>
                                 <div>
                                   <div className="font-medium">{m.name || m.email}</div>
-                                  <div className="text-xs text-gray-500">{m.email}</div>
+                                  <div className="text-xs text-gray-500">{m.role}</div>
                                 </div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <Input
-                                    value={editingMemberRole}
-                                    onChange={(e: any) => setEditingMemberRole(e.target.value)}
-                                    placeholder="Role"
-                                    className="min-w-[180px] py-[2px]"
-                                  />
-                                  <Button size="small" onClick={handleSaveMemberRole}>
-                                    Save
-                                  </Button>
-                                  <Button size="small" variant="secondary" onClick={closeMemberEditor}>
-                                    Cancel
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className='w-full'>
-                                  <div className='flex justify-between w-full'>
-                                    <div>
-                                      <div className="font-medium">{m.name || m.email}</div>
-                                      <div className="text-xs text-gray-500">{m.role}</div>
-                                    </div>
-                                    {(isOwner || (isAdmin && m.role !== 'owner')) && (
-                                      <div className="flex items-center gap-2 shrink-0">
-                                        <button onClick={() => openMemberEditor(m)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
-                                          Quick edit
-                                        </button>
-                                        {m.role !== 'owner' && (
-                                          <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
-                                            Remove
-                                          </button>
-                                        )}
-                                      </div>
-                                      )}
+                                {(isOwner || (isAdmin && m.role !== 'owner')) && (
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <button onClick={() => { setSelectedMember(m); setShowAddMember(true); }} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
+                                      Edit
+                                    </button>
+                                    {m.role !== 'owner' && (
+                                      <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
+                                        Remove
+                                      </button>
+                                    )}
                                   </div>
-                                  {m.permissions?.length ? (
-                                    <div className="mt-2 flex flex-wrap gap-1">
-                                      {m.permissions.map((permission) => (
-                                        <span key={permission} className="rounded-full bg-gray-100 px-4 py-[6px] text-[10px] dark:bg-[#202022]">
-                                          {permission}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  ) : null}
-                                  <div className="text-xs text-gray-400 mt-1">{m.email}</div>
+                                  )}
+                              </div>
+                              {m.permissions?.length ? (
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {m.permissions.map((permission) => (
+                                    <span key={permission} className="rounded-full bg-gray-100 px-4 py-[6px] text-[10px] dark:bg-[#202022]">
+                                      {permission}
+                                    </span>
+                                  ))}
                                 </div>
-                                
-                              </>
-                            )}
+                              ) : null}
+                              <div className="text-xs text-gray-400 mt-1">{m.email}</div>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -560,7 +511,14 @@ export default function OrganizationsPage() {
       )}
     <CreateOrganizationModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
     <EditOrganizationModal isOpen={showEdit} onClose={() => setShowEdit(false)} org={selectedOrg} />
-    <AddMemberModal isOpen={showAddMember} onClose={() => setShowAddMember(false)} />
+    <AddMemberModal
+      isOpen={showAddMember}
+      onClose={() => {
+        setShowAddMember(false);
+        setSelectedMember(null);
+      }}
+      member={selectedMember}
+    />
       {/* Task Details Modal (for list/grid/calendar clicks) */}
               {selectedTask && (
                   <TaskDetailsModal

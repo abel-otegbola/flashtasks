@@ -88,6 +88,8 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             const nextRole = membership.roles?.[0] || 'member';
             const nextPermissions = nextRole === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS;
 
+            const memberKey = (member: any) => member?.$id || member?.userId || member?.email || '';
+
             const existingMembers = Array.isArray(org.members)
                 ? org.members.map((member: any) => {
                     if (typeof member === 'string') {
@@ -110,7 +112,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                 })
                 : [];
 
-            const normalizedMembers = existingMembers.filter((member: any) => member?.$id);
+            const normalizedMembers = existingMembers.filter((member: any) => memberKey(member));
             const nextMember = {
                 $id: loggedIn.$id,
                 name: loggedIn.name || loggedIn.email,
@@ -120,7 +122,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             };
 
             const mergedMembers = [
-                ...normalizedMembers.filter((member: any) => member.$id !== nextMember.$id),
+                ...normalizedMembers.filter((member: any) => memberKey(member) !== nextMember.$id),
                 nextMember,
             ];
 

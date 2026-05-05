@@ -41,7 +41,7 @@ export default function SearchBar({ onResults, placeholder = "Search tasks..." }
   }, [debouncedQuery, user?.email]);
 
   return (
-    <div className="flex items-center relative w-full rounded-lg pl-2">
+    <div className="flex items-center relative w-full rounded-lg pl-2 bg-gray-500/[0.04] dark:bg-dark/[0.5]">
       <Magnifer size={16} color="currentColor" />
       <input
         className="w-full p-2 bg-transparent text-sm rounded-lg outline-none"

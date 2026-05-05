@@ -12,6 +12,7 @@ import { useOrganizations } from '../../context/organizationContext';
 interface AddMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
+  member?: any;
 }
 
 const roleOptions = [
@@ -19,23 +20,47 @@ const roleOptions = [
   { id: 'member', title: 'member' },
 ];
 
-export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps) {
-  const { currentOrg, createOrgInvite, loading } = useOrganizations();
+const normalizeMember = (member: any) => {
+  if (typeof member === 'string') {
+    return { $id: member, name: member, email: member, role: 'member', permissions: [] };
+  }
+
+  return {
+    ...member,
+    $id: member?.$id || member?.userId || member?.email,
+    name: member?.name || member?.fullname || member?.email || member?.$id || member?.userId || '',
+    email: member?.email || member?.userId || member?.$id || '',
+    role: member?.role || 'member',
+    permissions: Array.isArray(member?.permissions) ? member.permissions : [],
+  };
+};
+
+export default function AddMemberModal({ isOpen, onClose, member }: AddMemberModalProps) {
+  const { currentOrg, createOrgInvite, updateOrganization, loading } = useOrganizations();
   const modalRef = useOutsideClick(onClose, false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('member');
   const [permissions, setPermissions] = useState<string[]>(MEMBER_PERMISSIONS);
   const [error, setError] = useState('');
+  const initialMember = member ? normalizeMember(member) : null;
+  const editingMember = Boolean(initialMember?.$id);
 
   useEffect(() => {
     if (!isOpen) return;
-    setName('');
-    setEmail('');
-    setRole('member');
-    setPermissions(MEMBER_PERMISSIONS);
+    if (initialMember) {
+      setName(initialMember.name || '');
+      setEmail(initialMember.email || '');
+      setRole((initialMember.role as 'admin' | 'member') || 'member');
+      setPermissions(initialMember.permissions?.length ? initialMember.permissions : defaultPermissionsForRole(initialMember.role || 'member'));
+    } else {
+      setName('');
+      setEmail('');
+      setRole('member');
+      setPermissions(MEMBER_PERMISSIONS);
+    }
     setError('');
-  }, [isOpen]);
+  }, [isOpen, member]);
 
   if (!isOpen || !currentOrg) return null;
 
@@ -61,6 +86,25 @@ export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps)
       return;
     }
 
+    if (editingMember && initialMember) {
+      const nextMembers = (currentOrg.members || []).map((item) => {
+        const normalized = normalizeMember(item);
+        if (normalized.$id !== initialMember.$id) return item;
+
+        return {
+          ...normalized,
+          name: nextName,
+          email: nextEmail,
+          role: role as 'admin' | 'member',
+          permissions,
+        };
+      });
+
+      await updateOrganization(currentOrg.$id, { members: nextMembers });
+      onClose();
+      return;
+    }
+
     const invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'> = {
       name: nextName,
       email: nextEmail,
@@ -81,7 +125,7 @@ export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps)
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs px-4">
       <div ref={modalRef} className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-lg border border-gray-500/[0.2] bg-white shadow-xl dark:bg-dark-bg">
         <div className="sticky top-0 z-[2] flex items-center justify-between border-b border-gray-500/[0.1] bg-white p-4 dark:bg-dark-bg">
-          <h2 className="px-2 leading-4 opacity-[0.7]">Invite member</h2>
+          <h2 className="px-2 leading-4 opacity-[0.7]">{editingMember ? 'Edit member' : 'Invite member'}</h2>
           <button onClick={onClose} className="rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-dark-bg">
             <XIcon size={16} />
           </button>
@@ -155,7 +199,7 @@ export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps)
 
         <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-500/[0.2] bg-white p-6 py-4 dark:bg-dark-bg">
           <Button variant="secondary" onClick={onClose}>Close</Button>
-          <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Saving...' : 'Send invite'}</Button>
+          <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Saving...' : editingMember ? 'Save changes' : 'Send invite'}</Button>
         </div>
       </div>
     </div>
