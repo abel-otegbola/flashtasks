@@ -4,7 +4,7 @@ import Button from "../../../components/button/button"
 import LogoIcon from "../../../assets/icons/logo"
 import BlurReveal from '../../../components/animations/blurReveal';
 import { CalendarIcon, GridFourIcon, GridNineIcon, LightningIcon, UsersIcon } from '@phosphor-icons/react';
-import { ArrowRightUp } from '@solar-icons/react';
+import { ArrowRightUp, Microphone } from '@solar-icons/react';
 import FaqSection from '../../../components/faqs/faqs';
 
 function Home() {
@@ -123,7 +123,7 @@ function Home() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-10 pt-20 pb-10 p-4 md:mx-[5%]">
+      <section className="flex flex-col gap-10 pt-20 pb-10 p-4 md:mx-[5%]" id="features">
         <div className="flex flex-col justify-center items-center mx-auto max-w-3xl gap-[19px] mb-10">
           <BlurReveal preset="slide-right" className="font-medium flex items-center gap-2 border border-gray-500/[0.2] rounded-full px-6 py-2">
             <GridFourIcon />
@@ -138,11 +138,14 @@ function Home() {
 
       <section className="flex flex-col gap-10 lg:px-[6%] md:px-[3%] p-4">
 
-        <div className="relative flex md:flex-nowrap flex-wrap w-full gap-8 bg-gray-100 dark:bg-dark/[0.4] rounded-lg md:pl-[6%] p-6 pb-0 md:h-[400px]">
-          <div className="flex flex-col justify-between gap-8 md:w-[30%] py-[6%]">
-            <BlurReveal preset="slide-right"><h3 className="font-semibold text-lg">Voice to tasks</h3></BlurReveal>
+        <div className="relative flex md:flex-nowrap items-end flex-wrap w-full gap-8 bg-gray-100 dark:bg-dark/[0.4] rounded-lg md:pl-[6%] pb-0">
+          <div className="flex flex-col justify-between gap-8 md:w-[45%] py-[6%]">
+            <BlurReveal preset="slide-right" className="font-medium flex items-center gap-2 w-fit border border-gray-500/[0.2] rounded-full px-6 py-2">
+              <Microphone />
+              Voice to tasks
+            </BlurReveal>
 
-            <BlurReveal preset="slide-right"><p>Convert your spoken words into actionable tasks seamlessly</p></BlurReveal>
+            <BlurReveal preset="slide-right"><p className="text-[48px] max-[400px]:text-[40px] md:leading-[60px] leading-[56px] max-[400px]:leading-[50px]">Convert your spoken words into actionable tasks seamlessly</p></BlurReveal>
 
             <Button href="/auth/signup" variant="primary" className="">
               <BlurReveal preset="slide-right">Learn more</BlurReveal>

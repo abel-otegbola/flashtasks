@@ -12,15 +12,15 @@ function AuthPages() {
 const slides = [
   {
     title: "Build With Confidence",
-    text: "Capture key decisions and tasks automatically so nothing slips through the cracks. Reliable, secure, and designed for teams.",
+    text: "You don’t need perfect conditions to begin. Start where you are, use what you have, and move forward—clarity comes through action..",
   },
   {
     title: "Make Every Meeting Count",
-    text: "Instant summaries and task generation from voice — save time, reduce churn, and accelerate follow-through.",
+    text: "Great things aren’t built in bursts of inspiration, but in quiet, consistent action. Show up, do the work, and let progress speak for itself.",
   },
   {
-    title: "Trusted by Teams",
-    text: "Join forward-thinking teams that save hours each week — try Flashtasks free and see the difference in your delivery rhythm.",
+    title: "Execution is key",
+    text: "The difference between ideas and achievement is execution. Decide, commit, and take the first step—momentum will carry you the rest of the way.",
   },
 ];
 
@@ -34,10 +34,10 @@ const slides = [
   return (
     <div className="min-h-[400px] flex justify-between">
 
-      <div className="relative bg-[url('/hero-bg.png')] bg-cover bg-center md:w-[45%] h-[96vh] rounded-[12px] m-4 sticky top-0 md:block hidden">
+      <div className="relative bg-[url('/hero-bg3.png')] bg-cover bg-center md:w-[45%] h-[96vh] rounded-[12px] m-4 sticky top-0 md:block hidden">
         <div className="flex flex-col gap-6 p-[10%] h-full justify-end w-full rounded-[12px]">
 
-          <div className="flex flex-col gap-6 text-white w-full">
+          <div className="flex flex-col gap-6 w-full">
 
           {/* Slides */}
             <div className="relative h-[140px] overflow-hidden">

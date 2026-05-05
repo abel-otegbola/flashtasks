@@ -20,15 +20,15 @@ export default function Login() {
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%] md:py-[5%] py-[80px]">
             <div className="flex flex-col items-center gap-4">
-              <div className=" px-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] w-fit">
+              <div className=" px-4 rounded-lg border border-gray-500/[0.2] w-fit">
                 <LogoIcon className="w-[14px]"  />
               </div>
               
               <BlurReveal preset="slide-left">
-                <h1 className="font-bold text-[28px] text-dark-500">Welcome back</h1>
+                <h1 className="font-semibold text-[32px] text-dark-500 font-Elsie">Welcome back</h1>
               </BlurReveal>
               <BlurReveal preset="slide-left">
-                <p className="text-gray-500 text-center">Enter your email and password to access your account</p>
+                <p className="text-gray-500 text-center">Enter your email and password below</p>
               </BlurReveal>
             </div>
             <Formik
