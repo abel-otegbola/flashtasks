@@ -35,7 +35,8 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
 
   const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
-  const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORG_COLLECTION_ID || 'organizations';
+  const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORGANIZATIONS_COLLECTION_ID || 'organizations';
+  
   const loadOrganizations = async () => {
   if (!user?.$id || !user?.email) {
     setOrganizations([]);

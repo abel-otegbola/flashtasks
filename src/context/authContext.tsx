@@ -32,7 +32,8 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     const router = useNavigate();
 
     const DATABASE_ID = import.meta.env.VITE_APPWRITE_USERS_DATABASE_ID || '';
-    const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORG_COLLECTION_ID || 'organizations';
+    const DATABASE_ORG_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
+    const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORGANIZATIONS_COLLECTION_ID || 'organizations';
     const USERS_TABLE_ID = import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users';
 
     const ensureMainUserRow = async (accountUser: any) => {
@@ -85,13 +86,13 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             const membership = await teams.updateMembershipStatus({ teamId, membershipId, userId, secret });
 
             const res = await databases.listDocuments(
-                import.meta.env.VITE_APPWRITE_DATABASE_ID,
+                DATABASE_ORG_ID,
                 ORG_COLLECTION_ID,
                 [
                     Query.select(["*", "teams.*", "members.*"]),
                     Query.limit(100),
                 ]
-                );
+            );
             const nextRole = membership.roles[0] || 'member';
             const nextPermissions = membership.roles?.[0] === "admin" ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS;
 
@@ -111,7 +112,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                 nextMember,
             ];
 
-            await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, teamId, { members: nextMembers });
+            await databases.updateDocument(DATABASE_ORG_ID, ORG_COLLECTION_ID, teamId, { members: nextMembers });
 
 
             window.dispatchEvent(new Event('organizations:changed'));
@@ -164,7 +165,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                 .then(() => {
                     setPopup({ type: "success", msg: "Registered successful" })
                     tablesDB.createRow({
-                        databaseId: '68ed2831002414dd5275',
+                        databaseId: DATABASE_ID,
                         tableId: 'waitlist',
                         rowId: ID.unique(),
                         data: { email, name }
