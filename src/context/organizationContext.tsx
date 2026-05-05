@@ -37,35 +37,61 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
   const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORG_COLLECTION_ID || 'organizations';
   const loadOrganizations = async () => {
-    if (!user?.email) {
+  if (!user?.$id || !user?.email) {
+    setOrganizations([]);
+    setCurrentOrg(null);
+    return;
+  }
+
+  try {
+    const [memberRes, ownerRes] = await Promise.all([
+      // ✅ user is in members
+      databases.listDocuments(
+        DATABASE_ID,
+        ORG_COLLECTION_ID,
+        [
+          Query.equal("members.$id", user.$id),
+          Query.select(["*", "teams.*", "members.*"]),
+          Query.limit(100),
+        ]
+      ),
+
+      // ✅ user is owner
+      databases.listDocuments(
+        DATABASE_ID,
+        ORG_COLLECTION_ID,
+        [
+          Query.equal("ownerEmail", user.email),
+          Query.select(["*", "teams.*", "members.*"]),
+          Query.limit(100),
+        ]
+      )
+    ]);
+
+    // 🔁 merge + remove duplicates
+    const combined = [
+      ...memberRes.documents,
+      ...ownerRes.documents
+    ];
+
+    const unique = Array.from(
+      new Map(combined.map(doc => [doc.$id, doc])).values()
+    );
+
+    if (!unique.length) {
       setOrganizations([]);
       setCurrentOrg(null);
       return;
     }
 
-    try {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        ORG_COLLECTION_ID,
-        [
-          Query.select(["*", "teams.*", "members.*"]),
-          Query.limit(100),
-        ]
-      );
+    setOrganizations(unique as unknown as Organization[]);
+    setCurrentOrg(unique[0] as unknown as Organization);
 
-      if (!res.documents.length) {
-        setOrganizations([]);
-        setCurrentOrg(null);
-        return;
-      }
-
-      setOrganizations(res.documents as unknown as Organization[]);
-      setCurrentOrg(res.documents[0] as unknown as Organization);
-    } catch (err) {
-      console.error('Error loading organizations', err);
-      toast.error('Failed to load organizations');
-    }
-  };
+  } catch (err) {
+    console.error("Error loading organizations", err);
+    toast.error("Failed to load organizations");
+  }
+};
 
   // load organizations for current user on mount or when user changes
   useEffect(() => {
