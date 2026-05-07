@@ -174,7 +174,7 @@ function Tasks() {
                     ) : (
                         <div className="flex flex-col gap-2">
                             {/* List Header - Hidden on mobile */}
-                            <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]">
+                            <div className="hidden md:grid grid-cols-12 gap-4 px-4 pl-11 py-2 text-sm font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]">
                                 <div className="col-span-4">Task</div>
                                 <div className="col-span-2 px-2">Category</div>
                                 <div className="col-span-2 px-2">Status</div>

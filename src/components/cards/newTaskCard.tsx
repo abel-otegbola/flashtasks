@@ -1,49 +1,21 @@
 import { todo } from "../../interface/todo"
-import { useTasks } from "../../context/tasksContext"
-import TaskCheckbox from "../ui/taskCheckbox"
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
-import Confirmationmessage from "../modals/confirmation";
-import { useState } from "react";
 import { formatDeliveredTime } from "../../helpers/messageTime";
+import { TrashBinTrash } from "@solar-icons/react";
 
-export default function TaskListView({ task, openTaskDetails, index }: { task: todo, openTaskDetails: (task: todo) => void , index: number}) {
-    const { updateTask, deleteTask } = useTasks();
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-
-    const handleToggleComplete = async (checked: boolean) => {
-        await updateTask(task.$id, { status: checked ? 'completed' : 'pending' });
-    };
+export default function NewTaskCard({ task, deleteTask, saveTask, index }: { task: todo, deleteTask: (id: string) => void, saveTask: (task: todo) => void, index: number}) {
 
   return (
     <>
-    {showDeleteConfirm && (
-        <Confirmationmessage
-            title={`Delete task: ${task.title}?`}
-            text="This action cannot be undone."
-            buttonText="Delete"
-            setOpen={(open) => !open && setShowDeleteConfirm(false)}
-            onConfirm={() => deleteTask(task.$id)}
-        />
-    )}
     <SwipeDeleteItem 
-        onSwipeLeft={() => setShowDeleteConfirm(true)} 
-        onSwipeRight={() => updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' }) }
+        onSwipeLeft={() => deleteTask(task.$id)} 
+        onSwipeRight={() => saveTask(task) }
     >
-    <div className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark-bg/[0.6]'}`}
+    <div className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark/[0.4]'}`}
         
     >
-        <div className="flex items-start md:items-center p-4 pr-0 md:col-span-1">
-            <TaskCheckbox
-                checked={task.status === 'completed'}
-                onCheckedChange={(checked) => {
-                    void handleToggleComplete(checked);
-                }}
-                ariaLabel={`Mark ${task.title} as completed`}
-            />
-        </div>
         <div 
             key={task.$id}
-            onClick={() => openTaskDetails(task)}
             role="button"
             tabIndex={0}
             className={`md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 flex-1`}
@@ -85,6 +57,9 @@ export default function TaskListView({ task, openTaskDetails, index }: { task: t
             </div>
         </div>
     
+        <button className="flex items-start md:items-center p-4 pl-0 md:col-span-1" onClick={() => deleteTask(task.$id)}>
+            <TrashBinTrash size={20} className="text-gray-400" />
+        </button>
     </div>
     </SwipeDeleteItem>
     

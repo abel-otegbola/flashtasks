@@ -16,6 +16,7 @@ import {
   mapTodoToSavePayload,
   getMaxRecordingTime,
 } from "../../../helpers/createTaskHelpers";
+import NewTaskCard from "../../../components/cards/newTaskCard";
 
 function CreateTask() {
   const [finalText, setFinalText] = useState("");
@@ -140,7 +141,7 @@ function CreateTask() {
   };
 
   return (
-    <div className="flex flex-col gap-6 bg-white dark:bg-dark-bg md:rounded-[10px] md:px-[16.66%] py-[10%] px-6 h-full mb-4">
+    <div className="flex flex-col gap-6 bg-white dark:bg-dark-bg md:rounded-[10px] xl:px-[16.66%] py-[10%] px-6 h-full mb-4">
       <h1 className="font-medium md:text-[40px] text-[20px] bg-gradient-to-r bg-clip-text text-transparent from-black dark:from-white to-primary leading-[120%]">
         Hi there, {user?.name}
         <br />
@@ -297,7 +298,7 @@ function CreateTask() {
 
           <div className="flex flex-col gap-3 border border-gray-500/[0.1] rounded-lg p-4 bg-bg-gray-100/[0.2] dark:bg-dark-bg">
             <div className="flex flex-col gap-2">
-              <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]">
+              <div className="hidden md:grid grid-cols-12 gap-4 px-4 pr-14 py-2 text-xs font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]">
                 <div className="col-span-4">Task</div>
                 <div className="col-span-2">Category</div>
                 <div className="col-span-2">Status</div>
@@ -305,12 +306,11 @@ function CreateTask() {
                 <div className="col-span-2">Due Date</div>
               </div>
               {generatedTasks.map((task, index) => (
-                <TaskListView
-                  key={task.$id}
-                  task={task}
-                  openTaskDetails={(t) => { setSelectedTask(t); setDetailsOpen(true); }}
-                  index={index}
-                />
+                <NewTaskCard key={index} task={task} deleteTask={() => {
+                  setGeneratedTasks((prev) => prev ? prev.filter((t) => t.$id !== task.$id) : null);
+                }} saveTask={() => {
+                  handleSaveTasks();
+                }} index={index} />
               ))}
             </div>
           </div>

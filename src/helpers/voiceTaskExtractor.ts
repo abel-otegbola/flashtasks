@@ -1,49 +1,9 @@
-/**
- * voiceTaskExtractor.ts
- * ─────────────────────
- * Converts raw transcribed speech into structured task objects.
- *
- * Engine: Gemini 2.5 Flash  (gemini-2.5-flash-preview-04-17)
- *
- * Speed optimisations applied
- * ───────────────────────────
- * 1. response_mime_type "application/json"  — skips the model's markdown
- *    wrapping entirely; no fence-stripping needed, no parse failures.
- * 2. response_schema                        — Gemini validates + coerces the
- *    output before returning it, so we never get a malformed array.
- * 3. max_output_tokens: 512                 — a transcript rarely yields
- *    more than ~10 tasks; 512 tokens is plenty and caps latency hard.
- * 4. temperature: 0                         — deterministic; avoids the
- *    model adding prose before/after the JSON.
- * 5. System instruction injected as         — keeps the user turn short,
- *    systemInstruction field                  which reduces prefill time.
- * 6. Today's date baked into the prompt     — removes a round-trip that
- *    would otherwise be needed to resolve relative dates.
- * 7. Lightweight keep-alives: spreadTasksOverWindow + detectDeadlineWindow
- *    run locally (zero network cost) after the single API call.
- *
- * Pipeline
- * ────────
- *  raw transcript
- *       ↓ buildRequest()     — assemble Gemini payload (fast, local)
- *       ↓ callGemini()       — single HTTP POST, streaming disabled for
- *                              simplicity (add streamGemini() if <300ms
- *                              time-to-first-token matters to you)
- *       ↓ castTasks()        — map raw JSON → ExtractedTask[]
- *       ↓ spreadTasksOverWindow() — distribute undated tasks if a deadline
- *                              window phrase was found in the transcript
- */
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Public types  (unchanged — existing callers keep working)
-// ─────────────────────────────────────────────────────────────────────────────
-
 export type Priority = "low" | "medium" | "high";
 
 export interface ExtractedTask {
   id: string;
   title: string;
-  description: string;   // human-readable expansion; never identical to title
+  description: string;
   originalText: string;
   date: Date | null;
   timeText: string | null;
@@ -54,22 +14,12 @@ export interface ExtractedTask {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Configuration
+// Groq Configuration (Direct API)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GEMINI_MODEL   = "gemini-2.5-flash";
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
-// Pull from env — never hard-code keys in source
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY ?? "";
-
-// NOTE: responseSchema is NOT used with Gemini 2.5 Flash — it silently
-// ignores the constraint and returns "[]". Array safety is handled in
-// castTasks() instead.
-
-// ─────────────────────────────────────────────────────────────────────────────
-// System instruction  (speed optimisation #5 — separate from user turn)
-// ─────────────────────────────────────────────────────────────────────────────
+const GROQ_MODEL = "llama-3.1-8b-instant"; // Groq's optimized Llama 3.1 8B
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY ?? "";
 
 function buildSystemInstruction(todayISO: string): string {
   return `You are a task extraction engine. Extract every actionable task from the voice transcript the user provides.
@@ -95,44 +45,34 @@ Extra rules:
 - Omit items with confidence < 0.35.
 - Split run-ons: "call Tolu then email the client" → 2 tasks.
 - Tasks with no explicit date get dateISO: null (the caller will spread them).
-- If no tasks found, return [].`;
+- If no tasks found, return [].
+
+IMPORTANT: Return ONLY valid JSON. No markdown fences, no explanations, no extra text.`;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Gemini request builder
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface GeminiPayload {
-  system_instruction: { parts: [{ text: string }] };
-  contents: [{ role: "user"; parts: [{ text: string }] }];
-  generationConfig: {
-    temperature: number;
-    maxOutputTokens: number;
-    responseMimeType: string;
-    thinkingConfig: { thinkingBudget: number };
-  };
+interface GroqPayload {
+  model: string;
+  messages: Array<{ role: "system" | "user"; content: string }>;
+  temperature: number;
+  max_tokens: number;
+  response_format?: { type: "json_object" };
 }
 
-function buildRequest(transcript: string, todayISO: string): GeminiPayload {
+function buildRequest(transcript: string, todayISO: string): GroqPayload {
   return {
-    system_instruction: {
-      parts: [{ text: buildSystemInstruction(todayISO) }],
-    },
-    contents: [{
-      role: "user",
-      parts: [{ text: transcript }],
-    }],
-    generationConfig: {
-      temperature: 1,                        // required when thinkingConfig is present
-      maxOutputTokens: 1024,                 // enough for ~20 tasks
-      responseMimeType: "application/json",  // no markdown wrapping (speed opt #1)
-      thinkingConfig: { thinkingBudget: 0 }, // disable thinking phase (speed opt #2)
-    },
+    model: GROQ_MODEL,
+    messages: [
+      { role: "system", content: buildSystemInstruction(todayISO) },
+      { role: "user", content: transcript }
+    ],
+    temperature: 0.1, // Lower temp for deterministic JSON output
+    max_tokens: 1024,
+    response_format: { type: "json_object" } // Groq supports JSON mode
   };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Gemini HTTP call
+// Groq HTTP call
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface RawTask {
@@ -146,44 +86,67 @@ interface RawTask {
   priority: Priority;
   confidence: number;
 }
-
-async function callGemini(payload: GeminiPayload): Promise<RawTask[]> {
-  if (!GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY environment variable is not set.");
+async function callGroq(payload: GroqPayload): Promise<RawTask[]> {
+  if (!GROQ_API_KEY) {
+    throw new Error("VITE_GROQ_API_KEY environment variable is not set.");
   }
 
-  const res = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+  const res = await fetch(GROQ_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${GROQ_API_KEY}`
+    },
     body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(`Gemini API error ${res.status}: ${errText}`);
+    throw new Error(`Groq API error ${res.status}: ${errText}`);
   }
 
   const body = await res.json();
 
-  // Gemini wraps the content in candidates[0].content.parts[0].text
-  // Because we set responseMimeType to application/json, the text IS
-  // already a valid JSON string — no fence-stripping needed.
-  const raw: string = body?.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
+  // Groq returns OpenAI-compatible format: choices[0].message.content
+  const raw: string = body?.choices?.[0]?.message?.content?.trim() ?? "[]";
 
   try {
-    const parsed = JSON.parse(raw);
-    // Guard against object wrapper e.g. { tasks: [...] } or plain non-array
-    if (Array.isArray(parsed)) return parsed;
-    // Some models wrap the array in a key — try common ones
-    for (const key of ["tasks", "items", "results", "data"]) {
-      if (Array.isArray((parsed as Record<string, unknown>)[key])) {
-        return (parsed as Record<string, unknown[]>)[key] as RawTask[];
+    // Strip markdown code fences if present (defensive parsing)
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+    const parsed = JSON.parse(cleaned);
+    
+    // ✅ FIX: Always return array (handle single task objects)
+    let tasksArray: RawTask[];
+
+    // Case 1: Already an array
+    if (Array.isArray(parsed)) {
+      tasksArray = parsed;
+    }
+    // Case 2: Object with common wrapper keys (tasks, items, etc.)
+    else if (typeof parsed === 'object' && parsed !== null) {
+      const wrapperKeys = ['tasks', 'items', 'results', 'data', 'task', 'item'];
+      const foundKey = wrapperKeys.find(key => 
+        parsed.hasOwnProperty(key) || parsed.hasOwnProperty(key.charAt(0).toUpperCase() + key.slice(1))
+      );
+      
+      if (foundKey && Array.isArray(parsed[foundKey])) {
+        tasksArray = parsed[foundKey];
+      }
+      // Case 3: Single task object
+      else {
+        tasksArray = [parsed];
       }
     }
-    console.error("[voiceTaskExtractor] Unexpected JSON shape:", parsed);
-    return [];
-  } catch {
-    console.error("[voiceTaskExtractor] Failed to parse Gemini response:", raw);
+    // Case 4: Unexpected shape
+    else {
+      console.error("[voiceTaskExtractor] Unexpected JSON shape:", parsed);
+      return [];
+    }
+
+    return tasksArray;
+  } catch (e) {
+    console.error("[voiceTaskExtractor] Failed to parse Groq response:", raw);
+    console.error("Parse error:", e);
     return [];
   }
 }
@@ -204,13 +167,13 @@ function castTasks(raw: RawTask[]): ExtractedTask[] {
     .filter(t => (t.confidence ?? 0) >= 0.35)
     .map(t => ({
       id:           generateId(),
-      title:        t.title,
-      description:  t.description,
-      originalText: t.originalText,
+      title:        t.title?.slice(0, 80) ?? "",
+      description:  t.description ?? "",
+      originalText: t.originalText ?? "",
       date:         t.dateISO ? new Date(t.dateISO) : null,
       timeText:     t.timeText ?? null,
       people:       Array.isArray(t.people) ? t.people : [],
-      tags:         Array.isArray(t.tags)   ? t.tags   : [],
+      tags:         Array.isArray(t.tags) ? t.tags.slice(0, 3) : [],
       priority:     (["low","medium","high"].includes(t.priority) ? t.priority : "medium") as Priority,
       confidence:   Math.max(0, Math.min(1, t.confidence ?? 0)),
     }));
@@ -218,8 +181,6 @@ function castTasks(raw: RawTask[]): ExtractedTask[] {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Deadline window detector  (local — no network cost)
-// Detects "3 days to finish", "a week to complete", etc.
-// Returns total days, or null if not found.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function detectDeadlineWindow(text: string): number | null {
@@ -238,7 +199,6 @@ export function detectDeadlineWindow(text: string): number | null {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Task spreader  (local — no network cost)
-// Distributes undated tasks evenly across a deadline window.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function spreadTasksOverWindow(
@@ -270,27 +230,6 @@ export function spreadTasksOverWindow(
 // Public entry point
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * extractTasksFromText
- * ─────────────────────
- * Converts a raw transcript string into an array of structured tasks.
- *
- * @param text  Raw transcript from SpeechRecognition or typed input
- * @param now   Override "now" for date resolution (useful in tests)
- * @returns     Promise<ExtractedTask[]> sorted by date ascending
- *
- * @example
- * const tasks = await extractTasksFromText(
- *   "I want to create a portfolio design for my web design agency. " +
- *   "After that I will develop the code then finally launch it. " +
- *   "I have just 3 days to finalise the design and development"
- * );
- * // → [
- * //   { title: "Create a portfolio design for my web design agency", date: Day 1 },
- * //   { title: "Develop the code",                                   date: Day 2 },
- * //   { title: "Launch the website",                                 date: Day 3 },
- * // ]
- */
 export async function extractTasksFromText(
   text: string,
   now: Date = new Date()
@@ -299,14 +238,12 @@ export async function extractTasksFromText(
 
   const todayISO = now.toISOString().slice(0, 10);
 
-  // Single API call — all extraction happens server-side
   const payload  = buildRequest(text, todayISO);
-  const rawTasks = await callGemini(payload);
+  const rawTasks = await callGroq(payload);
   const tasks    = castTasks(rawTasks);
 
   if (tasks.length === 0) return [];
 
-  // Local post-processing: deadline window spreading (zero latency)
   const windowDays = detectDeadlineWindow(text);
 
   if (windowDays !== null) {
@@ -315,13 +252,11 @@ export async function extractTasksFromText(
       (a, b) => (a.date?.getTime() ?? Infinity) - (b.date?.getTime() ?? Infinity)
     );
   } else {
-    // No deadline window: high-confidence tasks first, then by date
     tasks.sort((a, b) => {
       if (b.confidence !== a.confidence) return b.confidence - a.confidence;
       if (a.date && b.date) return a.date.getTime() - b.date.getTime();
       return a.date ? -1 : b.date ? 1 : 0;
     });
   }
-  console.log(tasks)
   return tasks;
 }

@@ -219,17 +219,31 @@ export function useRealtimeTranscription({
         const seen = new Set<string>();
 
         recognition.onresult = (event: any) => {
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-              const text = event.results[i][0].transcript.trim();
-              const key = text.toLowerCase().replace(/\s+/g, " ");
-              if (!seen.has(key)) {
-                seen.add(key);
-                segments.push(text);
-              }
+        let latestInterimText = "";
+
+        // Process ALL results from index 0 each time (mobile-safe)
+        for (let i = 0; i < event.results.length; i++) {
+          const transcript: string = event.results[i][0].transcript;
+
+          if (event.results[i].isFinal) {
+            // Deduplicate final results by normalized content
+            const key = transcript.trim().toLowerCase().replace(/\s+/g, " ");
+            if (!seenFinalTextsRef.current.has(key)) {
+              seenFinalTextsRef.current.add(key);
+              onChunkTranscribed?.(transcript.trim(), true);
             }
+          } else {
+            // Interim results are cumulative - just keep the latest one
+            // (no need to accumulate with += since each interim contains all prior words)
+            latestInterimText = transcript;
           }
-        };
+        }
+
+        // Emit the most recent interim text if available
+        if (latestInterimText.trim()) {
+          onChunkTranscribed?.(latestInterimText.trim(), false);
+        }
+      };
 
         recognition.onerror = (event: any) => {
           URL.revokeObjectURL(url);
