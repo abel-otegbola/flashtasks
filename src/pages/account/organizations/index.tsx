@@ -9,7 +9,7 @@ import AddMemberModal from '../../../components/modals/addMemberModal';
 import { GridFourIcon, PencilSimpleLineIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { OrganizationSkeletonLoader } from '../../../components/skeletons';
 import Confirmationmessage from '../../../components/modals/confirmation';
-import { ADMIN_PERMISSIONS } from '../../../interface/organization';
+import { ADMIN_PERMISSIONS, Organization } from '../../../interface/organization';
 import { useUser } from '../../../context/authContext';
 import { useTasks } from '../../../context/tasksContext';
 import TaskListView from '../../../components/cards/taskListView';
@@ -19,14 +19,14 @@ import CreateTaskModal from '../../../components/modals/createTaskModal';
 
 export default function OrganizationsPage() {
   const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, updateOrganization, deleteOrganization, loading } = useOrganizations();
-  const { tasks, getTasks } = useTasks(); 
+  const { tasks, getOrganizationTasks } = useTasks(); 
   const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
-  const [selectedOrg, setSelectedOrg] = useState<any>(null);
+  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
   const [selectedTab, setSelectedTab] = useState("Tasks");
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingTeamName, setEditingTeamName] = useState('');
@@ -55,10 +55,8 @@ export default function OrganizationsPage() {
   };
 
   useEffect(() => {
-  if (user) {
-      getTasks(user.email || "");
-  }
-  }, [user]);
+      getOrganizationTasks(selectedOrg?.$id || "");
+  }, [selectedOrg ]);
 
   const initialLoading = loading && organizations.length === 0 && !currentOrg;
 
@@ -161,12 +159,12 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <div className="md:p-0 px-4">
-      <div className="flex items-center justify-between mb-4 bg-white dark:bg-dark-bg p-4 rounded-lg border border-gray-500/[0.1] dark:border-gray-500/[0.2]">
+    <div className="flex flex-col md:p-0 px-4 h-full">
+      <div className="flex flex-wrap gap-4 items-center justify-between mb-4 bg-white dark:bg-dark-bg p-4 rounded-lg border border-gray-500/[0.1] dark:border-gray-500/[0.2]">
         <h1 className="text-2xl font-semibold">Organizations</h1>
         <Button onClick={() => setShowCreate(true)} size="small">Create Organization</Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 h-full bg-white dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2] rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-4 flex-1 mb-4 bg-white dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2] rounded-lg">
         <div className="col-span-1 md:p-6 p-4">
           <h3 className="mb-4 text-sm text-gray-400">Your organizations</h3>
           <div className="flex flex-col gap-2">
@@ -177,7 +175,7 @@ export default function OrganizationsPage() {
                 className={`p-3 text-start flex items-center gap-2 rounded-lg ${currentOrg?.$id === org.$id ? 'bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]' : ''}`}
                 onClick={() => { selectOrganization(org.$id); setSelectedOrg(org); }} 
               >
-                <span className="w-12 h-12 flex items-center justify-center bg-primary/10 text-primary rounded-full font-bold">{org.name.charAt(0).toUpperCase()}</span>
+                <span className="w-12 h-12 aspect-square flex items-center justify-center bg-primary/10 text-primary rounded-full font-bold">{org.name.charAt(0).toUpperCase()}</span>
                 <div className="flex flex-col gap-2 text-start justify-start">
                     <div className="font-medium">{org.name}</div>
                     <div className="text-xs text-gray-500 line-clamp-2 md:line-clamp-1">{org.description}</div>

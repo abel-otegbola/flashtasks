@@ -11,42 +11,23 @@ import { useUser } from "../../../context/authContext";
 import CreateTaskModal from "../../../components/modals/createTaskModal";
 import { TaskSkeletonLoader } from "../../../components/skeletons";
 import TaskListView from "../../../components/cards/taskListView";
-import TaskCheckbox from "../../../components/ui/taskCheckbox";
-import SwipeDeleteItem from "../../../components/ui/swipeDeleteItem";
 import Dropdown from "../../../components/dropdown/dropdown";
+import Kanban from "../../../components/views/kanban";
+import Calendar from "../../../components/views/calendar";
 
-const colorClasses: Record<string, string> = {
-  yellow: "border-yellow-400/[0.2]",
-  blue: "border-blue-400/[0.2]",
-  orange: "border-orange-400/[0.2]",
-  green: "border-green-400/[0.2]",
-  red: "border-red-400/[0.2]",
-};
 
 type ViewMode = 'kanban' | 'list' | 'grid' | 'calendar';
 
 function Tasks() {
-    const [openSections, setOpenSections] = useState<string>("");
     const [showModal, setShowModal] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
-    const [currentDate, setCurrentDate] = useState(new Date());
     const { tasks, loading, getTasks, movePendingToToday, updateTask, deleteTask } = useTasks();
     const [showMoveConfirm, setShowMoveConfirm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<todo | null>(null);
     const [taskToDelete, setTaskToDelete] = useState<todo | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
-    const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-    const [dragOverSectionKey, setDragOverSectionKey] = useState<string | null>(null);
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const { user } = useUser();
-
-    const sections = [
-    { key: "todo", title: "Todo", filter: "upcoming", color: "blue" },
-    { key: "reviewed", title: "Reviewed", filter: "pending", color: "orange" },
-    { key: "inProgress", title: "In Progress", filter: "in progress", color: "yellow" },
-    { key: "completed", title: "Completed", filter: "completed", color: "green" },
-    { key: "suspended", title: "Suspended", filter: "suspended", color: "red" },
-    ] as const;
 
     useEffect(() => {
     if (user) {
@@ -66,22 +47,6 @@ function Tasks() {
         setSelectedTask(null);
     };
 
-    const handleSectionDrop = async (sectionKey: string, taskStatus: todo['status']) => {
-        if (!draggedTaskId) return;
-
-        const draggedTask = tasks.find(task => task.$id === draggedTaskId);
-        if (!draggedTask || draggedTask.status === taskStatus) {
-            setDraggedTaskId(null);
-            setDragOverSectionKey(null);
-            return;
-        }
-
-        setOpenSections(sectionKey);
-        await updateTask(draggedTaskId, { status: taskStatus });
-        setDraggedTaskId(null);
-        setDragOverSectionKey(null);
-    };
-
     const handleQuickComplete = async (taskId: string, checked: boolean) => {
         await updateTask(taskId, { status: checked ? 'completed' : 'pending' });
     };
@@ -91,38 +56,6 @@ function Tasks() {
         await deleteTask(taskToDelete.$id);
         setTaskToDelete(null);
     };
-    // Calendar helper functions
-    const getDaysInMonth = (date: Date) => {
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        return new Date(year, month + 1, 0).getDate();
-    };
-
-    const getFirstDayOfMonth = (date: Date) => {
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        return new Date(year, month, 1).getDay();
-    };
-
-    const getTasksForDate = (date: Date) => {
-        return tasks.filter(task => {
-            if (!task.dueDate) return false;
-            const taskDate = new Date(task.dueDate);
-            return taskDate.getDate() === date.getDate() &&
-                   taskDate.getMonth() === date.getMonth() &&
-                   taskDate.getFullYear() === date.getFullYear();
-        });
-    };
-
-    const changeMonth = (offset: number) => {
-        const newDate = new Date(currentDate);
-        newDate.setMonth(newDate.getMonth() + offset);
-        setCurrentDate(newDate);
-    };
-
-    const monthNames = ["January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"];
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     if (loading) {
         return <TaskSkeletonLoader />;
@@ -130,8 +63,8 @@ function Tasks() {
 
     return (
         <>
-        <div className="flex flex-col gap-6 md:m-0 mx-4 h-full mb-4">
-            <div className="flex justify-between gap-6 items-start rounded-[10px] border border-gray-500/[0.1] flex-wrap md:p-6 p-4 bg-white dark:bg-dark-bg">
+        <div className="flex flex-col gap-6 md:m-0 mx-4 h-full">
+            <div className="flex justify-between gap-4 items-start rounded-[10px] border border-gray-500/[0.1] flex-wrap md:p-6 p-4 bg-white dark:bg-dark-bg">
                 <div className="flex gap-4 items-center">
                     <h1 className="font-medium md:text-[24px] text-[18px] leading-[120%]">
                         Your Tasks
@@ -187,50 +120,25 @@ function Tasks() {
 
                     {/* View Toggle */}
                     <div className="flex items-center gap-1 bg-bg-gray-100 dark:bg-dark-bg p-1 rounded-lg border border-gray-500/[0.2]">
-                        <button
-                            onClick={() => setViewMode('list')}
-                            className={`p-1 rounded-md transition-all ${
-                                viewMode === 'list' 
-                                    ? 'bg-white dark:bg-dark-bg text-primary shadow-sm' 
-                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                            }`}
-                            title="List View"
-                        >
-                            <List size={16} />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('kanban')}
-                            className={`p-1 rounded-md transition-all ${
-                                viewMode === 'kanban' 
-                                    ? 'bg-white dark:bg-dark-bg text-primary shadow-sm' 
-                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                            }`}
-                            title="Kanban View"
-                        >
-                            <Widget4 size={16} />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('grid')}
-                            className={`p-1 rounded-md transition-all ${
-                                viewMode === 'grid' 
-                                    ? 'bg-white dark:bg-dark-bg text-primary shadow-sm' 
-                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                            }`}
-                            title="Grid View"
-                        >
-                            <Widget size={16} />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('calendar')}
-                            className={`p-1 rounded-md transition-all ${
-                                viewMode === 'calendar' 
-                                    ? 'bg-white dark:bg-dark-bg text-primary shadow-sm' 
-                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                            }`}
-                            title="Calendar View"
-                        >
-                            <CalendarIcon size={16} />
-                        </button>
+                        {
+                            ['list', 'kanban', 'grid', 'calendar'].map(mode => {
+                                const Icon = mode === 'list' ? List : mode === 'kanban' ? Widget4 : mode === 'grid' ? Widget : CalendarIcon;
+                                return (
+                                    <button
+                                        key={mode}
+                                        onClick={() => setViewMode(mode as ViewMode)}
+                                        className={`p-1 rounded-md transition-all ${
+                                            viewMode === mode 
+                                                ? 'bg-white dark:bg-dark-bg text-primary shadow-sm'
+                                                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                                        }`}
+                                        title={`${mode.charAt(0).toUpperCase() + mode.slice(1)} View`}
+                                    >
+                                        <Icon size={20} />
+                                    </button>
+                                );
+                            })
+                        }
                     </div>
 
                     <Button
@@ -253,58 +161,7 @@ function Tasks() {
 
             {/* Kanban View */}
             {viewMode === 'kanban' && (
-                <div className="grid lg:grid-cols-5 sm:grid-cols-2 grid-cols-1 gap-4 items-stretch rounded-lg max-h-[72vh] overflow-y-auto">
-                    {/* Task Statistics */}
-                    {sections.map(({ key, title, filter, color }) => (
-                        <div
-                            key={key}
-                            className={`flex flex-col h-full gap-2 rounded-lg transition-all ${dragOverSectionKey === key ? 'ring-2 ring-primary/30 bg-primary/[0.03]' : ''}`}
-                            onDragOver={(event) => event.preventDefault()}
-                            onDragEnter={() => setDragOverSectionKey(key)}
-                            onDragLeave={() => setDragOverSectionKey((current) => current === key ? null : current)}
-                            onDrop={async (event) => {
-                                event.preventDefault();
-                                await handleSectionDrop(key, filter);
-                            }}
-                        >
-                            <button 
-                                key={key} 
-                                className={`p-4 md:text-center text-start z-[2] sticky top-0 rounded-lg border ${colorClasses[color]} bg-white dark:bg-dark-bg`}
-                                onClick={() => setOpenSections(prev => prev === key ? '' : key)}                                
-                            >
-                                <p className="text-gray-400 text-xs mb-1">{title}</p>
-                                <p className="text-2xl font-bold">{tasks.filter((t) => t.status === filter).length}</p>
-                            </button>
-                            <div
-                                className={`flex flex-col gap-4 overflow-hidden transition-all duration-300
-                                    ${openSections === key ? "max-h-[2000px]" : "max-h-0 md:max-h-none"}
-                                `}
-                            >
-                                {filteredTasks.filter((t) => t.status === filter).length === 0 ? (
-                                    <div className="text-center py-8 text-gray-400 dark:text-gray-500">
-                                        No tasks in {title.toLowerCase()}
-                                    </div>
-                                ) : (
-                                    filteredTasks
-                                        .filter((t) => t.status === filter)
-                                        .map((task) => (
-                                            <TodoCard
-                                                key={task.$id}
-                                                {...task}
-                                                draggable
-                                                onDragStart={(dragTask, event) => {
-                                                    setDraggedTaskId(dragTask.$id);
-                                                    event.dataTransfer.effectAllowed = 'move';
-                                                    event.dataTransfer.setData('text/plain', dragTask.$id);
-                                                }}
-                                                onDragEnd={() => setDraggedTaskId(null)}
-                                            />
-                                        ))
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <Kanban tasks={tasks} filteredStatus={filterStatus} />
             )}
 
             {/* List View */}
@@ -356,103 +213,7 @@ function Tasks() {
 
             {/* Calendar View */}
             {viewMode === 'calendar' && (
-                <div className="flex flex-col gap-4">
-                    {/* Calendar Header */}
-                    <div className="flex items-center justify-between p-4 bg-bg-gray-100 dark:bg-dark-bg/50 rounded-lg border border-gray-500/[0.2]">
-                        <button
-                            onClick={() => changeMonth(-1)}
-                            className="p-2 hover:bg-white dark:hover:bg-dark-bg rounded-lg transition-colors"
-                        >
-                            <span className="text-xl">←</span>
-                        </button>
-                        <h2 className="text-xl font-bold">
-                            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                        </h2>
-                        <button
-                            onClick={() => changeMonth(1)}
-                            className="p-2 hover:bg-white dark:hover:bg-dark-bg rounded-lg transition-colors"
-                        >
-                            <span className="text-xl">→</span>
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-2">
-                        {/* Day names header */}
-                        {dayNames.map(day => (
-                            <div key={day} className="p-2 text-center font-semibold text-gray-500 dark:text-gray-400 text-sm">
-                                {day}
-                            </div>
-                        ))}
-
-                        {/* Empty cells for days before month starts */}
-                        {Array.from({ length: getFirstDayOfMonth(currentDate) }).map((_, i) => (
-                            <div key={`empty-${i}`} className="p-2 min-h-[100px] bg-gray-50 dark:bg-dark-bg/20 rounded-lg" />
-                        ))}
-
-                        {/* Calendar days */}
-                        {Array.from({ length: getDaysInMonth(currentDate) }).map((_, i) => {
-                            const day = i + 1;
-                            const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                            const tasksForDay = getTasksForDate(date);
-                            const isToday = new Date().toDateString() === date.toDateString();
-
-                            return (
-                                <div
-                                    key={day}
-                                    className={`p-2 min-h-[100px] border rounded-lg ${
-                                        isToday 
-                                            ? 'border-primary bg-primary/5 dark:bg-primary/10' 
-                                            : 'border-gray-500/[0.2] bg-bg-gray-100 dark:bg-dark-bg/50'
-                                    } hover:shadow-md transition-shadow`}
-                                >
-                                    <div className={`text-sm font-semibold mb-2 ${isToday ? 'text-primary' : ''}`}>
-                                        {day}
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        {tasksForDay.slice(0, 3).map(task => (
-                                            <SwipeDeleteItem
-                                                key={task.$id}
-                                                onSwipeLeft={() => setTaskToDelete(task)}
-                                                className="rounded"
-                                            >
-                                                <div
-                                                    onClick={() => openTaskDetails(task)}
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    className={`text-xs p-1 rounded truncate cursor-pointer ${
-                                                        task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                                        task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                                                        task.status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                        task.status === 'pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                                                        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                    }`}
-                                                    title={task.title}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <TaskCheckbox
-                                                            checked={task.status === 'completed'}
-                                                            onCheckedChange={(checked) => {
-                                                                void handleQuickComplete(task.$id, checked);
-                                                            }}
-                                                            ariaLabel={`Mark ${task.title} as completed`}
-                                                            className="shrink-0"
-                                                        />
-                                                        <span className="truncate">{task.title}</span>
-                                                    </div>
-                                                </div>
-                                            </SwipeDeleteItem>
-                                        ))}
-                                        {tasksForDay.length > 3 && (
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 pl-1">
-                                                +{tasksForDay.length - 3} more
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
+                <Calendar tasks={tasks} openTaskDetails={openTaskDetails} handleQuickComplete={handleQuickComplete} setTaskToDelete={setTaskToDelete} />
             )}
         </div>
 

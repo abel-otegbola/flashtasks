@@ -15,6 +15,7 @@ type TasksContextValues = {
     updateTask: (taskId: string, updates: Partial<todo>) => Promise<todo | null>;
     deleteTask: (taskId: string) => Promise<boolean>;
     getTasks: (userEmail: string) => Promise<void>;
+    getOrganizationTasks: (orgId: string) => Promise<void>;
     getTaskById: (taskId: string) => todo | undefined;
     filterTasksByStatus: (status: todo['status']) => todo[];
     filterTasksByCategory: (category: string) => todo[];
@@ -47,6 +48,31 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                 TASKS_COLLECTION_ID,
                 [
                     Query.equal('userEmail', userEmail),
+                    Query.limit(100)
+                ]
+            );
+
+            setTasks(response.documents as unknown as todo[]);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
+            setError(errorMessage);
+            toast.error(errorMessage);
+            console.error('Error fetching tasks:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getOrganizationTasks = async (orgId: string) => {
+        setLoading(true);
+        setError(null);
+        
+        try {
+            const response = await databases.listDocuments(
+                DATABASE_ID,
+                TASKS_COLLECTION_ID,
+                [
+                    Query.equal('organizationId', orgId),
                     Query.limit(100)
                 ]
             );
@@ -280,6 +306,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         updateTask,
         deleteTask,
         getTasks,
+        getOrganizationTasks,
         getTaskById,
         filterTasksByStatus,
         filterTasksByCategory,
