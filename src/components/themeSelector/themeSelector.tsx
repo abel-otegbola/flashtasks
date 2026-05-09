@@ -13,8 +13,8 @@ function ThemeSelector() {
     const [theme, setTheme] = useState(localStorage.theme || 'light')
 
     const themes: Themes = [
-        { id: 1, img: <Sun size={16} />, title: "light" },
-        { id: 2, img: <Moon size={16} />, title: "dark" },
+        { id: 1, img: <Sun size={10} />, title: "light" },
+        { id: 2, img: <Moon size={10} />, title: "dark" },
     ]
     
     useEffect(() => {
@@ -45,16 +45,16 @@ function ThemeSelector() {
     }, [])
 
     return (
-        <button >                      
+        <button className="flex gap-2 border border-gray-500/[0.1] p-1 rounded-lg">                      
             {
             themes.map(item => {
                 return (
                     <span 
                         key={item.id} 
-                        className={`relative text-[16px] ${item.title === theme ? "block" : "hidden"}`} 
+                        className={`flex items-center leading-0 gap-1 text-[10px] p-2 pr-3 rounded ${item.title === theme ? "bg-primary text-white" : ""}`} 
                         aria-label={"Theme setting changed to "+ theme} 
-                        onClick={() => setTheme(item.title === "light" ? "dark" : "light" )} 
-                    >{item.img}</span>
+                        onClick={() => setTheme(item.title)} 
+                    >{item.img}{item.title}</span>
                 )
             })}
         </button>

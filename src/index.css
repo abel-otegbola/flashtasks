@@ -52,6 +52,14 @@ html {
 	font-size: 14px;
 }
 
+html[data-density="compact"] {
+	font-size: 13px;
+}
+
+html[data-density="comfortable"] {
+	font-size: 14px;
+}
+
 .shadow-input-active {
   box-shadow: 0 4px 10px 0 rgba(157, 146, 166, 0.20);
 }

@@ -18,8 +18,9 @@ type values = {
     logOut: () => void;
     acceptTeamInvite: (teamId: string, membershipId: string, userId: string, secret: string) => Promise<boolean>;
     getPhotoUrl: (email: string) => Promise<string | null>;
-    updateProfile: (values: { name: string, email: string }, helpers: any) => Promise<void>;
-    uploadAvatar: (file: File) => Promise<void>;
+    updateAvatar: (file: File) => Promise<string>;
+    updateProfile: (values: { name: string; photoUrl?: string }) => Promise<void>;
+    changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 export const AuthContext = createContext({} as values);
@@ -204,9 +205,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
         }
     }
 
-    
-    const uploadAvatar = async (file: File) => {
-        const readFileAsDataUrl = (file: File) =>
+    const readFileAsDataUrl = (file: File) =>
         new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(String(reader.result || ''));
@@ -214,74 +213,95 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             reader.readAsDataURL(file);
         });
 
+    const updateAvatar = async (file: File) => {
         const fileData = await readFileAsDataUrl(file);
         const response = await fetch('/api/cloudinary/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            file: fileData,
-            fileName: file.name,
-            folder: import.meta.env.VITE_CLOUDINARY_UPLOAD_FOLDER || 'profile-photos',
-          }),
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                file: fileData,
+                fileName: file.name,
+                folder: import.meta.env.VITE_CLOUDINARY_UPLOAD_FOLDER || 'profile-photos',
+            }),
         });
-    
+
         const payload = await response.json().catch(() => ({}));
-    
+
         if (!response.ok) {
-          throw new Error(payload?.error || 'Failed to upload image');
+            throw new Error(payload?.error || 'Failed to upload image');
         }
-        if (String(payload?.secure_url)) {
-            // Appwrite Account SDK: updateName
-            // @ts-ignore
-            const userResponse = await databases.updateDocument(
-                DATABASE_ID,
-                import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
-                user?._id || '',
-                { photoUrl: payload?.secure_url }
-            );
-            
-            const updatedUser = userResponse as unknown as User;
-            setUser(updatedUser);
-            getPhotoUrl(user?.email || '');
-        }
-        return payload?.secure_url;
+
+        return String(payload?.secure_url || '');
     };
 
-    
-    const updateProfile = async (values: { name: string, email: string }, helpers: any) => {
-        helpers.setSubmitting(true);
+    const updateProfile = async ({ name, photoUrl }: { name: string; photoUrl?: string }) => {
+        setLoading(true);
         try {
-            const { name, email } = values;
-            const userResponse = await databases.updateDocument(
-                DATABASE_ID,
-                import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
-                user?._id || '',
-                { name: name || user?.name, email: email || user?.email }
-            );
-            
-            const updatedUser = userResponse as unknown as User;
-            setUser(updatedUser);
-    
-          // Refresh session user and update app state
-          try {
+            const currentUser = await account.get();
+
+            if (name && name !== currentUser.name) {
+                await account.updateName(name);
+            }
+
             const refreshed = await account.get();
+
+            const response = await tablesDB.listRows({
+                databaseId: DATABASE_ID,
+                tableId: USERS_TABLE_ID,
+            });
+
+            const existing = (response.rows || []).find((row: any) => row.$id === refreshed.$id || row.email?.toLowerCase() === refreshed.email.toLowerCase());
+            const rowData = {
+                $id: refreshed.$id,
+                email: refreshed.email,
+                name: refreshed.name || refreshed.email,
+                photoUrl: photoUrl || existing?.photoUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${refreshed.name || refreshed.email}`,
+                $createdAt: existing?.$createdAt || refreshed.$createdAt || new Date().toISOString(),
+                $updatedAt: new Date().toISOString(),
+            };
+
+            if (existing?.$id) {
+                await tablesDB.updateRow({
+                    databaseId: DATABASE_ID,
+                    tableId: USERS_TABLE_ID,
+                    rowId: existing.$id,
+                    data: rowData,
+                });
+            } else {
+                await tablesDB.createRow({
+                    databaseId: DATABASE_ID,
+                    tableId: USERS_TABLE_ID,
+                    rowId: refreshed.$id,
+                    data: rowData,
+                });
+            }
+
             setUser(refreshed);
+            try { localStorage.setItem('user', JSON.stringify(refreshed)); } catch {}
             setPopup({ type: 'success', msg: 'Profile updated' });
-            // reload so AuthProvider picks up the new account data
-            window.location.reload();
-          } catch (e) {
-            console.warn('Failed to refresh user after update', e);
-            setPopup({ type: 'success', msg: 'Profile updated' });
-            window.location.reload();
-          }
-        } catch (err: any) {
-          setPopup({ type: 'error', msg: err?.message || 'Failed to update profile' });
-          toast.error(err?.message || 'Failed to update profile');
+        } catch (error: any) {
+            console.error('Failed to update profile', error);
+            setPopup({ type: 'error', msg: error?.message || 'Failed to update profile' });
+            throw error;
         } finally {
-          setLoading(false);
-          helpers.setSubmitting(false);
+            setLoading(false);
         }
-      };
+    };
+
+    const changePassword = async (currentPassword: string, newPassword: string) => {
+        setLoading(true);
+        try {
+            await account.updatePassword(newPassword, currentPassword);
+            setPopup({ type: 'success', msg: 'Password updated' });
+        } catch (error: any) {
+            console.error('Failed to update password', error);
+            setPopup({ type: 'error', msg: error?.message || 'Failed to update password' });
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+    
     
     async function logOut() {
         await account.deleteSession("current");
@@ -313,7 +333,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     }, [popup])
 
     return (
-        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut, acceptTeamInvite, getPhotoUrl, uploadAvatar, updateProfile }}>
+        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut, acceptTeamInvite, getPhotoUrl, updateAvatar, updateProfile, changePassword }}>
             <Toaster containerClassName="p-8" />
             {children}
         </AuthContext.Provider>
