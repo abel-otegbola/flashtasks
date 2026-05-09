@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { useUser } from "../../context/authContext";
 import Dashboard from "./dashboard/dashboard";
@@ -14,6 +15,9 @@ import CreateTask from "./create-task/createTask";
 import SettingsPage from "./settings";
 import Pricing from "./pricing";
 import Notifications from "./notifications";
+import { getGravatar } from "../../helpers/getGravatar";
+import useGetAvatar from "../../customHooks/useGetAvatar";
+import GetAvatar from "../../customHooks/useGetAvatar";
 
 function AccountPages() {
     const { user } = useUser();
@@ -22,6 +26,7 @@ function AccountPages() {
     if (!user) {
         return <Navigate to="/auth/login" replace />;
     }
+
   return (
     <div className="flex justify-between bg-bg-gray-100 dark:bg-dark/[0.6]">
         <Sidebar />
@@ -52,7 +57,7 @@ function AccountPages() {
                         <span className="absolute top-1 right-3 p-[2px] w-[2px] h-[2px] rounded-lg bg-red-500"></span>
                     </button>
                     <Link to="/account" className="outline outline-offset-2 outline-primary/[0.2] rounded-full">
-                        <img src="/profile_pic.png" width={26} height={26} alt="avatar" className="rounded-full" />
+                    <GetAvatar email={user?.email || ""} className="w-12 h-12" />
                     </Link>
                 </div>
             </div>

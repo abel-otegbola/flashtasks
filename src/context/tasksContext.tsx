@@ -20,7 +20,6 @@ type TasksContextValues = {
     filterTasksByStatus: (status: todo['status']) => todo[];
     filterTasksByCategory: (category: string) => todo[];
     movePendingToToday: () => Promise<number>;
-    getPhotoUrl: (email: string) => string | null;
 }
 
 export const TasksContext = createContext({} as TasksContextValues);
@@ -298,21 +297,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         return tasks.filter(task => task.category === category);
     };
 
-    const getPhotoUrl = (email: string) => {
-        const promise = tablesDB.listRows({
-            databaseId: import.meta.env.VITE_APPWRITE_USERS_DATABASE_ID || 'YOUR_DATABASE_ID',
-            tableId: import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
-        });
-        // get the photoUrl for the user from the waitlist table
-        promise.then(function (response) {
-          try {
-            const user = response.rows.find((doc: any) => doc.email === email);
-            return user ? user.photoUrl : null;
-          } catch { return null }
-        })
-        return null;
-    }
-
     const value: TasksContextValues = {
         tasks,
         loading,
@@ -327,7 +311,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         filterTasksByStatus,
         filterTasksByCategory,
         movePendingToToday,
-        getPhotoUrl,
     };
 
     return (

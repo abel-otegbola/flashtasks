@@ -1,11 +1,13 @@
 'use client'
-import { useState, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LogoIcon from "../../assets/icons/logo";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
 import { Bell, Calendar, DollarMinimalistic, Home, IconProps, Logout, Server, Settings, UsersGroupTwoRounded } from "@solar-icons/react";
 import ThemeSelector from "../themeSelector/themeSelector";
 import { useUser } from "../../context/authContext";
+import { getGravatar } from "../../helpers/getGravatar";
+import GetAvatar from "../../customHooks/useGetAvatar";
 
 export interface Link {
     id: number; label: string; icon: ReactElement<IconProps>, link: string, subtext?: string
@@ -14,18 +16,26 @@ export interface Link {
 function Sidebar() {
     const [open, setOpen] = useState(false)
     const pathname = useLocation().pathname;
-    const { user, logOut } = useUser();
+    const { user, getPhotoUrl, logOut } = useUser();
     const navigate = useNavigate();
+    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+    
+    useEffect(() => {
+        let active = true;
 
-    // Get user's initials for avatar
-    const getUserInitial = () => {
-        if (user?.name && typeof user.name === 'string') {
-            return user.name.charAt(0).toUpperCase();
-        } else if (user?.email && typeof user.email === 'string') {
-            return user.email.charAt(0).toUpperCase();
-        }
-        return 'U';
-    };
+        const loadPhoto = async () => {
+            const nextPhotoUrl = await getPhotoUrl(user?.email || "");
+            if (active) {
+                setPhotoUrl(nextPhotoUrl);
+            }
+        };
+
+        loadPhoto();
+
+        return () => {
+            active = false;
+        };
+    }, [getPhotoUrl, user?.email]);
 
     const generalLinks: Link[] = [
         { id: 0, label: "Dashboard", icon: <Home size={16} />, link: "/account/dashboard" },
@@ -132,7 +142,7 @@ function Sidebar() {
                     {user && (
                         <div className={`flex items-center gap-3 p-1`}>
                             {/* User Avatar */}
-                            <img src="/profile_pic.png" width={40} height={40} alt="avatar" className="rounded-full" />
+                            <GetAvatar email={user?.email || ""} className="w-12 h-12" />
                             
                             {/* User Details */}
                             <div className={`flex-1 min-w-0 ${open ? "sm:hidden" : ""}`}>

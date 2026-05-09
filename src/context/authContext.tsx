@@ -17,6 +17,7 @@ type values = {
     signUp: ( name: string, email: string, password: string, callbackURL: string) => void;
     logOut: () => void;
     acceptTeamInvite: (teamId: string, membershipId: string, userId: string, secret: string) => Promise<boolean>;
+    getPhotoUrl: (email: string) => Promise<string | null>;
 }
 
 export const AuthContext = createContext({} as values);
@@ -186,6 +187,21 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
         });
     }
     
+    const getPhotoUrl = async (email: string) => {
+        try {
+            const response = await tablesDB.listRows({
+                databaseId: import.meta.env.VITE_APPWRITE_USERS_DATABASE_ID || 'YOUR_DATABASE_ID',
+                tableId: import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
+            });
+
+            const row = response.rows.find((doc: any) => doc.email?.toLowerCase?.() === email.toLowerCase());
+            return row?.photoUrl || null;
+        } catch (error) {
+            console.error('Failed to load photo url', error);
+            return null;
+        }
+    }
+    
     async function logOut() {
         await account.deleteSession("current");
         setUser(null);
@@ -216,7 +232,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     }, [popup])
 
     return (
-        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut, acceptTeamInvite }}>
+        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut, acceptTeamInvite, getPhotoUrl }}>
             <Toaster containerClassName="p-8" />
             {children}
         </AuthContext.Provider>

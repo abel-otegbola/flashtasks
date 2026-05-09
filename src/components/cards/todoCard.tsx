@@ -12,6 +12,8 @@ import TaskCheckbox from "../ui/taskCheckbox";
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
 import { formatDeliveredTime } from "../../helpers/messageTime";
 import { getGravatar } from "../../helpers/getGravatar";
+import useGetAvatar from "../../customHooks/useGetAvatar";
+import GetAvatar from "../../customHooks/useGetAvatar";
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -27,7 +29,7 @@ function TodoCard(task: TodoCardProps) {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { deleteTask, updateTask, getPhotoUrl } = useTasks();
+  const { deleteTask, updateTask } = useTasks();
 
   const statusColors: Record<
     string,
@@ -180,14 +182,7 @@ function TodoCard(task: TodoCardProps) {
 
         <div className="flex justify-between gap-4 flex-wrap p-2 px-4 border-t border-gray-100 dark:border-gray-500/[0.2]">
           <div className="flex ml-2">
-            {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => (
-              <span key={index} className="border-2 border-white -ml-2 flex items-center w-8 h-8 overflow-hidden rounded-full bg-gray-100 dark:bg-[#202020] dark:border-[#151515] flex items-center justify-center text-[10px]">
-                <img
-                  src={getPhotoUrl(initial) || getGravatar(initial)}
-                  alt={initial}
-                />
-              </span>
-            ))}
+            {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => <GetAvatar key={index} email={initial} className="-ml-1" />)}
           </div>
           <p className="text-[12px] flex gap-1 items-center text-gray-500">
             <ChatLine size={12} color="currentColor" />
