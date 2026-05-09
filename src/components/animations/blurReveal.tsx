@@ -48,6 +48,7 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
   const textRef = useRef<HTMLDivElement>(null);
   const splitTextRef = useRef<SplitText | null>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
   const hasAnimatedRef = useRef(false);
 
   // Compute scaleAmount with fallback
@@ -68,6 +69,9 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
 
   // Clean up animation
   const cleanup = () => {
+    scrollTriggerRef.current?.kill();
+    scrollTriggerRef.current = null;
+
     if (timelineRef.current) {
       timelineRef.current.kill();
       timelineRef.current = null;
@@ -87,8 +91,13 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
   const runAnimation = () => {
     if (!textRef.current || hasAnimatedRef.current) return;
 
+    const disableScrollTriggerForViewport =
+      disableScrollTrigger ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      window.matchMedia('(max-width: 767px)').matches;
+
     // Respect reduced motion
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (disableScrollTriggerForViewport) {
       textRef.current.style.opacity = '1';
       textRef.current.style.filter = 'blur(0)';
       hasAnimatedRef.current = true;
@@ -143,13 +152,13 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
     };
 
     // Add scroll trigger if enabled
-    if (!disableScrollTrigger && timelineRef.current) {
+    if (!disableScrollTriggerForViewport && timelineRef.current) {
       if (isInViewport()) {
         // Element already visible, play immediately
         timelineRef.current.play();
       } else {
         // Element not visible, wait for scroll
-        ScrollTrigger.create({
+        scrollTriggerRef.current = ScrollTrigger.create({
           trigger: textRef.current,
           start: 'top 90%',
           end: 'bottom 10%',
@@ -158,7 +167,7 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
           once: true,
         });
       }
-    } else if (disableScrollTrigger && timelineRef.current) {
+    } else if (timelineRef.current) {
       // If scroll trigger disabled, play immediately
       timelineRef.current.play();
     }

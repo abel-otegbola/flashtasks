@@ -58,6 +58,14 @@ const resolvePreset = (preset: AnimationPreset, offset: number, blurAmount: numb
   }
 };
 
+const shouldDisableScrollTriggerOnThisViewport = () => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return true;
+  }
+
+  return window.matchMedia('(max-width: 767px)').matches;
+};
+
 const Animate = forwardRef<AnimateHandle, AnimateProps>(({ 
   children,
   className = '',
@@ -97,7 +105,9 @@ const Animate = forwardRef<AnimateHandle, AnimateProps>(({
 
     cleanup();
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const disableScrollTriggerForViewport = disableScrollTrigger || shouldDisableScrollTriggerOnThisViewport();
+
+    if (disableScrollTriggerForViewport) {
       gsap.set(wrapperRef.current, { clearProps: 'opacity,transform,filter' });
       hasAnimatedRef.current = true;
       return;
@@ -124,7 +134,7 @@ const Animate = forwardRef<AnimateHandle, AnimateProps>(({
       timelineRef.current?.play(0);
     };
 
-    if (disableScrollTrigger) {
+    if (disableScrollTriggerForViewport) {
       playAnimation();
       return;
     }

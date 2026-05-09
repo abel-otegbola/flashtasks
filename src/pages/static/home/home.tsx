@@ -193,16 +193,12 @@ function Home() {
             Solutions
           </BlurReveal>
 
-          <BlurReveal preset="slide-up"><h2 className="md:text-[32px] text-[28px] text-center font-medium leading-[120%]">Work Smarter. Move Faster</h2></BlurReveal>
+          <BlurReveal preset="slide-up"><h2 className="md:text-[32px] text-[28px] text-center font-medium leading-[120%] px-6">Work Smarter. Move Faster</h2></BlurReveal>
           <BlurReveal preset="slide-up"><p className='text-[#939395] md:w-[60%] w-[90%] mx-auto text-center'>FlashTasks helps teams and individuals simplify task management, improve collaboration, and stay productive with an organized all-in-one workspace.</p></BlurReveal>
         </div>
 
-        <div className="grid md:grid-cols-2 max-w-12xl mx-auto gap-8">
-          {
-            ["Organize projects and daily tasks effortlessly", "Collaborate with teams in real time", "Track progress and improve accountability", "Reduce workflow confusion and scattered communication"]
-             
-          }
-          <Animate preset="zoomIn" duration={2} className="flex flex-col gap-4 border border-gray-500/[0.2] p-12">
+        <div className="grid md:grid-cols-2 max-w-12xl mx-auto gap-8 w-full">
+          <Animate preset="zoomIn" duration={2} className="flex flex-col gap-4 border border-gray-500/[0.2] md:p-12 p-4">
             <div className='flex flex-col gap-2 bg-gray-100 dark:bg-dark/[0.4] p-4'>
               {
                   ([
@@ -216,8 +212,8 @@ function Home() {
             </div>
             <BlurReveal preset="slide-up"><h2 className="font-medium text-center">Organize projects and daily tasks effortlessly</h2></BlurReveal>
           </Animate>  
-          <Animate preset="zoomIn" duration={2} className="flex flex-col gap-4 border border-gray-500/[0.2] p-12">
-            <div className='flex gap-2 bg-gray-100 dark:bg-dark/[0.4] p-4'>
+          <Animate preset="zoomIn" duration={2} className="flex flex-col gap-4 border border-gray-500/[0.2] md:p-12 p-4">
+            <div className='flex sm:flex-row flex-col gap-2 bg-gray-100 dark:bg-dark/[0.4] p-4'>
               {
                   ([
                     { $id:"1", title: "Update documentation", description: "Update user documentation with latest changes", category: "doc", priority: "low", status: "completed", userId: "", userEmail: "", comments: "", $createdAt: "", assignees: ["abel15655@gmail.com", "abel.d.otegbola@gmail.com"] },
