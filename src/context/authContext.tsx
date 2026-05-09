@@ -18,6 +18,8 @@ type values = {
     logOut: () => void;
     acceptTeamInvite: (teamId: string, membershipId: string, userId: string, secret: string) => Promise<boolean>;
     getPhotoUrl: (email: string) => Promise<string | null>;
+    updateProfile: (values: { name: string, email: string }, helpers: any) => Promise<void>;
+    uploadAvatar: (file: File) => Promise<void>;
 }
 
 export const AuthContext = createContext({} as values);
@@ -201,6 +203,90 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             return null;
         }
     }
+
+    
+    const uploadAvatar = async (file: File) => {
+        const readFileAsDataUrl = (file: File) =>
+        new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = () => reject(new Error('Unable to read the selected file'));
+            reader.readAsDataURL(file);
+        });
+
+        const fileData = await readFileAsDataUrl(file);
+        const response = await fetch('/api/cloudinary/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            file: fileData,
+            fileName: file.name,
+            folder: import.meta.env.VITE_CLOUDINARY_UPLOAD_FOLDER || 'profile-photos',
+          }),
+        });
+    
+        const payload = await response.json().catch(() => ({}));
+    
+        if (!response.ok) {
+          throw new Error(payload?.error || 'Failed to upload image');
+        }
+        if (String(payload?.secure_url)) {
+            // Appwrite Account SDK: updateName
+            // @ts-ignore
+            await account.updateName(name);
+        }
+        const userResponse = await databases.updateDocument(
+            DATABASE_ID,
+            import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
+            user?._id || '',
+            { photoUrl: payload?.secure_url }
+        );
+        
+        const updatedUser = userResponse as unknown as User;
+        setUser(updatedUser);
+        getPhotoUrl(user?.email || '');
+        return payload?.secure_url;
+    };
+
+    
+      const updateProfile = async (values: { name: string, email: string }, helpers: any) => {
+        helpers.setSubmitting(true);
+        try {
+            const { name, email } = values;
+        
+            if (name && name !== user?.name) {
+                await account.updateName(name);
+            }
+            const userResponse = await databases.updateDocument(
+                DATABASE_ID,
+                import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
+                user?._id || '',
+                { name: name || user?.name, email: email || user?.email }
+            );
+            
+            const updatedUser = userResponse as unknown as User;
+            setUser(updatedUser);
+    
+          // Refresh session user and update app state
+          try {
+            const refreshed = await account.get();
+            setUser(refreshed);
+            setPopup({ type: 'success', msg: 'Profile updated' });
+            // reload so AuthProvider picks up the new account data
+            window.location.reload();
+          } catch (e) {
+            console.warn('Failed to refresh user after update', e);
+            setPopup({ type: 'success', msg: 'Profile updated' });
+            window.location.reload();
+          }
+        } catch (err: any) {
+          setPopup({ type: 'error', msg: err?.message || 'Failed to update profile' });
+          toast.error(err?.message || 'Failed to update profile');
+        } finally {
+          setLoading(false);
+          helpers.setSubmitting(false);
+        }
+      };
     
     async function logOut() {
         await account.deleteSession("current");
@@ -232,7 +318,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     }, [popup])
 
     return (
-        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut, acceptTeamInvite, getPhotoUrl }}>
+        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut, acceptTeamInvite, getPhotoUrl, uploadAvatar, updateProfile }}>
             <Toaster containerClassName="p-8" />
             {children}
         </AuthContext.Provider>

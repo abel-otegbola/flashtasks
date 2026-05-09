@@ -3,7 +3,19 @@ import { todo } from "../../interface/todo";
 import { useTasks } from "../../context/tasksContext";
 import TodoCard from "../cards/todoCard";
 
-export default function Kanban({ tasks, filteredStatus }: { tasks: todo[]; filteredStatus: string }) {
+export default function Kanban({
+    tasks,
+    filteredStatus,
+    onReorderTasks,
+    onTaskDragStart,
+    onTaskDragEnd,
+}: {
+    tasks: todo[];
+    filteredStatus: string;
+    onReorderTasks: (visibleTasks: todo[], targetTaskId: string) => Promise<void>;
+    onTaskDragStart?: (taskId: string | null) => void;
+    onTaskDragEnd?: () => void;
+}) {
     const [openSections, setOpenSections] = useState<string>("");
     const [dragOverSectionKey, setDragOverSectionKey] = useState<string | null>(null);
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -86,10 +98,24 @@ export default function Kanban({ tasks, filteredStatus }: { tasks: todo[]; filte
                                         draggable
                                         onDragStart={(dragTask, event) => {
                                             setDraggedTaskId(dragTask.$id);
+                                            onTaskDragStart?.(dragTask.$id);
                                             event.dataTransfer.effectAllowed = 'move';
                                             event.dataTransfer.setData('text/plain', dragTask.$id);
                                         }}
-                                        onDragEnd={() => setDraggedTaskId(null)}
+                                        onDragEnd={() => {
+                                            setDraggedTaskId(null);
+                                            onTaskDragEnd?.();
+                                        }}
+                                        onDragOver={(dragTask, event) => {
+                                            event.preventDefault();
+                                        }}
+                                        onDrop={async (dropTask, event) => {
+                                            event.preventDefault();
+                                            const sectionTasks = filteredTasks.filter((sectionTask) => sectionTask.status === filter);
+                                            await onReorderTasks(sectionTasks, dropTask.$id);
+                                            setDraggedTaskId(null);
+                                            onTaskDragEnd?.();
+                                        }}
                                     />
                                 ))
                         )}

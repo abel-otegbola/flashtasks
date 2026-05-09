@@ -11,6 +11,7 @@ export interface todo {
   invites?: string[];
   organizationId?: string;
   teamId?: string;
+  orderIndex?: number;
   status: 'pending' | 'upcoming' | 'in progress' | 'completed' | 'suspended';
   priority?: 'low' | 'medium' | 'high';
   dueDate?: string;

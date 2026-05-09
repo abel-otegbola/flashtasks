@@ -12,7 +12,7 @@ export default function GetAvatar({ email, className }: { email: string; classNa
                 setPhotoUrl(nextPhotoUrl);
             }
             else {
-                setPhotoUrl(`https://www.gravatar.com/avatar/${email.trim().toLowerCase()}?s=200&d=identicon`);
+                setPhotoUrl(`https://www.gravatar.com/avatar/${email.split("@")[0].trim().toLowerCase()}?s=200&d=identicon`);
             }
         };
 
@@ -22,7 +22,7 @@ export default function GetAvatar({ email, className }: { email: string; classNa
     return (
         <span className={`border-2 border-white flex items-center w-8 h-8 overflow-hidden rounded-full bg-gray-100 dark:bg-[#202020] dark:border-[#151515] flex items-center justify-center text-[10px] ${className}`}>
             <img
-                src={photoUrl || `https://www.gravatar.com/avatar/${email.trim().toLowerCase()}?s=200&d=identicon`}
+                src={photoUrl || `https://www.gravatar.com/avatar/${email.split("@")[0].trim().toLowerCase()}?s=200&d=identicon`}
                 alt={email}
             />
         </span>

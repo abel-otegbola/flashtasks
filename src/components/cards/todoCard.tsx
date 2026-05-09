@@ -19,6 +19,9 @@ type TodoCardProps = todo & {
   draggable?: boolean;
   onDragStart?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
   onDragEnd?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
+  onDragOver?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
+  onDragEnter?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
+  onDrop?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
 };
 
 function TodoCard(task: TodoCardProps) {
@@ -97,8 +100,22 @@ function TodoCard(task: TodoCardProps) {
           setIsDragging(false);
           task.onDragEnd?.(task, event);
         }}
+        onDragEnter={(event) => {
+          if (task.draggable) {
+            task.onDragEnter?.(task, event);
+          }
+        }}
         onDragOver={(event) => {
-          if (task.draggable) event.preventDefault();
+          if (task.draggable) {
+            event.preventDefault();
+            task.onDragOver?.(task, event);
+          }
+        }}
+        onDrop={(event) => {
+          if (task.draggable) {
+            event.preventDefault();
+            task.onDrop?.(task, event);
+          }
         }}
       >
         <div className="flex flex-col gap-3 p-4">
@@ -182,7 +199,7 @@ function TodoCard(task: TodoCardProps) {
 
         <div className="flex justify-between gap-4 flex-wrap p-2 px-4 border-t border-gray-100 dark:border-gray-500/[0.2]">
           <div className="flex ml-2">
-            {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => <GetAvatar key={index} email={initial} className="-ml-1" />)}
+            {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => <GetAvatar key={index} email={initial} className="-ml-2" />)}
           </div>
           <p className="text-[12px] flex gap-1 items-center text-gray-500">
             <ChatLine size={12} color="currentColor" />

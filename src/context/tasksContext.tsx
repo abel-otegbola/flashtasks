@@ -20,6 +20,7 @@ type TasksContextValues = {
     filterTasksByStatus: (status: todo['status']) => todo[];
     filterTasksByCategory: (category: string) => todo[];
     movePendingToToday: () => Promise<number>;
+    reorderTasks: (orderedTaskIds: string[]) => Promise<void>;
 }
 
 export const TasksContext = createContext({} as TasksContextValues);
@@ -32,10 +33,31 @@ export function useTasks() {
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'YOUR_DATABASE_ID';
 const TASKS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_TASKS_COLLECTION_ID || 'YOUR_TASKS_COLLECTION_ID';
 
+const getTaskOrderIndex = (task: todo) => typeof task.orderIndex === 'number' ? task.orderIndex : Number.MAX_SAFE_INTEGER;
+
+const sortTasksByOrder = (tasksToSort: todo[]) => [...tasksToSort].sort((left, right) => {
+    const orderDiff = getTaskOrderIndex(left) - getTaskOrderIndex(right);
+    if (orderDiff !== 0) return orderDiff;
+
+    const createdDiff = new Date(left.$createdAt).getTime() - new Date(right.$createdAt).getTime();
+    if (createdDiff !== 0) return createdDiff;
+
+    return left.$id.localeCompare(right.$id);
+});
+
 const TasksProvider = ({ children }: { children: ReactNode}) => {
     const [tasks, setTasks] = useState<todo[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const getNextOrderIndex = (tasksToInspect: todo[]) => {
+        const maxOrderIndex = tasksToInspect.reduce((max, task) => {
+            const current = typeof task.orderIndex === 'number' ? task.orderIndex : -1;
+            return Math.max(max, current);
+        }, -1);
+
+        return maxOrderIndex + 1;
+    };
 
     // Get all tasks for the current user
     const getTasks = async (userEmail: string) => {
@@ -52,7 +74,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                 ]
             );
 
-            setTasks(response.documents as unknown as todo[]);
+            setTasks(sortTasksByOrder(response.documents as unknown as todo[]));
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
             setError(errorMessage);
@@ -77,7 +99,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                 ]
             );
 
-            setTasks(response.documents as unknown as todo[]);
+            setTasks(sortTasksByOrder(response.documents as unknown as todo[]));
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
             setError(errorMessage);
@@ -101,7 +123,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                 priority: task.priority || 'medium',
                 comments: task.comments || '0',
                 userId: task.userId,
-                userEmail: task.userEmail
+                userEmail: task.userEmail,
+                orderIndex: typeof task.orderIndex === 'number' ? task.orderIndex : getNextOrderIndex(tasks),
             };
 
             // Only add optional fields if they exist
@@ -119,7 +142,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             );
             
             const newTask = response as unknown as todo;
-            setTasks(prev => [newTask, ...prev]);
+            setTasks(prev => sortTasksByOrder([newTask, ...prev]));
 
             // Index the task in Elasticsearch via backend endpoint
             await indexTask('create', newTask);
@@ -150,7 +173,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                     priority: task.priority || 'medium',
                     comments: task.comments || '0',
                     userId: task.userId,
-                    userEmail: task.userEmail
+                    userEmail: task.userEmail,
+                    orderIndex: typeof task.orderIndex === 'number' ? task.orderIndex : getNextOrderIndex(tasks),
                 };
 
                 // Only add optional fields if they exist
@@ -171,7 +195,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                 await indexTask('create', response);
             }
             
-            setTasks(prev => [...createdTasks, ...prev]);
+            setTasks(prev => sortTasksByOrder([...createdTasks, ...prev]));
             toast.success(`${createdTasks.length} tasks created successfully!`);
             return createdTasks;
         } catch (err) {
@@ -199,7 +223,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             );
             
             const updatedTask = response as unknown as todo;
-            setTasks(prev => prev.map(task => task.$id === taskId ? updatedTask : task));
+            setTasks(prev => sortTasksByOrder(prev.map(task => task.$id === taskId ? updatedTask : task)));
 
             // update index
             await indexTask('update', updatedTask);
@@ -268,7 +292,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             setTasks(prev => {
                 const byId = new Map(prev.map(p => [p.$id, p]));
                 for (const u of updatedTasks) byId.set(u.$id, u);
-                return Array.from(byId.values()).sort((a,b) => (a.$createdAt > b.$createdAt ? -1 : 1));
+                return sortTasksByOrder(Array.from(byId.values()));
             });
 
             toast.success(`${updatedTasks.length} pending tasks moved to today`);
@@ -297,6 +321,30 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         return tasks.filter(task => task.category === category);
     };
 
+    const reorderTasks = async (orderedTaskIds: string[]) => {
+        setError(null);
+
+        try {
+            for (const [index, taskId] of orderedTaskIds.entries()) {
+                await databases.updateDocument(
+                    DATABASE_ID,
+                    TASKS_COLLECTION_ID,
+                    taskId,
+                    { orderIndex: index }
+                );
+            }
+
+            setTasks(prev => sortTasksByOrder(prev.map(task => {
+                const nextIndex = orderedTaskIds.indexOf(task.$id);
+                return nextIndex >= 0 ? { ...task, orderIndex: nextIndex } : task;
+            })));
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to reorder tasks';
+            setError(errorMessage);
+            toast.error(errorMessage);
+        }
+    };
+
     const value: TasksContextValues = {
         tasks,
         loading,
@@ -311,6 +359,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         filterTasksByStatus,
         filterTasksByCategory,
         movePendingToToday,
+        reorderTasks,
     };
 
     return (

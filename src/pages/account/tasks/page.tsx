@@ -18,15 +18,32 @@ import Calendar from "../../../components/views/calendar";
 
 type ViewMode = 'kanban' | 'list' | 'grid' | 'calendar';
 
+const getTaskOrderIndex = (task: todo) => {
+    const orderIndex = (task as todo & { orderIndex?: number }).orderIndex;
+    return typeof orderIndex === 'number' ? orderIndex : Number.MAX_SAFE_INTEGER;
+};
+
+const sortTasksByOrder = (taskList: todo[]) => [...taskList].sort((left, right) => {
+    const orderDiff = getTaskOrderIndex(left) - getTaskOrderIndex(right);
+    if (orderDiff !== 0) return orderDiff;
+
+    const createdDiff = new Date(left.$createdAt).getTime() - new Date(right.$createdAt).getTime();
+    if (createdDiff !== 0) return createdDiff;
+
+    return left.$id.localeCompare(right.$id);
+});
+
 function Tasks() {
     const [showModal, setShowModal] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
-    const { tasks, loading, getTasks, movePendingToToday, updateTask, deleteTask } = useTasks();
+    const { tasks, loading, getTasks, movePendingToToday, updateTask, deleteTask, reorderTasks } = useTasks();
     const [showMoveConfirm, setShowMoveConfirm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<todo | null>(null);
     const [taskToDelete, setTaskToDelete] = useState<todo | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [filterStatus, setFilterStatus] = useState<string>('all');
+    const [dragOverSectionKey, setDragOverSectionKey] = useState<string | null>(null);
+    const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
     const { user } = useUser();
 
     useEffect(() => {
@@ -35,7 +52,8 @@ function Tasks() {
     }
     }, [user]);
 
-    const filteredTasks = filterStatus === 'all' ? tasks : tasks.filter(task => task.status === filterStatus);
+    const sortedTasks = sortTasksByOrder(tasks);
+    const filteredTasks = filterStatus === 'all' ? sortedTasks : sortedTasks.filter(task => task.status === filterStatus);
 
     const openTaskDetails = (task: todo) => {
         setSelectedTask(task);
@@ -55,6 +73,38 @@ function Tasks() {
         if (!taskToDelete) return;
         await deleteTask(taskToDelete.$id);
         setTaskToDelete(null);
+    };
+
+    const reorderVisibleTasks = async (visibleTasks: todo[], targetTaskId: string) => {
+        if (!draggedTaskId) return;
+
+        const orderedTasks = sortTasksByOrder(tasks);
+        const visibleTaskIds = new Set(visibleTasks.map((task) => task.$id));
+        const visibleOrderedTasks = orderedTasks.filter((task) => visibleTaskIds.has(task.$id));
+
+        const draggedIndex = visibleOrderedTasks.findIndex((task) => task.$id === draggedTaskId);
+        const targetIndex = visibleOrderedTasks.findIndex((task) => task.$id === targetTaskId);
+
+        if (draggedIndex < 0 || targetIndex < 0 || draggedIndex === targetIndex) {
+            return;
+        }
+
+        const nextVisibleTasks = [...visibleOrderedTasks];
+        const [movedTask] = nextVisibleTasks.splice(draggedIndex, 1);
+        nextVisibleTasks.splice(targetIndex, 0, movedTask);
+
+        let cursor = 0;
+        const nextOrderedTasks = orderedTasks.map((task) => {
+            if (!visibleTaskIds.has(task.$id)) {
+                return task;
+            }
+
+            const replacement = nextVisibleTasks[cursor];
+            cursor += 1;
+            return replacement;
+        });
+
+        await reorderTasks(nextOrderedTasks.map((task) => task.$id));
     };
 
     if (loading) {
@@ -161,7 +211,7 @@ function Tasks() {
 
             {/* Kanban View */}
             {viewMode === 'kanban' && (
-                <Kanban tasks={tasks} filteredStatus={filterStatus} />
+                <Kanban tasks={sortedTasks} filteredStatus={filterStatus} onReorderTasks={reorderVisibleTasks} onTaskDragStart={setDraggedTaskId} onTaskDragEnd={() => setDraggedTaskId(null)} />
             )}
 
             {/* List View */}
@@ -189,6 +239,19 @@ function Tasks() {
                                     task={task}
                                     openTaskDetails={openTaskDetails}
                                     index={index}
+                                    draggable
+                                    onDrop={async () => {
+                                        await reorderVisibleTasks(filteredTasks, task.$id);
+                                        setDraggedTaskId(null);
+                                    }}
+                                    onDragStart={(dragTask, event) => {
+                                        setDraggedTaskId(dragTask.$id);
+                                        event.dataTransfer.effectAllowed = 'move';
+                                        event.dataTransfer.setData('text/plain', dragTask.$id);
+                                    }}
+                                    onDragEnd={() => {
+                                        setDraggedTaskId(null);
+                                    }}
                                 />
                             ))}
                         </div>
@@ -205,7 +268,17 @@ function Tasks() {
                         </div>
                     ) : (
                         filteredTasks.map((task) => (
-                            <TodoCard key={task.$id} {...task} />
+                            <TodoCard
+                                key={task.$id}
+                                {...task}
+                                draggable
+                                onDragStart={() => setDraggedTaskId(task.$id)}
+                                onDragEnd={() => setDraggedTaskId(null)}
+                                onDrop={async () => {
+                                    await reorderVisibleTasks(filteredTasks, task.$id);
+                                    setDraggedTaskId(null);
+                                }}
+                            />
                         ))
                     )}
                 </div>
@@ -213,7 +286,7 @@ function Tasks() {
 
             {/* Calendar View */}
             {viewMode === 'calendar' && (
-                <Calendar tasks={tasks} openTaskDetails={openTaskDetails} handleQuickComplete={handleQuickComplete} setTaskToDelete={setTaskToDelete} />
+                <Calendar tasks={sortedTasks} openTaskDetails={openTaskDetails} handleQuickComplete={handleQuickComplete} setTaskToDelete={setTaskToDelete} />
             )}
         </div>
 
