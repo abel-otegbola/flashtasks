@@ -233,30 +233,25 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
         if (String(payload?.secure_url)) {
             // Appwrite Account SDK: updateName
             // @ts-ignore
-            await account.updateName(name);
+            const userResponse = await databases.updateDocument(
+                DATABASE_ID,
+                import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
+                user?._id || '',
+                { photoUrl: payload?.secure_url }
+            );
+            
+            const updatedUser = userResponse as unknown as User;
+            setUser(updatedUser);
+            getPhotoUrl(user?.email || '');
         }
-        const userResponse = await databases.updateDocument(
-            DATABASE_ID,
-            import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
-            user?._id || '',
-            { photoUrl: payload?.secure_url }
-        );
-        
-        const updatedUser = userResponse as unknown as User;
-        setUser(updatedUser);
-        getPhotoUrl(user?.email || '');
         return payload?.secure_url;
     };
 
     
-      const updateProfile = async (values: { name: string, email: string }, helpers: any) => {
+    const updateProfile = async (values: { name: string, email: string }, helpers: any) => {
         helpers.setSubmitting(true);
         try {
             const { name, email } = values;
-        
-            if (name && name !== user?.name) {
-                await account.updateName(name);
-            }
             const userResponse = await databases.updateDocument(
                 DATABASE_ID,
                 import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
