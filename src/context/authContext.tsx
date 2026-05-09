@@ -151,8 +151,8 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
         setLoading(true)
         
         const promise = tablesDB.listRows({
-            databaseId: "68ed2831002414dd5275",
-            tableId: "waitlist",
+            databaseId: import.meta.env.VITE_APPWRITE_USERS_DATABASE_ID || 'YOUR_DATABASE_ID',
+            tableId: import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
         });
 
         promise.then(async function (response) { // 1️⃣ Check if username already exists
@@ -166,9 +166,9 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                     setPopup({ type: "success", msg: "Registered successful" })
                     tablesDB.createRow({
                         databaseId: DATABASE_ID,
-                        tableId: 'waitlist',
+                        tableId: import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
                         rowId: ID.unique(),
-                        data: { email, name }
+                        data: { email, name, photoUrl: `https://api.dicebear.com/9.x/avataaars/svg?seed=${name}` },
                     });
                     signIn(email, password, callbackURL || "/account/dashboard")
                 })

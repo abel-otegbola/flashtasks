@@ -11,6 +11,7 @@ import EditTaskModal from "../modals/editTaskModal";
 import TaskCheckbox from "../ui/taskCheckbox";
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
 import { formatDeliveredTime } from "../../helpers/messageTime";
+import { getGravatar } from "../../helpers/getGravatar";
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -26,7 +27,7 @@ function TodoCard(task: TodoCardProps) {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { deleteTask, updateTask } = useTasks();
+  const { deleteTask, updateTask, getPhotoUrl } = useTasks();
 
   const statusColors: Record<
     string,
@@ -180,8 +181,11 @@ function TodoCard(task: TodoCardProps) {
         <div className="flex justify-between gap-4 flex-wrap p-2 px-4 border-t border-gray-100 dark:border-gray-500/[0.2]">
           <div className="flex ml-2">
             {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => (
-              <span key={index} className="border-2 border-white -ml-2 flex items-center w-8 h-8 rounded-full bg-gray-100 dark:bg-[#202020] dark:border-[#151515] flex items-center justify-center text-[10px]">
-                {String(initial).trim().charAt(0).toUpperCase()}
+              <span key={index} className="border-2 border-white -ml-2 flex items-center w-8 h-8 overflow-hidden rounded-full bg-gray-100 dark:bg-[#202020] dark:border-[#151515] flex items-center justify-center text-[10px]">
+                <img
+                  src={getPhotoUrl(initial) || getGravatar(initial)}
+                  alt={initial}
+                />
               </span>
             ))}
           </div>

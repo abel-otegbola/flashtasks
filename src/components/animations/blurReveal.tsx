@@ -23,6 +23,7 @@ interface BlurRevealProps {
   children: React.ReactNode;
   className?: string;
   duration?: number;
+  delay?: number;
   stagger?: number;
   preset?: AnimationPreset;
   offset?: number;
@@ -36,6 +37,7 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
   children,
   className = '',
   duration = 1.2,
+  delay = 0,
   stagger = 0.06,
   preset = 'slide-up',
   offset = 40,
@@ -113,7 +115,7 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
     });
 
     // Create timeline
-    timelineRef.current = gsap.timeline();
+    timelineRef.current = gsap.timeline({ delay });
 
     timelineRef.current.to(words, {
       opacity: 1,
@@ -169,7 +171,7 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
       runAnimation();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [duration, stagger, preset, offset, blurAmount, scaleAmount, disableScrollTrigger,]);
+  }), [duration, delay, stagger, preset, offset, blurAmount, scaleAmount, disableScrollTrigger,]);
 
   // Initial setup
   useEffect(() => {
@@ -177,7 +179,7 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
 
     return () => cleanup();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [duration, stagger, preset, offset, blurAmount, scaleAmount, disableScrollTrigger,]);
+  }, [duration, delay, stagger, preset, offset, blurAmount, scaleAmount, disableScrollTrigger,]);
 
   return (
     <div ref={textRef} className={className}>

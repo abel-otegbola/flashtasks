@@ -4,6 +4,7 @@ import { AltArrowDown } from "@solar-icons/react";
 import { Link } from "react-router-dom";
 import { FAQ_ITEMS } from "../../data/faqs";
 import BlurReveal from "../animations/blurReveal";
+import Animate from "../animations/animate";
 
 interface FaqSectionProps {
   title?: string;
@@ -27,8 +28,8 @@ function FaqSection({
           <BlurReveal preset="slide-right" duration={3}>
             <p className="mt-3 text-sm sm:text-base opacity-[0.75] leading-6">
               {subtitle} {" "}
-            <Link to="/contact" className="underline underline-offset-2 hover:text-primary transition-colors">
-              Chat to our friendly team
+            <Link to="/contact" className="hover:text-primary transition-colors">
+              Chat with us
             </Link>
             .
             </p>
@@ -40,19 +41,20 @@ function FaqSection({
             const isOpen = openItemId === item.id;
 
             return (
+              <Animate key={item.id} preset="scaleUp" duration={2} delay={index * 0.1}>
               <article key={item.id} className="rounded-2xl border border-gray-500/[0.2] bg-background overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setOpenItemId(isOpen ? null : item.id)}
                   className="w-full px-4 sm:px-5 py-4 flex items-center gap-3 text-left"
                 >
-                    <BlurReveal preset="slide-right" duration={3} className="w-8 h-8 rounded-lg border border-gray-500/[0.2] flex items-center justify-center text-xs font-medium opacity-[0.7] shrink-0">
+                    <div className="w-8 h-8 rounded-lg border border-gray-500/[0.2] flex items-center justify-center text-xs font-medium opacity-[0.7] shrink-0">
                       {String(index + 1).padStart(2, "0")}
-                    </BlurReveal>
+                    </div>
 
-                    <BlurReveal preset="slide-right" duration={3} className="flex-1 font-medium text-sm sm:text-base">
+                    <div className="flex-1 font-medium text-sm sm:text-base">
                       {item.question}
-                    </BlurReveal>
+                    </div>
 
                   <span
                     className={`shrink-0 transition-transform ${isOpen ? "rotate-180" : "rotate-0"}`}
@@ -61,13 +63,11 @@ function FaqSection({
                     <AltArrowDown size={16} />
                   </span>
                 </button>
-
-                {isOpen ? (
-                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 pl-[58px] text-sm sm:text-[15px] opacity-[0.72] leading-6">
-                    <BlurReveal preset="slide-right" duration={3}>{item.answer}</BlurReveal>
-                  </div>
-                ) : null}
+                <div className={`px-4 sm:pr-5 sm:pl-[58px] pl-[52px] text-sm sm:text-[15px] opacity-[0.72] leading-6 isolate ${isOpen ? "max-h-screen pb-4 sm:pb-5" : "max-h-0"} transition-max-height duration-300 ease-in-out`}>
+                  <div>{item.answer}</div>
+                </div>
               </article>
+              </Animate>
             );
           })}
         </div>

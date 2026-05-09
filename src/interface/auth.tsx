@@ -3,7 +3,7 @@ export interface User {
     $id: string,
     email: string,
     fullname: string,
-    img?: string,
+    photoUrl?: string,
     bio?: string,
     address?: string,
     userId: string,
