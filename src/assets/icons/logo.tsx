@@ -7,7 +7,7 @@ const LogoIcon = (props: SVGProps<SVGSVGElement>) => (
         <rect x="1" y="15" width="10" height="10" rx="5" fill="currentColor"/>
         <rect x="17" y="15" width="10" height="10" rx="5" fill="currentColor"/>
         <rect x="1" y="29" width="10" height="10" rx="5" fill="currentColor"/>
-        <rect x="17" y="29" width="10" height="10" rx="6" fill="#4BD551"/>
+        <rect x="17" y="29" width="10" height="10" rx="6" fill="var(--color-primary)"/>
     </svg>
 
 
