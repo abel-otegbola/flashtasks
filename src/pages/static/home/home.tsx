@@ -26,7 +26,7 @@ function Home() {
             
             <BlurReveal preset="slide-up"  delay={0.2}><h1>Get tasks done</h1></BlurReveal>
 
-              <h1 className="sm:flex hidden gap-2 items-center">
+              <h1 className="flex sm:flex-row flex-wrap gap-2 items-center">
                 Faster and more<span className="underline decoration-[#22FF7E]">Efficiently</span>
               </h1>
             <img src="/arrow.svg" alt="sparkle" width={200} height={64} className="md:block hidden absolute top-0 -right-24" />
