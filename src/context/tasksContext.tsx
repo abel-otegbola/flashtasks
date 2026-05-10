@@ -113,8 +113,9 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     // Add a single task
     const addTask = async (task: Omit<todo, '$id' | 'id' | '$createdAt'>): Promise<todo | null> => {
         setError(null);
+        setLoading(true);
         
-        try {            
+        try {
             const taskData: any = {
                 title: task.title,
                 description: task.description,
@@ -153,14 +154,16 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             toast.error(errorMessage);
             return null;
         } finally {
+            setLoading(false);
         }
     };
 
     // Add multiple tasks at once
     const addMultipleTasks = async (tasksToAdd: Omit<todo, '$id' | 'id' | '$createdAt'>[]): Promise<todo[] | null> => {
         setError(null);
+        setLoading(true);
         
-        try {            
+        try {
             const createdTasks: todo[] = [];
             
             // Create tasks sequentially to avoid rate limiting
@@ -204,12 +207,14 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             toast.error(errorMessage);
             return null;
         } finally {
+            setLoading(false);
         }
     };
 
     // Update a task
     const updateTask = async (taskId: string, updates: Partial<todo>): Promise<todo | null> => {
         setError(null);
+        setLoading(true);
         
         try {
             // Remove $createdAt and $updatedAt from updates as they're auto-managed by Appwrite
@@ -234,12 +239,14 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             toast.error(errorMessage);
             return null;
         } finally {
+            setLoading(false);
         }
     };
 
     // Delete a task
     const deleteTask = async (taskId: string): Promise<void> => {
         setError(null);
+        setLoading(true);
         
         try {
             await databases.deleteDocument(
@@ -259,6 +266,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             toast.error(errorMessage);
             return;
         } finally {
+            setLoading(false);
         }
     };
 
