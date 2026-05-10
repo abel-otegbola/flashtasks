@@ -4,6 +4,7 @@ import TaskCheckbox from './taskCheckbox';
 import SwipeDeleteItem from './swipeDeleteItem';
 import { useState } from 'react';
 import Confirmationmessage from '../modals/confirmation';
+import FocusMode from '../focusMode/focusMode';
 
 type Props = {
   tasks: todo[];
@@ -13,6 +14,7 @@ const TasksList = ({ tasks }: Props) => {
   const { updateTask } = useTasks();
   const { deleteTask } = useTasks();
   const [taskToDelete, setTaskToDelete] = useState<todo | null>(null);
+  const [focusModeTask, setFocusModeTask] = useState<todo | null>(null);
 
   // Group tasks by due date (fall back to createdAt when no dueDate)
   const grouped = tasks.reduce<Record<string, todo[]>>((acc, t) => {
@@ -33,7 +35,7 @@ const TasksList = ({ tasks }: Props) => {
 
             <div className="space-y-3">
               {dayTasks.map((task, index) => (
-                <SwipeDeleteItem key={task.$id || index} onSwipeLeft={() => setTaskToDelete(task)} className="rounded-lg">
+                <SwipeDeleteItem key={task.$id || index} onSwipeLeft={() => setTaskToDelete(task)} onLongPress={() => setFocusModeTask(task)} className="rounded-lg">
                 <div className="flex items-center gap-4 p-3 bg-white dark:bg-[#0f0f0f] rounded-lg border border-gray-100 dark:border-gray-500/[0.2]">
                   <TaskCheckbox
                     checked={task.status === 'completed'}
@@ -67,6 +69,10 @@ const TasksList = ({ tasks }: Props) => {
           </div>
         ))}
       </div>
+
+      {focusModeTask && (
+        <FocusMode task={focusModeTask} setOpen={(open) => !open && setFocusModeTask(null)} />
+      )}
 
       {taskToDelete && (
         <Confirmationmessage

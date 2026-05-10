@@ -4,10 +4,12 @@ type SwipeActionItemProps = {
   children: React.ReactNode;
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
+  onLongPress?: () => void;
   className?: string;
   threshold?: number;
   maxReveal?: number;
   disabled?: boolean;
+  longPressThreshold?: number;
 };
 
 const clamp = (val: number, min: number, max: number) =>
@@ -21,10 +23,12 @@ function SwipeActionItem({
   children,
   onSwipeLeft,
   onSwipeRight,
+  onLongPress,
   className = "",
   threshold = 90,
   maxReveal = 100,
   disabled = false,
+  longPressThreshold = 500,
 }: SwipeActionItemProps) {
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -37,6 +41,8 @@ function SwipeActionItem({
   const suppressClickRef = useRef(false);
   // Track which direction was committed (prevents direction flip mid-swipe)
   const directionLockRef = useRef<"left" | "right" | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggeredRef = useRef(false);
 
   // ── Gesture handlers ──────────────────────────────────────────────────────
 
@@ -49,7 +55,18 @@ function SwipeActionItem({
       pointerId: e.pointerId,
     };
     directionLockRef.current = null;
+    longPressTriggeredRef.current = false;
     setIsDragging(true);
+
+    // Start long-press timer
+    longPressTimerRef.current = window.setTimeout(() => {
+      if (onLongPress && !longPressTriggeredRef.current) {
+        longPressTriggeredRef.current = true;
+        suppressClickRef.current = true;
+        onLongPress();
+        resetSwipe();
+      }
+    }, longPressThreshold);
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -62,6 +79,12 @@ function SwipeActionItem({
 
     const deltaX = e.clientX - pointerStartRef.current.x;
     const deltaY = e.clientY - pointerStartRef.current.y;
+
+    // Cancel long-press if movement detected
+    if ((Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) && longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
 
     // Cancel if vertical scroll is dominant
     if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 8) return;
@@ -83,6 +106,10 @@ function SwipeActionItem({
   };
 
   const resetSwipe = () => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
     setTranslateX(0);
     setIsDragging(false);
     pointerStartRef.current = null;

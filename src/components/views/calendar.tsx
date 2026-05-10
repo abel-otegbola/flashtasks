@@ -1,10 +1,12 @@
 import { useState } from "react";
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
 import TaskCheckbox from "../ui/taskCheckbox";
+import FocusMode from "../focusMode/focusMode";
 
 
 export default function Calendar({ tasks, openTaskDetails, handleQuickComplete, setTaskToDelete }: { tasks: any[]; openTaskDetails: (task: any) => void; handleQuickComplete: (taskId: string, checked: boolean) => void; setTaskToDelete: (task: any) => void }) {
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [focusModeTask, setFocusModeTask] = useState<any | null>(null);
 
     // Calendar helper functions
     const getDaysInMonth = (date: Date) => {
@@ -97,6 +99,7 @@ export default function Calendar({ tasks, openTaskDetails, handleQuickComplete, 
                                     <SwipeDeleteItem
                                         key={task.$id}
                                         onSwipeLeft={() => setTaskToDelete(task)}
+                                        onLongPress={() => setFocusModeTask(task)}
                                         className="rounded"
                                     >
                                         <div
@@ -136,6 +139,10 @@ export default function Calendar({ tasks, openTaskDetails, handleQuickComplete, 
                     );
                 })}
             </div>
+
+            {focusModeTask && (
+                <FocusMode task={focusModeTask} setOpen={(open) => !open && setFocusModeTask(null)} />
+            )}
         </div>
     );
 }

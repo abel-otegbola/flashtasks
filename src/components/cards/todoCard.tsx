@@ -10,10 +10,12 @@ import Confirmationmessage from "../modals/confirmation";
 import EditTaskModal from "../modals/editTaskModal";
 import TaskCheckbox from "../ui/taskCheckbox";
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
+import FocusMode from "../focusMode/focusMode";
 import { formatDeliveredTime } from "../../helpers/messageTime";
 import { getGravatar } from "../../helpers/getGravatar";
 import useGetAvatar from "../../customHooks/useGetAvatar";
 import GetAvatar from "../../customHooks/useGetAvatar";
+import { PlayIcon } from "@phosphor-icons/react";
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -30,6 +32,7 @@ function TodoCard(task: TodoCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [showFocusMode, setShowFocusMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { deleteTask, updateTask } = useTasks();
@@ -87,6 +90,7 @@ function TodoCard(task: TodoCardProps) {
         className={`relative flex flex-col overflow-hidden transition-all cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
         onSwipeLeft={() => setShowDeleteConfirmation(true)}
         onSwipeRight={() => updateTask(task.$id, { status: status === 'completed' ? 'pending' : 'completed' }) }
+        onLongPress={() => setShowFocusMode(true)}
       >
       <div
         className={`border-t-3 ${color.border} border rounded-[10px] bg-white dark:bg-dark-bg hover:shadow-md `}
@@ -121,13 +125,29 @@ function TodoCard(task: TodoCardProps) {
         <div className="flex flex-col gap-3 p-4">
           <div className="flex justify-between gap-4 items-start">
             <div className="flex items-center gap-2">
-              <TaskCheckbox
-                checked={status === 'completed'}
-                onCheckedChange={(checked) => {
-                  void updateTask(task.$id, { status: checked ? 'completed' : 'pending' });
-                }}
-                ariaLabel={`Mark ${title} as completed`}
-              />
+              {
+                task.status === 'completed' ? (
+                    <TaskCheckbox
+                      checked={status === 'completed'}
+                      onCheckedChange={(checked) => {
+                        void updateTask(task.$id, { status: checked ? 'completed' : 'pending' });
+                      }}
+                      ariaLabel={`Mark ${title} as completed`}
+                    />
+                ) : (
+                    <button
+                        className=""
+                        aria-label="Start Pomodoro for task"
+                        title="Focus mode"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowFocusMode(true);
+                        }}
+                    >
+                        <PlayIcon size={16} className="text-gray-400" />
+                    </button>
+                )
+            }
               <p
                 className={`p-1 px-3 font-medium rounded-full text-[10px] w-fit ${color.bg} ${color.text}`}
               >
@@ -220,6 +240,10 @@ function TodoCard(task: TodoCardProps) {
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
       />
+
+      {showFocusMode && (
+        <FocusMode task={task} setOpen={(open) => !open && setShowFocusMode(false)} />
+      )}
 
       {showDeleteConfirmation && (
         <Confirmationmessage

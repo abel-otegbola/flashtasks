@@ -5,6 +5,8 @@ import SwipeDeleteItem from "../ui/swipeDeleteItem";
 import Confirmationmessage from "../modals/confirmation";
 import { useState, type DragEvent } from "react";
 import { formatDeliveredTime } from "../../helpers/messageTime";
+import { PlayIcon } from "@phosphor-icons/react";
+import FocusMode from "../focusMode/focusMode";
 
 type Props = {
     task: todo;
@@ -20,10 +22,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     const { updateTask, deleteTask } = useTasks();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
-
-    const handleToggleComplete = async (checked: boolean) => {
-        await updateTask(task.$id, { status: checked ? 'completed' : 'pending' });
-    };
+    const [startPomodoro, setStartPomodoro] = useState<todo | null>(null);
 
   return (
     <>
@@ -39,6 +38,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     <SwipeDeleteItem 
         onSwipeLeft={() => setShowDeleteConfirm(true)} 
         onSwipeRight={() => updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' }) }
+        onLongPress={() => setStartPomodoro(task)}
         className={`relative flex flex-col overflow-hidden transition-all cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
     >
     <div className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark-bg/[0.6]'}`}
@@ -63,13 +63,27 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
         }}
     >
         <div className="flex items-start md:items-center p-4 pr-0 md:col-span-1">
-            <TaskCheckbox
-                checked={task.status === 'completed'}
-                onCheckedChange={(checked) => {
-                    void handleToggleComplete(checked);
-                }}
-                ariaLabel={`Mark ${task.title} as completed`}
-            />
+            {
+                task.status === 'completed' ? (
+                    <TaskCheckbox
+                        ariaLabel="completed"
+                        checked={true}
+                        onCheckedChange={() => {}}
+                    />
+                ) : (
+                    <button
+                        className=""
+                        aria-label="Start Pomodoro for task"
+                        title="Focus mode"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setStartPomodoro(task);
+                        }}
+                    >
+                        <PlayIcon size={16} className="text-gray-400" />
+                    </button>
+                )
+            }
         </div>
         <div 
             key={task.$id}
@@ -117,6 +131,12 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     
     </div>
     </SwipeDeleteItem>
+
+    {
+        startPomodoro && (
+            <FocusMode task={startPomodoro} setOpen={(open) => !open && setStartPomodoro(null)} />
+        )
+    }
     
     </>
     )
