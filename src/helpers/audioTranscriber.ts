@@ -47,6 +47,40 @@ export function useRealtimeTranscription({
     timerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000);
   };
 
+// Normalize & dedupe transcript text while preserving order.
+function dedupeTranscript(text: string): string {
+  if (!text) return text;
+
+  // Split into candidate fragments by sentence punctuation or newlines
+  const fragments = text
+    .split(/(?:\n|(?<=[.!?])\s+)/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const seen = new Set<string>();
+  const out: string[] = [];
+
+  for (const frag of fragments) {
+    // Normalize: collapse whitespace, lowercase, strip leading/trailing punctuation
+    const norm = frag
+      .replace(/[\u2018\u2019\u201C\u201D]/g, '"')
+      .replace(/[\p{P}\p{S}]+/gu, '') // remove punctuation/symbols for comparison
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    if (!norm) continue;
+    if (seen.has(norm)) continue;
+    seen.add(norm);
+    out.push(frag);
+  }
+
+  // Join using a single space for short fragments or newline when fragments are longer
+  if (out.length === 0) return '';
+  if (out.length === 1) return out[0];
+  return out.join(' ');
+}
+
   const stopTimer = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -212,8 +246,10 @@ export function useRealtimeTranscription({
 
             transcript = (transcript || "").trim();
 
+            // Deduplicate repeated fragments that some STT backends emit
             if (transcript) {
-              resolve(transcript);
+              const deduped = dedupeTranscript(transcript);
+              resolve(deduped);
               return;
             }
             // if empty, fall through to local fallback
