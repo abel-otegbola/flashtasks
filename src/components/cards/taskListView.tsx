@@ -113,7 +113,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
                     {task.category}
                 </span>
             </div>
-            <div className="md:col-span-2 md:flex hidden items-center md:justify-start">
+            <div className="md:col-span-2 md:flex hidden items-center md:justify-start text-nowrap">
                 <span className={`text-xs px-2 py-1 rounded-full ${
                     task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                     task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :

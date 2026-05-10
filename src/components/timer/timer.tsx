@@ -82,7 +82,7 @@ export default function Timer({ onClose }: TimerProps) {
           width="260"
           height="260"
           viewBox="0 0 260 260"
-          className="absolute -top-8 -left-8"
+          className="absolute -top-6 -left-6"
         >
           {/* Background circle */}
           <circle

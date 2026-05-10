@@ -107,41 +107,89 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
     // Clean up previous
     cleanup();
 
-    // Split text
-    splitTextRef.current = new SplitText(textRef.current, {
-      type: 'words',
-      wordsClass: 'word',
-    });
+    // Split text safely after fonts load to avoid SplitText warning
+    const startSplit = () => {
+      if (!textRef.current) return;
 
-    const words = splitTextRef.current.words;
-    const initialState = getInitialState();
+      splitTextRef.current = new SplitText(textRef.current, {
+        type: 'words',
+        wordsClass: 'word',
+      });
 
-    // Set initial state
-    gsap.set(words, {
-      opacity: 0,
-      filter: `blur(${blurAmount}px)`,
-      ...initialState,
-    });
+      const words = splitTextRef.current.words;
+      const initialState = getInitialState();
 
-    // Create timeline
-    timelineRef.current = gsap.timeline({ delay });
+      // Set initial state
+      gsap.set(words, {
+        opacity: 0,
+        filter: `blur(${blurAmount}px)`,
+        ...initialState,
+      });
 
-    timelineRef.current.to(words, {
-      opacity: 1,
-      filter: 'blur(0px)',
-      x: 0,
-      y: 0,
-      scale: 1,
-      duration,
-      ease: preset === 'zoom' ? 'back.out(1.7)' : 'expo.out',
-      stagger: {
-        each: stagger,
-        from: 'start',
-      },
-      onComplete: () => {
-        hasAnimatedRef.current = true;
-      },
-    });
+      // Create timeline
+      timelineRef.current = gsap.timeline({ delay });
+
+      timelineRef.current.to(words, {
+        opacity: 1,
+        filter: 'blur(0px)',
+        x: 0,
+        y: 0,
+        scale: 1,
+        duration,
+        ease: preset === 'zoom' ? 'back.out(1.7)' : 'expo.out',
+        stagger: {
+          each: stagger,
+          from: 'start',
+        },
+        onComplete: () => {
+          hasAnimatedRef.current = true;
+        },
+      });
+
+      // Check if element is already in viewport
+      const isInViewport = () => {
+        if (!textRef.current) return false;
+        const rect = textRef.current.getBoundingClientRect();
+        const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+        return rect.top <= windowHeight * 0.9 && rect.bottom >= 0;
+      };
+
+      // Add scroll trigger if enabled
+      if (!disableScrollTriggerForViewport && timelineRef.current) {
+        if (isInViewport()) {
+          // Element already visible, play immediately
+          timelineRef.current.play();
+        } else {
+          // Element not visible, wait for scroll
+          scrollTriggerRef.current = ScrollTrigger.create({
+            trigger: textRef.current,
+            start: 'top 90%',
+            end: 'bottom 10%',
+            toggleActions: 'play none none none',
+            animation: timelineRef.current,
+            once: true,
+          });
+        }
+      } else if (timelineRef.current) {
+        // If scroll trigger disabled, play immediately
+        timelineRef.current.play();
+      }
+    };
+
+    // Wait for document fonts to be ready when available to avoid SplitText warnings
+    if (typeof document !== 'undefined' && (document as any).fonts && (document as any).fonts.ready) {
+      (document as any).fonts.ready.then(() => {
+        if (!textRef.current) return;
+        startSplit();
+      }).catch(() => {
+        // In case fonts.ready rejects for some reason, still attempt to start
+        if (!textRef.current) return;
+        startSplit();
+      });
+    } else {
+      // No FontFaceSet available (older browsers or SSR), just start immediately
+      startSplit();
+    }
 
     // Check if element is already in viewport
     const isInViewport = () => {

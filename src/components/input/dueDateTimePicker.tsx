@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { formatDateTime } from '../../helpers/dateTime';
 import Calendar from 'react-calendar';
 import { Calendar as CalendarIcon, XIcon } from '@phosphor-icons/react';
 import Input from './input';
@@ -119,7 +120,7 @@ export default function DueDateTimePicker({
       >
         <span className="flex items-center gap-2">
           <CalendarIcon size={16} />
-          <span>{selectedDate.toLocaleDateString()} at {timePart || '00:00'}</span>
+          <span>{formatDateTime(selectedDate, { year: 'numeric', month: 'short', day: 'numeric' })} at {timePart || '00:00'}</span>
         </span>
         <span className="text-xs text-gray-500 dark:text-gray-400">Choose</span>
       </button>

@@ -1,3 +1,4 @@
+import React, { lazy, Suspense } from 'react'
 import useTheme from '../../../customHooks/useTheme'
 import { useUser } from '../../../context/authContext'
 import Button from "../../../components/button/button"
@@ -7,9 +8,10 @@ import { CalendarIcon, GridFourIcon, GridNineIcon, LightningIcon, UsersIcon } fr
 import { ArrowRightUp, Microphone } from '@solar-icons/react';
 import FaqSection from '../../../components/faqs/faqs';
 import Animate from '../../../components/animations/animate';
-import TodoCard from '../../../components/cards/todoCard';
+const TodoCard = lazy(() => import('../../../components/cards/todoCard'));
 import { todo } from '../../../interface/todo';
-import TaskListView from '../../../components/cards/taskListView';
+const TaskListView = lazy(() => import('../../../components/cards/taskListView'));
+import HeroArrowIcon from '../../../assets/icons/heroArrow';
 
 function Home() {
   const { user } = useUser();
@@ -27,9 +29,9 @@ function Home() {
             <BlurReveal preset="slide-up"  delay={0.2}><h1>Get tasks done</h1></BlurReveal>
 
               <h1 className="flex sm:flex-row flex-wrap justify-center gap-2 items-center">
-                Faster and more<span className="underline decoration-[#22FF7E]">Efficiently</span>
+                Faster and more<span className="underline decoration-primary">Efficiently</span>
               </h1>
-            <img src="/arrow.svg" alt="sparkle" width={200} height={64} className="md:block hidden absolute top-0 -right-24" />
+            <HeroArrowIcon className="text-primary md:block hidden absolute top-0 -right-24" />
           </div>
           <div className="text-gray dark:text-gray-300 mb-6">
             <BlurReveal preset="slide-up" delay={0.2} duration={2}>Efficiently manage your tasks and boost productivity</BlurReveal>
@@ -55,13 +57,13 @@ function Home() {
         
         <div className="flex flex-col justify-center items-center py-[60px] p-4 md:w-[65%] w-full">
           <Animate preset="zoomIn" duration={2} className='shadow-lg md:rounded-[24px] rounded w-full flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.7] md:p-4 p-1'>
-            <video autoPlay loop muted playsInline className="w-full h-full md:rounded-[16px] rounded-[8px] border border-gray-500/[0.07]">
+            <video preload="none" autoPlay loop muted playsInline className="w-full h-full md:rounded-[16px] rounded-[8px] border border-gray-500/[0.07]">
               <source src={`/hero-video-${theme === 'dark' ? 'dark' : 'light'}.webm`} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </Animate>
           <BlurReveal preset="slide-up"><h2 className="font-medium mt-20 mb-4 text-center">Join 500+ teams saving 10+ hours/week of quality time</h2></BlurReveal>
-          <img src="/users.png" alt="users" width={240} height={64} className="" />
+          <img src="/users.png" alt="users" width={240} height={64} loading="lazy" className="" />
         </div>
         
       </header>
@@ -142,23 +144,23 @@ function Home() {
 
       <section className="flex flex-col gap-10 lg:px-[6%] md:px-[3%] p-4">
 
-        <div className="relative flex md:flex-nowrap items-end flex-wrap w-full gap-8 bg-gray-100 dark:bg-dark/[0.4] rounded-lg md:pl-[6%] p-12 pb-0">
-          <div className="flex flex-col justify-between gap-8 md:w-[45%] py-[6%]">
+        <div className="relative flex lg:flex-nowrap items-end flex-wrap w-full gap-8 bg-gray-100 dark:bg-dark/[0.4] rounded-lg md:pl-[6%] p-12 pb-0">
+          <div className="flex flex-col justify-between gap-8 lg:w-[45%] py-[6%]">
             <BlurReveal preset="slide-up" className="font-medium flex items-center gap-2 w-fit border border-gray-500/[0.2] rounded-full px-6 py-2">
               <Microphone />
               Voice to tasks
             </BlurReveal>
 
-            <BlurReveal preset="slide-up"><p className="sm:text-[40px] text-[32px] md:leading-[60px] sm:leading-[56px] leading-[40px]">Convert your spoken words into actionable tasks seamlessly</p></BlurReveal>
+            <BlurReveal preset="slide-up"><p className="lg:text-[40px] text-[32px] lg:leading-[60px] sm:leading-[56px] leading-[40px]">Convert your spoken words into actionable tasks seamlessly</p></BlurReveal>
 
             <Button href="/auth/signup" variant="primary" className="">
               <BlurReveal preset="slide-up">Learn more</BlurReveal>
             </Button>
           </div>
 
-          <div className="flex-1 flex items-end h-full justify-center">
+          <div className="flex-1 flex items-end lg:w-[35%] h-full justify-center">
             <Animate preset="fadeIn" duration={2} delay={0.6}>
-              <div className='rounded-t-lg sm:w-[600px] w-[100%] h-auto flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.7] md:p-3 p-1'>
+              <div className='rounded-t-lg lg:w-[500px]  w-full h-auto flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.7] md:p-3 p-1'>
                 <video autoPlay loop muted playsInline className="w-full h-full md:rounded-[10px] rounded-[8px] border border-gray-500/[0.07]">
                   <source src={`/voice-to-tasks-${theme === 'dark' ? 'dark' : 'light'}.mp4`} type="video/mp4" />
                   Your browser does not support the video tag.
@@ -186,7 +188,7 @@ function Home() {
 
       </section>
 
-      <section className="flex flex-col gap-10 pt-20 pb-10 p-4 md:mx-[5%]" id="features">
+      <section className="flex flex-col gap-10 pt-20 pb-10 p-4 md:mx-[5%]" id="solutions">
         <div className="flex flex-col justify-center items-center mx-auto max-w-3xl gap-[19px] mb-10">
           <BlurReveal preset="slide-up" className="font-medium flex items-center gap-2 border border-gray-500/[0.2] rounded-full px-6 py-2">
             <GridFourIcon />
@@ -202,12 +204,14 @@ function Home() {
             <div className='flex flex-col gap-2 bg-gray-100 dark:bg-dark/[0.4] p-4'>
               {
                   ([
-                    { $id:"0", title: "Develop new features", description: "Need to research and implement new features", category: "dev", priority: "high", status: "pending", userId: "", userEmail: "", comments: "", $createdAt: "" },
-                    { $id:"1", title: "Review pull requests", description: "Review and provide feedback on pending pull requests", category: "review", priority: "medium", status: "completed", userId: "", userEmail: "", comments: "", $createdAt: "" },
-                    { $id:"2", title: "Update documentation", description: "Update user documentation with latest changes", category: "doc", priority: "low", status: "completed", userId: "", userEmail: "", comments: "", $createdAt: "" },
+                    { $id:"0", title: "Develop new features", description: "Research and implement AI-powered task prioritization algorithm", category: "Dev", priority: "high", status: "in progress", userId: "", userEmail: "abel15655@gmail.com", comments: "", $createdAt: "2026-05-01T09:00:00Z", dueDate: "2026-05-18T17:00:00Z" },
+                    { $id:"1", title: "Review pull requests", description: "Review and provide feedback on 3 pending pull requests from team", category: "Review", priority: "medium", status: "pending", userId: "", userEmail: "abel.d.otegbola@gmail.com", comments: "", $createdAt: "2026-05-03T10:30:00Z", dueDate: "2026-05-15T17:00:00Z" },
+                    { $id:"2", title: "Update documentation", description: "Update user guide and API documentation with latest v2.0 changes", category: "Doc", priority: "low", status: "completed", userId: "", userEmail: "abel15655@gmail.com", comments: "", $createdAt: "2026-04-28T14:00:00Z", dueDate: "2026-05-10T17:00:00Z" },
                   ] as todo[]).map((task: todo,index: number) => (
-                  <TaskListView key={task.$id} task={task} openTaskDetails={() => {}} index={index} />
-                ))  
+                    <Suspense key={task.$id} fallback={<div className="h-12 w-full bg-gray-200 animate-pulse rounded" />}>
+                      <TaskListView task={task} openTaskDetails={() => {}} index={index} />
+                    </Suspense>
+                  ))  
               }
             </div>
             <BlurReveal preset="slide-up"><h2 className="font-medium text-center">Organize projects and daily tasks effortlessly</h2></BlurReveal>
@@ -216,11 +220,13 @@ function Home() {
             <div className='flex sm:flex-row flex-col gap-2 bg-gray-100 dark:bg-dark/[0.4] p-4'>
               {
                   ([
-                    { $id:"1", title: "Update documentation", description: "Update user documentation with latest changes", category: "doc", priority: "low", status: "completed", userId: "", userEmail: "", comments: "", $createdAt: "", assignees: ["abel15655@gmail.com", "abel.d.otegbola@gmail.com"] },
-                    { $id:"2", title: "Update documentation", description: "Update user documentation with latest changes", category: "doc", priority: "low", status: "completed", userId: "", userEmail: "", comments: "", $createdAt: "", assignees: ["user@gmail.com", "user2@gmail.com"] },
+                    { $id:"3", title: "Prepare Q3 roadmap", description: "Create and present quarterly product roadmap to stakeholders", category: "Planning", priority: "high", status: "completed", userId: "", userEmail: "abel15655@gmail.com", comments: "", $createdAt: "2026-04-20T11:00:00Z", dueDate: "2026-05-08T17:00:00Z", assignees: ["abel15655@gmail.com", "product@company.com"] },
+                    { $id:"4", title: "Team sync meeting", description: "Weekly sync to discuss progress, blockers, and next week's priorities", category: "Meetings", priority: "medium", status: "pending", userId: "", userEmail: "abel.d.otegbola@gmail.com", comments: "", $createdAt: "2026-05-05T09:00:00Z", dueDate: "2026-05-12T10:00:00Z", assignees: ["abel.d.otegbola@gmail.com", "team2@company.com"] },
                   ] as todo[]).map((task: todo) => (
-                  <TodoCard key={task.$id} {...task} />
-                ))  
+                    <Suspense key={task.$id} fallback={<div className="h-20 w-full bg-gray-200 animate-pulse rounded" />}>
+                      <TodoCard {...task} />
+                    </Suspense>
+                  ))  
               }
             </div>
             <BlurReveal preset="slide-up"><h2 className="font-medium text-center">Collaborate with teams in real time</h2></BlurReveal>

@@ -9,6 +9,8 @@ import Confirmationmessage from "./confirmation";
 import EditTaskModal from "./editTaskModal";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
 import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
+import { formatDateTime } from "../../helpers/dateTime";
+import GetAvatar from "../../customHooks/useGetAvatar";
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
@@ -60,9 +62,9 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
     <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
       <div ref={modalRef} className="bg-white dark:bg-dark-bg shadow-xl w-[94%] max-w-2xl max-h-[80vh] border border-gray-500/[0.2] rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
+          <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="px-2 opacity-[0.7] leading-4">Created on {new Date(task.$createdAt).toLocaleDateString()}</h2>
+            <h2 className="px-2 opacity-[0.7] leading-4">Created on {formatDateTime(task.$createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -138,11 +140,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
                   Due Date
                 </label>
                 <p className="col-span-2 text-gray-700 dark:text-gray-300">
-                  {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  }) : 'No due date'}
+                  {task.dueDate ? formatDateTime(task.dueDate, { year: 'numeric', month: 'long', day: 'numeric' }) : 'No due date'}
                 </p>
               </div>
             </div>
@@ -158,23 +156,28 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           </div>
 
           {/* Organization / Team Display */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
-              Organization
-            </label>
-            <div>
-              {taskOrg ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{taskOrg.name}</span>
-                  {taskTeam && <span className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">{taskTeam.name}</span>}
-                </div>
-              ) : (
-                <div className="mt-2">Personal / No organization</div>
-              )}
+          {
+            taskOrg && (
+            <div className="flex flex-col gap-2">
+              <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
+                Organization
+              </label>
+              <div>
+                {taskOrg ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{taskOrg.name}</span>
+                    {taskTeam && <span className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">{taskTeam.name}</span>}
+                  </div>
+                ) : (
+                  <div className="mt-2">Personal / No organization</div>
+                )}
+              </div>
             </div>
-          </div>
+            )
+          }
 
           {/* Assignees Section */}
+          {task?.assignees &&task?.assignees?.length > 0 && (
           <div className="flex flex-col gap-2">
             <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
               Assignees
@@ -183,31 +186,36 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             {/* Assignees List */}
             <div className="space-y-2 ">
               {/* Main Assignee */}
-              {task.assignees && (
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-fuchsia-400 flex items-center justify-center text-white font-bold text-sm">
-                    {task?.assignees[0]?.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{task?.assignees[0]}</p>
+              {
+                task.assignees.map((assigneeEmail, index) => (
+                  <div className="flex items-center gap-3">
+                    <GetAvatar email={assigneeEmail} className="w-12 h-12" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{assigneeEmail}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Main Assignee</p>
                   </div>
                 </div>
-              )}
+                ))
+              }
 
               {!task.assignees && (!task.invites || task.invites.length === 0) && (
                 <p className="text-gray-500 dark:text-gray-400 text-sm italic">No assignees yet</p>
               )}
             </div>
           </div>
+          )}
 
           {/* Comments Count */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
-              Comments
-            </label>
-            <p className="">{task.comments || 0} comments</p>
-          </div>
+          {
+            task.comments !== "0" && (
+              <div className="flex flex-col gap-2">
+                <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
+                  Comments
+                </label>
+                <p className="">{task.comments} comments</p>
+              </div>
+            )
+          }
         </div>
 
         {/* Footer */}

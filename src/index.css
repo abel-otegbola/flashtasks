@@ -260,3 +260,15 @@ html[data-density="comfortable"] {
   border-radius: 4px;
   transition: background 0.2s ease;
 }
+
+.pagination .page-item .page-link {
+	display: block;
+	border-radius: 4px;
+	padding: 4px 8px;
+	margin: 0 2px;
+	transition: background-color 0.2s ease;
+}
+.pagination .page-item .page-link:hover, .pagination .page-item.active .page-link {
+	background-color: var(--color-primary);
+	color: white;
+}

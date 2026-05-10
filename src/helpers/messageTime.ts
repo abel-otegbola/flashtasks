@@ -6,6 +6,8 @@ const THREE_WEEKS_MS = 3 * WEEK_MS;
 
 type TimeDirection = "past" | "future";
 
+import { getStoredTimezone } from './appPreferences';
+
 function getOrdinal(day: number): string {
   const mod100 = day % 100;
 
@@ -26,11 +28,21 @@ function getOrdinal(day: number): string {
 }
 
 function formatLongDateWithOrdinal(date: Date): string {
-  const day = date.getDate();
-  const month = date.toLocaleString("en-US", { month: "long" });
-  const year = date.getFullYear();
+  const timeZone = getStoredTimezone();
 
-  return `${day}${getOrdinal(day)} ${month} ${year}`;
+  try {
+    const parts = new Intl.DateTimeFormat(undefined, { timeZone, day: 'numeric', month: 'long', year: 'numeric' }).formatToParts(date);
+    const dayStr = parts.find((p) => p.type === 'day')?.value || String(date.getDate());
+    const monthStr = parts.find((p) => p.type === 'month')?.value || date.toLocaleString(undefined, { month: 'long' });
+    const yearStr = parts.find((p) => p.type === 'year')?.value || String(date.getFullYear());
+    const day = Number(dayStr);
+    return `${day}${getOrdinal(day)} ${monthStr} ${yearStr}`;
+  } catch {
+    const day = date.getDate();
+    const month = date.toLocaleString("en-US", { month: "long" });
+    const year = date.getFullYear();
+    return `${day}${getOrdinal(day)} ${month} ${year}`;
+  }
 }
 
 export function formatDeliveredTime(
@@ -42,13 +54,12 @@ export function formatDeliveredTime(
 
   const parsedDate = new Date(dateTime);
   if (Number.isNaN(parsedDate.getTime())) return "";
-
   const now = referenceTime ?? Date.now();
   const timestamp = parsedDate.getTime();
-  const diff = Math.abs(now - timestamp);
-  const isFuture = direction === "future";
+  const absDiff = Math.abs(now - timestamp);
+  const isFuture = timestamp > now; // determine actual relation, ignore caller 'direction'
 
-  if (diff < MINUTE_MS) {
+  if (absDiff < MINUTE_MS) {
     if (isFuture) {
       return "soon";
     }
@@ -56,26 +67,26 @@ export function formatDeliveredTime(
     return "just now";
   }
 
-  if (diff < HOUR_MS) {
-    const minutes = Math.floor(diff / MINUTE_MS);
+  if (absDiff < HOUR_MS) {
+    const minutes = Math.floor(absDiff / MINUTE_MS);
     const unit = minutes === 1 ? "minute" : "minutes";
     return isFuture ? `in ${minutes} ${unit}` : `${minutes} ${unit} ago`;
   }
 
-  if (diff < DAY_MS) {
-    const hours = Math.floor(diff / HOUR_MS);
+  if (absDiff < DAY_MS) {
+    const hours = Math.floor(absDiff / HOUR_MS);
     const unit = hours === 1 ? "hour" : "hours";
     return isFuture ? `in ${hours} ${unit}` : `${hours} ${unit} ago`;
   }
 
-  if (diff < WEEK_MS) {
-    const days = Math.floor(diff / DAY_MS);
+  if (absDiff < WEEK_MS) {
+    const days = Math.floor(absDiff / DAY_MS);
     const unit = days === 1 ? "day" : "days";
     return isFuture ? `in ${days} ${unit}` : `${days} ${unit} ago`;
   }
 
-  if (diff <= THREE_WEEKS_MS) {
-    const weeks = Math.floor(diff / WEEK_MS);
+  if (absDiff <= THREE_WEEKS_MS) {
+    const weeks = Math.floor(absDiff / WEEK_MS);
     const unit = weeks === 1 ? "week" : "weeks";
     return isFuture ? `in ${weeks} ${unit}` : `${weeks} ${unit} ago`;
   }

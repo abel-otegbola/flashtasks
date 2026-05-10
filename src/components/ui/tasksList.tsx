@@ -5,6 +5,7 @@ import SwipeDeleteItem from './swipeDeleteItem';
 import { useState } from 'react';
 import Confirmationmessage from '../modals/confirmation';
 import FocusMode from '../focusMode/focusMode';
+import { formatDateTime } from '../../helpers/dateTime';
 import { shouldConfirmBeforeDeletingTasks } from '../../helpers/appPreferences';
 
 type Props = {
@@ -71,8 +72,8 @@ const TasksList = ({ tasks }: Props) => {
                     </div>
 
                     <div className="mt-3 flex gap-2 text-[12px] text-gray-500">
-                      <div className="px-2 py-1 bg-gray-100 dark:bg-dark rounded">Created: {new Date(task.$createdAt).toLocaleString()}</div>
-                      {task.dueDate && <div className="px-2 py-1 bg-gray-100 dark:bg-dark rounded">Due: {new Date(task.dueDate).toLocaleString()}</div>}
+                      <div className="px-2 py-1 bg-gray-100 dark:bg-dark rounded">Created: {formatDateTime(task.$createdAt)}</div>
+                      {task.dueDate && <div className="px-2 py-1 bg-gray-100 dark:bg-dark rounded">Due: {formatDateTime(task.dueDate)}</div>}
                     </div>
                   </div>
                 </div>

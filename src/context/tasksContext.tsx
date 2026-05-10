@@ -13,7 +13,7 @@ type TasksContextValues = {
     addTask: (task: Omit<todo, '$id' | 'id' | '$createdAt'>) => Promise<todo | null>;
     addMultipleTasks: (tasks: Omit<todo, '$id' | 'id' | '$createdAt'>[]) => Promise<todo[] | null>;
     updateTask: (taskId: string, updates: Partial<todo>) => Promise<todo | null>;
-    deleteTask: (taskId: string) => Promise<boolean>;
+    deleteTask: (taskId: string) => Promise<void>;
     getTasks: (userEmail: string) => Promise<void>;
     getOrganizationTasks: (orgId: string) => Promise<void>;
     getTaskById: (taskId: string) => todo | undefined;
@@ -238,7 +238,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     };
 
     // Delete a task
-    const deleteTask = async (taskId: string): Promise<boolean> => {
+    const deleteTask = async (taskId: string): Promise<void> => {
         setError(null);
         
         try {
@@ -252,12 +252,12 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
 
             // delete from index
             await indexTask('delete', taskId);
-            return true;
+            return;
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to delete task';
             setError(errorMessage);
             toast.error(errorMessage);
-            return false;
+            return;
         } finally {
         }
     };
