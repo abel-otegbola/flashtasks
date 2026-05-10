@@ -7,6 +7,8 @@ import Input from '../../../components/input/input';
 import ThemeSelector from '../../../components/themeSelector/themeSelector';
 import toast from 'react-hot-toast';
 import { changePasswordSchema, settingsSchema } from '../../../schema/settingsSchema';
+import GetAvatar from '../../../customHooks/useGetAvatar';
+import { Camera } from '@solar-icons/react';
 
 const accentOptions = [
   { label: 'Green', value: '#45b44b' },
@@ -64,7 +66,6 @@ export default function SettingsPage() {
       });
 
       setSelectedPhoto(null);
-      window.location.reload();
     } catch (err: any) {
       console.error('Failed to update profile', err);
       toast.error(err?.message || 'Failed to update profile');
@@ -110,27 +111,32 @@ export default function SettingsPage() {
           <div className="max-w-2xl mx-auto py-10">
             <div className="mb-6 flex items-center gap-4  border border-gray-500/[0.2] rounded-xl p-6">
               {previewUrl ? (
+                <div className='relative'>
                 <img
                   src={previewUrl}
                   alt="Profile"
                   className="w-16 h-16 rounded-full object-cover border border-gray-200 dark:border-gray-500/[0.2]"
                 />
+                  <label htmlFor="profile_image" className='absolute -bottom-2 -right-1 cursor-pointer border border-gray-200 dark:border-gray-500/[0.2] rounded-full p-1 bg-white dark:bg-gray-800'><Camera size={16} /></label>
+                </div>
               ) : (
-                <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/[0.08] border border-gray-200 dark:border-gray-500/[0.2] flex items-center justify-center text-xl font-semibold text-gray-500">
-                  {initials}
+                <div className='relative'>
+                  <GetAvatar email={user?.email} className='w-16 h-16' />
+                  <label htmlFor="profile_image" className='absolute -bottom-2 -right-1 cursor-pointer border border-gray-200 dark:border-gray-500/[0.2] rounded-full p-1 bg-white dark:bg-gray-800'><Camera size={16} /></label>
                 </div>
               )}
 
-              <div className="flex-1">
-                <label className="text-sm text-gray-600 block mb-1">Profile photo</label>
+              <label htmlFor="profile_image" className="flex-1">
+                <span className="text-sm text-gray-600 block mb-1">Profile photo</span>
                 <input
                   type="file"
                   accept="image/*"
+                  id='profile_image'
                   onChange={handlePhotoSelect}
-                  className="block w-full text-sm text-gray-600 dark:text-gray-300 file:mr-4 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:opacity-90"
+                  className="hidden w-full text-sm text-gray-600 dark:text-gray-300 file:mr-4 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:opacity-90"
                 />
                 <p className="text-xs text-gray-400 mt-1">PNG, JPG, or WebP. The image is uploaded to Cloudinary.</p>
-              </div>
+              </label>
             </div>
             <Formik
               initialValues={{ name: initialName }}

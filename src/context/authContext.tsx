@@ -240,7 +240,23 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             const currentUser = await account.get();
 
             if (name && name !== currentUser.name) {
-                await account.updateName(name);
+                
+                const promise = tablesDB.listRows({
+                    databaseId: import.meta.env.VITE_APPWRITE_USERS_DATABASE_ID || 'YOUR_DATABASE_ID',
+                    tableId: import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
+                });
+                promise.then(async function (res) { // 1️⃣ Check if username already exists
+                    if(res.rows.map(r => r.name.toLowerCase()).includes(name.toLowerCase())) {
+                        setPopup({ type: "error", msg: "Username already exists" })
+                        setLoading(false)
+                        return;
+                    }
+                    else await account.updateName(name);
+                }, function (error) {
+                    console.log(error);
+                    setLoading(false)
+                    return;
+                });
             }
 
             const refreshed = await account.get();
@@ -267,6 +283,8 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                     rowId: existing.$id,
                     data: rowData,
                 });
+                
+                setPopup({ type: 'success', msg: 'Profile updated' });
             } else {
                 await tablesDB.createRow({
                     databaseId: DATABASE_ID,
@@ -274,11 +292,11 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                     rowId: refreshed.$id,
                     data: rowData,
                 });
+                    setPopup({ type: 'success', msg: 'Profile updated' });
             }
 
             setUser(refreshed);
             try { localStorage.setItem('user', JSON.stringify(refreshed)); } catch {}
-            setPopup({ type: 'success', msg: 'Profile updated' });
         } catch (error: any) {
             console.error('Failed to update profile', error);
             setPopup({ type: 'error', msg: error?.message || 'Failed to update profile' });
