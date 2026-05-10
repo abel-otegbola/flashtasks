@@ -23,7 +23,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ isVisible }) => {
 
             {/* Logo */}
             <div className="relative z-10 flex items-center justify-center w-16 h-16 bg-white dark:bg-dark-bg rounded-full shadow-lg">
-              <LogoIcon className="w-8 h-8 text-primary" />
+              <LogoIcon className="w-8 h-8" />
             </div>
           </div>
         </div>
