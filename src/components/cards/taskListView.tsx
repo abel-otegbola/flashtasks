@@ -7,6 +7,7 @@ import { useState, type DragEvent } from "react";
 import { formatDeliveredTime } from "../../helpers/messageTime";
 import { PlayIcon } from "@phosphor-icons/react";
 import FocusMode from "../focusMode/focusMode";
+import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 
 type Props = {
     task: todo;
@@ -23,6 +24,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const [startPomodoro, setStartPomodoro] = useState<todo | null>(null);
+    const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
 
   return (
     <>
@@ -36,7 +38,14 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
         />
     )}
     <SwipeDeleteItem 
-        onSwipeLeft={() => setShowDeleteConfirm(true)} 
+        onSwipeLeft={() => {
+            if (confirmBeforeDelete) {
+                setShowDeleteConfirm(true);
+                return;
+            }
+
+            void deleteTask(task.$id);
+        }} 
         onSwipeRight={() => updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' }) }
         onLongPress={() => setStartPomodoro(task)}
         className={`relative flex flex-col overflow-hidden transition-all cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}

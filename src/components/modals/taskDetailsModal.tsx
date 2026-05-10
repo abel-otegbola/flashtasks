@@ -8,6 +8,7 @@ import { TrashIcon, XIcon } from "@phosphor-icons/react";
 import Confirmationmessage from "./confirmation";
 import EditTaskModal from "./editTaskModal";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
+import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   const { deleteTask } = useTasks();
   const { organizations } = useOrganizations();
   const modalRef = useOutsideClick(onClose, false);
+  const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
 
   // determine user's role in the task's organization (if any)
   const taskOrg = organizations.find(o => o.$id === (task as any).organizationId);
@@ -71,7 +73,14 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
               <PenNewSquare size={16} />
             </button>
             <button
-              onClick={() => setShowDeleteConfirmation(true)}
+              onClick={() => {
+                if (confirmBeforeDelete) {
+                  setShowDeleteConfirmation(true);
+                  return;
+                }
+
+                void handleDelete();
+              }}
               className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
               title="Delete Task"
             >

@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Formik, Form, ErrorMessage } from 'formik';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../../context/authContext';
 import Button from '../../../components/button/button';
 import Input from '../../../components/input/input';
@@ -9,6 +10,15 @@ import toast from 'react-hot-toast';
 import { changePasswordSchema, settingsSchema } from '../../../schema/settingsSchema';
 import GetAvatar from '../../../customHooks/useGetAvatar';
 import { Camera } from '@solar-icons/react';
+import {
+  APP_PREFERENCE_KEYS,
+  DEFAULT_LANDING_PAGE_OPTIONS,
+  getDefaultLandingPage,
+  getStoredTimezone,
+  getTimezoneOptions,
+  setStoredPreference,
+  shouldConfirmBeforeDeletingTasks,
+} from '../../../helpers/appPreferences';
 
 const accentOptions = [
   { label: 'Green', value: '#45b44b' },
@@ -19,7 +29,8 @@ const accentOptions = [
 ];
 
 export default function SettingsPage() {
-  const { user, updateProfile, updateAvatar, changePassword, loading } = useUser();
+  const { user, updateProfile, updateAvatar, changePassword, loading, logOut } = useUser();
+  const navigate = useNavigate();
   const initialName = String((user as any)?.name || '');
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
@@ -28,6 +39,9 @@ export default function SettingsPage() {
   const [selectedTab, setSelectedTab] = useState('General');
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('accentColor') || '#45b44b');
   const [compactMode, setCompactMode] = useState(() => localStorage.getItem('compactMode') === 'true');
+  const [timezone, setTimezone] = useState(() => getStoredTimezone());
+  const [defaultLandingPage, setDefaultLandingPage] = useState(() => getDefaultLandingPage());
+  const [confirmBeforeDelete, setConfirmBeforeDelete] = useState(() => shouldConfirmBeforeDeletingTasks());
 
   useEffect(() => {
     const root = document.documentElement;
@@ -40,6 +54,18 @@ export default function SettingsPage() {
     root.setAttribute('data-density', compactMode ? 'compact' : 'comfortable');
     localStorage.setItem('compactMode', String(compactMode));
   }, [compactMode]);
+
+  useEffect(() => {
+    setStoredPreference(APP_PREFERENCE_KEYS.timezone, timezone);
+  }, [timezone]);
+
+  useEffect(() => {
+    setStoredPreference(APP_PREFERENCE_KEYS.defaultLandingPage, defaultLandingPage);
+  }, [defaultLandingPage]);
+
+  useEffect(() => {
+    setStoredPreference(APP_PREFERENCE_KEYS.confirmBeforeDeletingTasks, String(confirmBeforeDelete));
+  }, [confirmBeforeDelete]);
 
   const readFileAsDataUrl = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -105,7 +131,82 @@ export default function SettingsPage() {
         }
         </div>
       <div className="mt-6">
-        {selectedTab === "General" && null}
+          {selectedTab === "General" && (
+            <div className="max-w-2xl mx-auto grid gap-6">
+              <div className="border border-gray-500/[0.2] rounded-xl p-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-medium">General</h3>
+                  <p className="text-sm text-gray-500">Keep only essential app preferences.</p>
+                </div>
+
+                <div className="grid gap-5">
+                  <div>
+                    <label className="text-sm text-gray-600 block mb-2">Timezone</label>
+                    <select
+                      value={timezone}
+                      onChange={(event) => setTimezone(event.target.value)}
+                      className="w-full rounded-lg border border-gray-500/[0.2] bg-white dark:bg-dark-bg px-3 py-2 text-sm outline-none focus:border-primary"
+                    >
+                      {getTimezoneOptions().map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-600 block mb-2">Default landing page</label>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      {DEFAULT_LANDING_PAGE_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setDefaultLandingPage(option.value)}
+                          className={`rounded-lg border px-4 py-3 text-left transition-colors ${defaultLandingPage === option.value ? 'border-primary bg-primary/5 text-primary' : 'border-gray-500/[0.2] hover:border-gray-400'}`}
+                        >
+                          <div className="font-medium">{option.label}</div>
+                          <div className="text-xs text-gray-500">Opens {option.label.toLowerCase()} first</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-500/[0.2] p-4">
+                    <div>
+                      <label className="text-sm text-gray-600 block mb-1">Confirm before deleting tasks</label>
+                      <p className="text-xs text-gray-400">Turn this off to delete tasks immediately from swipe actions and task menus.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmBeforeDelete((current) => !current)}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${confirmBeforeDelete ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
+                      aria-pressed={confirmBeforeDelete}
+                    >
+                      <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${confirmBeforeDelete ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-500/[0.2] p-4">
+                    <div>
+                      <label className="text-sm text-gray-600 block mb-1">Logout</label>
+                      <p className="text-xs text-gray-400">End your current session on this device.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={async () => {
+                        await logOut();
+                        navigate('/auth/waitlist');
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         {
           selectedTab === "Profile" && 
           <div className="max-w-2xl mx-auto py-10">

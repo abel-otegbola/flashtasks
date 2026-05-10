@@ -14,6 +14,7 @@ import FocusMode from "../focusMode/focusMode";
 import { formatDeliveredTime } from "../../helpers/messageTime";
 import GetAvatar from "../../customHooks/useGetAvatar";
 import { PlayIcon } from "@phosphor-icons/react";
+import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -34,6 +35,7 @@ function TodoCard(task: TodoCardProps) {
   const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { deleteTask, updateTask } = useTasks();
+  const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
 
   const statusColors: Record<
     string,
@@ -86,7 +88,14 @@ function TodoCard(task: TodoCardProps) {
     <>
       <SwipeDeleteItem
         className={`relative flex flex-col overflow-hidden transition-all cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
-        onSwipeLeft={() => setShowDeleteConfirmation(true)}
+        onSwipeLeft={() => {
+          if (confirmBeforeDelete) {
+            setShowDeleteConfirmation(true);
+            return;
+          }
+
+          void deleteTask(task.$id);
+        }}
         onSwipeRight={() => updateTask(task.$id, { status: status === 'completed' ? 'pending' : 'completed' }) }
         onLongPress={() => setShowFocusMode(true)}
       >
@@ -179,7 +188,13 @@ function TodoCard(task: TodoCardProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowDeleteConfirmation(true);
+                      if (confirmBeforeDelete) {
+                        setShowDeleteConfirmation(true);
+                        setOpenMenu(false);
+                        return;
+                      }
+
+                      void deleteTask(task.$id);
                       setOpenMenu(false);
                     }}
                     className="flex items-center gap-2 w-full text-left text-sm p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500"

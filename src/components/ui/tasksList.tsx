@@ -5,6 +5,7 @@ import SwipeDeleteItem from './swipeDeleteItem';
 import { useState } from 'react';
 import Confirmationmessage from '../modals/confirmation';
 import FocusMode from '../focusMode/focusMode';
+import { shouldConfirmBeforeDeletingTasks } from '../../helpers/appPreferences';
 
 type Props = {
   tasks: todo[];
@@ -35,7 +36,19 @@ const TasksList = ({ tasks }: Props) => {
 
             <div className="space-y-3">
               {dayTasks.map((task, index) => (
-                <SwipeDeleteItem key={task.$id || index} onSwipeLeft={() => setTaskToDelete(task)} onLongPress={() => setFocusModeTask(task)} className="rounded-lg">
+                <SwipeDeleteItem
+                  key={task.$id || index}
+                  onSwipeLeft={() => {
+                    if (shouldConfirmBeforeDeletingTasks()) {
+                      setTaskToDelete(task);
+                      return;
+                    }
+
+                    void deleteTask(task.$id);
+                  }}
+                  onLongPress={() => setFocusModeTask(task)}
+                  className="rounded-lg"
+                >
                 <div className="flex items-center gap-4 p-3 bg-white dark:bg-[#0f0f0f] rounded-lg border border-gray-100 dark:border-gray-500/[0.2]">
                   <TaskCheckbox
                     checked={task.status === 'completed'}

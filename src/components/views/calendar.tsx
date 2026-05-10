@@ -2,11 +2,13 @@ import { useState } from "react";
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
 import TaskCheckbox from "../ui/taskCheckbox";
 import FocusMode from "../focusMode/focusMode";
+import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 
 
-export default function Calendar({ tasks, openTaskDetails, handleQuickComplete, setTaskToDelete }: { tasks: any[]; openTaskDetails: (task: any) => void; handleQuickComplete: (taskId: string, checked: boolean) => void; setTaskToDelete: (task: any) => void }) {
+export default function Calendar({ tasks, openTaskDetails, handleQuickComplete, setTaskToDelete, deleteTask }: { tasks: any[]; openTaskDetails: (task: any) => void; handleQuickComplete: (taskId: string, checked: boolean) => void; setTaskToDelete: (task: any) => void; deleteTask: (taskId: string) => Promise<void> | void }) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [focusModeTask, setFocusModeTask] = useState<any | null>(null);
+    const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
 
     // Calendar helper functions
     const getDaysInMonth = (date: Date) => {
@@ -98,7 +100,14 @@ export default function Calendar({ tasks, openTaskDetails, handleQuickComplete, 
                                 {tasksForDay.slice(0, 3).map(task => (
                                     <SwipeDeleteItem
                                         key={task.$id}
-                                        onSwipeLeft={() => setTaskToDelete(task)}
+                                        onSwipeLeft={() => {
+                                            if (confirmBeforeDelete) {
+                                                setTaskToDelete(task);
+                                                return;
+                                            }
+
+                                            void deleteTask(task.$id);
+                                        }}
                                         onLongPress={() => setFocusModeTask(task)}
                                         className="rounded"
                                     >

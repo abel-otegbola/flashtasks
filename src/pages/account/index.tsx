@@ -18,6 +18,7 @@ import Notifications from "./notifications";
 import { getGravatar } from "../../helpers/getGravatar";
 import useGetAvatar from "../../customHooks/useGetAvatar";
 import GetAvatar from "../../customHooks/useGetAvatar";
+import { resolveAccountLandingPath } from "../../helpers/appPreferences";
 
 function AccountPages() {
     const { user } = useUser();
@@ -62,7 +63,7 @@ function AccountPages() {
                 </div>
             </div>
             <Routes>
-                <Route path="/" element={<Navigate to={"/account/dashboard"} />} />
+                <Route path="/" element={<Navigate to={resolveAccountLandingPath()} replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/organizations" element={<Organizations />} />

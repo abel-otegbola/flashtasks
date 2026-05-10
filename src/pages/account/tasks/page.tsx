@@ -311,7 +311,7 @@ function Tasks() {
 
             {/* Calendar View */}
             {viewMode === 'calendar' && (
-                <Calendar tasks={sortedTasks} openTaskDetails={openTaskDetails} handleQuickComplete={handleQuickComplete} setTaskToDelete={setTaskToDelete} />
+                <Calendar tasks={sortedTasks} openTaskDetails={openTaskDetails} handleQuickComplete={handleQuickComplete} setTaskToDelete={setTaskToDelete} deleteTask={deleteTask} />
             )}
         </div>
 
