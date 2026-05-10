@@ -9,7 +9,6 @@ import { useTasks } from "../../../context/tasksContext";
 import { useUser } from "../../../context/authContext";
 import { extractTasksFromText } from "../../../helpers/voiceTaskExtractor";
 import { useRealtimeTranscription } from "../../../helpers/audioTranscriber";
-import TaskListView from "../../../components/cards/taskListView";
 import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
 import {
   mapExtractedToTodo,
@@ -36,37 +35,35 @@ function CreateTask() {
   const userRole = ((user as any)?.prefs?.role as string) || "free";
   const maxRecordingTime = getMaxRecordingTime(userRole);
 
-  const handleChunk = useCallback((text: string, isFinal: boolean) => {
-    if (isFinal) {
-      setFinalText((prev) => (prev ? `${prev} ${text}` : text));
-      setInterimText("");
-    } else {
-      setInterimText(text);
-    }
-  }, []);
-
   const {
-    status: transcriptionStatus,
+    status,
     recordingTime,
-    isSupported,
     startRecording,
     stopRecording,
-    transcribeFile,
-    error: transcriptionError,
+    error,
   } = useRealtimeTranscription({
-    onChunkTranscribed: handleChunk,
-    onError: (msg) => setTaskError(msg),
+    apiKey: import.meta.env.VITE_GROQ_API_KEY,
+
+    // Fast live browser transcription
+    onInterimTranscript: (text) => {
+      setInterimText(text);
+    },
+
+    // Final accurate Groq transcript
+    onFinalTranscript: (text) => {
+      setFinalText(text);
+
+      // Clear interim once final arrives
+      setInterimText("");
+    },
   });
 
-  const isRecording = transcriptionStatus === "recording";
+  const isRecording = status === "recording";
+  const isSupported = status !== "error";
   const displayText = interimText ? `${finalText} ${interimText}`.trim() : finalText;
-  const displayError = taskError || transcriptionError;
+  const displayError = taskError || error;
 
   const handleMicToggle = () => {
-    if (!isSupported) {
-      setTaskError("Speech recognition is not supported in this browser.");
-      return;
-    }
     if (isRecording) {
       stopRecording();
       return;
@@ -329,3 +326,36 @@ function CreateTask() {
 }
 
 export default CreateTask;
+
+function transcribeFile(file: File) {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY as string | undefined;
+
+  if (!apiKey) {
+    throw new Error("Missing transcription API key.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append(
+    "model",
+    (import.meta.env.VITE_GROQ_TRANSCRIPTION_MODEL as string | undefined) || "whisper-large-v3"
+  );
+  formData.append("response_format", "json");
+
+  return fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: formData,
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const message = await res.text().catch(() => "");
+        throw new Error(message || "Failed to transcribe file.");
+      }
+
+      return res.json();
+    })
+    .then((data: { text?: string }) => data.text?.trim() || "");
+}

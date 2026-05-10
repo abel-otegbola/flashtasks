@@ -154,6 +154,7 @@ const Animate = forwardRef<AnimateHandle, AnimateProps>(({
       return;
     }
 
+    scrollTriggerRef.current && scrollTriggerRef.current.kill();
     scrollTriggerRef.current = ScrollTrigger.create({
       trigger: triggerElement,
       start: 'top 90%',
