@@ -91,13 +91,13 @@ const BlurReveal = forwardRef<BlurRevealHandle, BlurRevealProps>(({
   const runAnimation = () => {
     if (!textRef.current || hasAnimatedRef.current) return;
 
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const disableScrollTriggerForViewport =
       disableScrollTrigger ||
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
       window.matchMedia('(max-width: 767px)').matches;
 
     // Respect reduced motion
-    if (disableScrollTriggerForViewport) {
+    if (reduceMotion) {
       textRef.current.style.opacity = '1';
       textRef.current.style.filter = 'blur(0)';
       hasAnimatedRef.current = true;

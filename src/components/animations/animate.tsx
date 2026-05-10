@@ -105,9 +105,10 @@ const Animate = forwardRef<AnimateHandle, AnimateProps>(({
 
     cleanup();
 
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const disableScrollTriggerForViewport = disableScrollTrigger || shouldDisableScrollTriggerOnThisViewport();
 
-    if (disableScrollTriggerForViewport) {
+    if (reduceMotion) {
       gsap.set(wrapperRef.current, { clearProps: 'opacity,transform,filter' });
       hasAnimatedRef.current = true;
       return;
