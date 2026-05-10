@@ -187,8 +187,8 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             <div className="space-y-2 ">
               {/* Main Assignee */}
               {
-                task.assignees.map((assigneeEmail, index) => (
-                  <div className="flex items-center gap-3">
+                task.assignees.map((assigneeEmail) => (
+                  <div key={assigneeEmail} className="flex items-center gap-3">
                     <GetAvatar email={assigneeEmail} className="w-12 h-12" />
                     <div className="flex-1">
                       <p className="text-sm font-medium">{assigneeEmail}</p>

@@ -84,13 +84,18 @@ export default function EditTaskModal({
                         
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Status <span className="text-red-500">*</span></label>
-                            <select value={values.status} name='status' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none">
-                                <option value="upcoming">Upcoming</option>
-                                <option value="in progress">In Progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="suspended">Suspended</option>
-                                <option value="pending">Pending</option>
-                            </select>
+                            <Dropdown
+                              variant="secondary"
+                              value={values.status}
+                              onChange={(value) => setFieldValue('status', value)}
+                              options={[
+                                { title: "Upcoming", id: "upcoming" },
+                                { title: "In Progress", id: "in progress" },
+                                { title: "Completed", id: "completed" },
+                                { title: "Suspended", id: "suspended" },
+                                { title: "Pending", id: "pending" }
+                              ]}
+                            />
                         </div>
                         
                         <DueDateTimePicker
@@ -102,20 +107,6 @@ export default function EditTaskModal({
 
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Priority <span className="text-red-500">*</span></label>
-                            <select value={values.priority} name='priority' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none">
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                            </select>
-                        </div>
-                        
-                        <div className='flex flex-col gap-2'>
-                            <label className="text-sm font-medium">Invites</label>
-                            <TagInput tags={values.invites} onChange={(e) => setFieldValue('invites', e.toString())} placeholder="Add emails to invite to the task" />
-                        </div>
-                         
-                        <div className='flex flex-col gap-2'>
-                            <label className="text-sm font-medium">Add to an organization</label>
                             <Dropdown
                               variant="secondary"
                               value={values.priority}
@@ -126,6 +117,20 @@ export default function EditTaskModal({
                                 { title: "High", id: "high" }
                               ]}
                             />
+                        </div>
+                        
+                        <div className='flex flex-col gap-2'>
+                            <label className="text-sm font-medium">Invites</label>
+                            <TagInput tags={values.invites} onChange={(e) => setFieldValue('invites', e.toString())} placeholder="Add emails to invite to the task" />
+                        </div>
+                         
+                        <div className='flex flex-col gap-2'>
+                            <label className="text-sm font-medium">Add to an organization</label>
+                            <Dropdown
+                              value={values.organizationId}
+                              onChange={(value) => setFieldValue('organizationId', value)}
+                              options={organizations.map((org: Organization) => ({ title: org.name, id: org.$id }))}
+                            />                       
                         </div>
 
                         <div className='flex flex-col gap-2'>

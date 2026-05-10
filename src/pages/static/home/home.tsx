@@ -204,9 +204,9 @@ function Home() {
             <div className='flex flex-col gap-2 bg-gray-100 dark:bg-dark/[0.4] p-4'>
               {
                   ([
-                    { $id:"0", title: "Develop new features", description: "Research and implement AI-powered task prioritization algorithm", category: "Dev", priority: "high", status: "in progress", userId: "", userEmail: "abel15655@gmail.com", comments: "", $createdAt: "2026-05-01T09:00:00Z", dueDate: "2026-05-18T17:00:00Z" },
-                    { $id:"1", title: "Review pull requests", description: "Review and provide feedback on 3 pending pull requests from team", category: "Review", priority: "medium", status: "pending", userId: "", userEmail: "abel.d.otegbola@gmail.com", comments: "", $createdAt: "2026-05-03T10:30:00Z", dueDate: "2026-05-15T17:00:00Z" },
-                    { $id:"2", title: "Update documentation", description: "Update user guide and API documentation with latest v2.0 changes", category: "Doc", priority: "low", status: "completed", userId: "", userEmail: "abel15655@gmail.com", comments: "", $createdAt: "2026-04-28T14:00:00Z", dueDate: "2026-05-10T17:00:00Z" },
+                    { $id:"0", title: "Develop new features", description: "Research and implement AI-powered task prioritization algorithm", category: "Dev", priority: "high", status: "in progress", userId: "", userEmail: "test@gmail.com", comments: "", $createdAt: "2026-05-01T09:00:00Z", dueDate: "2026-05-18T17:00:00Z" },
+                    { $id:"1", title: "Review pull requests", description: "Review and provide feedback on 3 pending pull requests from team", category: "Review", priority: "medium", status: "pending", userId: "", userEmail: "test@gmail.com", comments: "", $createdAt: "2026-05-03T10:30:00Z", dueDate: "2026-05-15T17:00:00Z" },
+                    { $id:"2", title: "Update documentation", description: "Update user guide and API documentation with latest v2.0 changes", category: "Doc", priority: "low", status: "completed", userId: "", userEmail: "test@gmail.com", comments: "", $createdAt: "2026-04-28T14:00:00Z", dueDate: "2026-05-10T17:00:00Z" },
                   ] as todo[]).map((task: todo,index: number) => (
                     <Suspense key={task.$id} fallback={<div className="h-12 w-full bg-gray-200 animate-pulse rounded" />}>
                       <TaskListView task={task} openTaskDetails={() => {}} index={index} />
@@ -220,8 +220,8 @@ function Home() {
             <div className='flex sm:flex-row flex-col gap-2 bg-gray-100 dark:bg-dark/[0.4] p-4'>
               {
                   ([
-                    { $id:"3", title: "Prepare Q3 roadmap", description: "Create and present quarterly product roadmap to stakeholders", category: "Planning", priority: "high", status: "completed", userId: "", userEmail: "abel15655@gmail.com", comments: "", $createdAt: "2026-04-20T11:00:00Z", dueDate: "2026-05-08T17:00:00Z", assignees: ["abel15655@gmail.com", "product@company.com"] },
-                    { $id:"4", title: "Team sync meeting", description: "Weekly sync to discuss progress, blockers, and next week's priorities", category: "Meetings", priority: "medium", status: "pending", userId: "", userEmail: "abel.d.otegbola@gmail.com", comments: "", $createdAt: "2026-05-05T09:00:00Z", dueDate: "2026-05-12T10:00:00Z", assignees: ["abel.d.otegbola@gmail.com", "team2@company.com"] },
+                    { $id:"3", title: "Prepare Q3 roadmap", description: "Create and present quarterly product roadmap to stakeholders", category: "Planning", priority: "high", status: "completed", userId: "", userEmail: "test@gmail.com", comments: "", $createdAt: "2026-04-20T11:00:00Z", dueDate: "2026-05-08T17:00:00Z", assignees: ["daniel@gmail.com", "product@company.com"] },
+                    { $id:"4", title: "Team sync meeting", description: "Weekly sync to discuss progress, blockers, and next week's priorities", category: "Meetings", priority: "medium", status: "pending", userId: "", userEmail: "rapheal@gmail.com", comments: "", $createdAt: "2026-05-05T09:00:00Z", dueDate: "2026-05-12T10:00:00Z", assignees: ["mcheal@gmail.com", "team2@company.com"] },
                   ] as todo[]).map((task: todo) => (
                     <Suspense key={task.$id} fallback={<div className="h-20 w-full bg-gray-200 animate-pulse rounded" />}>
                       <TodoCard {...task} />

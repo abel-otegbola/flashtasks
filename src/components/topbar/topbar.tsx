@@ -41,7 +41,7 @@ function Topbar() {
             setScrolled(window.scrollY > 10)
 
             // Detect active section
-            const sections = ["features", "how-it-works", "pricing", "testimonials"]
+            const sections = ["features", "solutions", "resources", "pricing"]
             const scrollPosition = window.scrollY + 100 // Offset for better detection
 
             for (const sectionId of sections) {
