@@ -8,6 +8,7 @@ import Dropdown from '../dropdown/dropdown';
 import TaskCheckbox from '../ui/taskCheckbox';
 import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, OrgInvite } from '../../interface/organization';
 import { useOrganizations } from '../../context/organizationContext';
+import { useUser } from '../../context/authContext';
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ const normalizeMember = (member: any) => {
 
 export default function AddMemberModal({ isOpen, onClose, member }: AddMemberModalProps) {
   const { currentOrg, createOrgInvite, updateOrganization, loading } = useOrganizations();
+  const { user } = useUser();
   const modalRef = useOutsideClick(onClose, false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -61,6 +63,9 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
     }
     setError('');
   }, [isOpen, member]);
+
+  const isOwner = currentOrg?.ownerEmail === user?.email;
+  const isAdmin = (currentOrg?.members || []).some((m: any) => (m.email || m.$id) === user?.email && m.role === 'admin');
 
   if (!isOpen || !currentOrg) return null;
 
@@ -102,6 +107,12 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
 
       await updateOrganization(currentOrg.$id, { members: nextMembers });
       onClose();
+      return;
+    }
+
+    // Only owner can invite new members
+    if (!isOwner) {
+      setError('Only the organization owner can invite new members.');
       return;
     }
 
@@ -162,16 +173,18 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
             <div className="grid grid-cols-1 gap-3">
               {(role === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS).map((permission) => {
                 const checked = permissions.includes(permission);
+                // Owners can toggle all permissions. Admins cannot grant the 'Invite/remove members' right.
+                const disabledToggle = permission === 'Invite/remove members' && !isOwner;
 
                 return (
                   <label
                     key={permission}
-                    className="flex items-start gap-3 rounded-lg border border-gray-500/[0.1] p-3 transition-colors hover:bg-gray-500/[0.03]"
+                    className={`flex items-start gap-3 rounded-lg border border-gray-500/[0.1] p-3 transition-colors ${disabledToggle ? 'opacity-60' : 'hover:bg-gray-500/[0.03]'}`}
                   >
                     <TaskCheckbox
                       checked={checked}
                       ariaLabel={permission}
-                      onCheckedChange={() => togglePermission(permission)}
+                      onCheckedChange={() => !disabledToggle && togglePermission(permission)}
                       className="mt-0.5"
                     />
                     <div className="min-w-0">

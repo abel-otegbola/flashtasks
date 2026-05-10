@@ -1,6 +1,6 @@
 'use client'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
-import { ADMIN_PERMISSIONS, Organization, OrgInvite, OrgMember, Team, CreateOrganizationPayload, CreateTeamPayload } from '../interface/organization';
+import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, Organization, OrgInvite, OrgMember, Team, CreateOrganizationPayload, CreateTeamPayload } from '../interface/organization';
 import { databases, teams } from '../appwrite/appwrite';
 import { ID, Query } from 'appwrite';
 import toast from 'react-hot-toast';
@@ -20,6 +20,7 @@ type OrganizationContextValues = {
   deleteOrganization: (orgId: string) => Promise<boolean>;
   removeMemberFromOrg: (orgId: string, memberId: string) => Promise<boolean>;
   updateTeamMembers: (orgId: string, teamId: string, memberIds: string[]) => Promise<boolean>;
+  hasPermission?: (permission: string, orgId?: string) => boolean;
 }
 
 const OrganizationContext = createContext({} as OrganizationContextValues);
@@ -33,6 +34,29 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
+
+  // Helper: get current user's permissions for a given organization
+  const getUserPermissionsForOrg = (org?: Organization | null) => {
+    if (!user) return [] as string[];
+    if (!org) return [] as string[];
+
+    // Owner has all admin + member permissions
+    if (org.ownerEmail === user.email) {
+      return Array.from(new Set([...(ADMIN_PERMISSIONS || []), ...(MEMBER_PERMISSIONS || [])]));
+    }
+
+    const member = (org.members || []).find((m: any) => (m.email || m.$id) === user.email || (m.$id === user.$id));
+    if (!member) return [];
+
+    if (member.role === 'admin') return member.permissions && member.permissions.length ? member.permissions : ADMIN_PERMISSIONS;
+    return member.permissions && member.permissions.length ? member.permissions : MEMBER_PERMISSIONS;
+  };
+
+  const hasPermission = (permission: string, orgId?: string) => {
+    const org = orgId ? organizations.find(o => o.$id === orgId) : currentOrg;
+    const perms = getUserPermissionsForOrg(org);
+    return perms.includes(permission);
+  };
 
   const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
   const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORGANIZATIONS_COLLECTION_ID || 'organizations';
@@ -417,7 +441,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <OrganizationContext.Provider value={{ organizations, currentOrg, loading, createOrganization, selectOrganization, addTeam, removeTeam, addMemberToOrg, createOrgInvite, updateOrganization, deleteOrganization, removeMemberFromOrg, updateTeamMembers }}>
+    <OrganizationContext.Provider value={{ organizations, currentOrg, loading, createOrganization, selectOrganization, addTeam, removeTeam, addMemberToOrg, createOrgInvite, updateOrganization, deleteOrganization, removeMemberFromOrg, updateTeamMembers, hasPermission }}>
       {children}
     </OrganizationContext.Provider>
   );

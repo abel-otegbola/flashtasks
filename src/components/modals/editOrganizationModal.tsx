@@ -28,6 +28,8 @@ export default function EditOrganizationModal({ isOpen, onClose, org }: Props) {
   const [teams, setTeams] = useState<string>('');
   const { user } = useUser();
   const ownerEmail = (user as any)?.email;
+  const isOwner = org?.ownerEmail === (user as any)?.email;
+  const isAdmin = (org?.members || []).some((m) => m.email === (user as any)?.email && m.role === 'admin');
     
   const modalRef = useOutsideClick(onClose, false)
 
@@ -102,8 +104,9 @@ export default function EditOrganizationModal({ isOpen, onClose, org }: Props) {
     
                             <div className='flex flex-col gap-2'>
                                 <label className="text-sm font-medium">Members (comma-separated emails)</label>
-                                <TagInput tags={members} onChange={(e) => setMembers(e.toString())} />
-                                <div className="text-xs text-gray-500">Do not include your email here — you'll be added automatically as owner.</div>
+                                  <TagInput tags={members} onChange={(e) => setMembers(e.toString())} disabled={!isOwner} />
+                                  <div className="text-xs text-gray-500">Do not include your email here — you'll be added automatically as owner.</div>
+                                  {!isOwner && isAdmin && <div className="text-xs text-yellow-600">Only the owner can add or remove organization members; admins can edit other organization settings.</div>}
                             </div>
     
                             <div className='flex flex-col gap-2'>

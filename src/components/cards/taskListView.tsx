@@ -8,6 +8,9 @@ import { formatDeliveredTime } from "../../helpers/messageTime";
 import { PlayIcon } from "@phosphor-icons/react";
 import FocusMode from "../focusMode/focusMode";
 import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
+import { useOrganizations } from "../../context/organizationContext";
+import { useUser } from "../../context/authContext";
+import toast from 'react-hot-toast';
 
 type Props = {
     task: todo;
@@ -25,6 +28,13 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     const [isDragging, setIsDragging] = useState(false)
     const [startPomodoro, setStartPomodoro] = useState<todo | null>(null);
     const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
+    const orgCtx = useOrganizations();
+    const { user } = useUser();
+
+    const currentOrg = orgCtx.currentOrg;
+    const isOwner = currentOrg?.ownerEmail === user?.email;
+    const hasGlobalEdit = orgCtx.hasPermission?.('Create/edit/delete all tasks') || false;
+    const canEdit = isOwner || hasGlobalEdit || (task.userEmail === user?.email && (orgCtx.hasPermission?.('Edit their own tasks') || false)) || ((task.assignees || []).includes(user?.email) && (orgCtx.hasPermission?.('Edit tasks assigned to them') || false));
 
   return (
     <>
@@ -39,6 +49,11 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     )}
     <SwipeDeleteItem 
         onSwipeLeft={() => {
+            if (!canEdit) {
+                toast.error('You do not have permission to delete this task');
+                return;
+            }
+
             if (confirmBeforeDelete) {
                 setShowDeleteConfirm(true);
                 return;
@@ -46,7 +61,13 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
 
             void deleteTask(task.$id);
         }} 
-        onSwipeRight={() => updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' }) }
+        onSwipeRight={() => {
+            if (!canEdit) {
+                toast.error('You do not have permission to update this task');
+                return;
+            }
+            return updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' });
+        }}
         onLongPress={() => setStartPomodoro(task)}
         className={`relative flex flex-col overflow-hidden transition-all cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
     >

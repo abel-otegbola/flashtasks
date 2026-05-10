@@ -32,6 +32,13 @@ export default function EditTaskModal({
   const { user } = useUser();
   const modalRef = useOutsideClick(onClose, false)
 
+  const orgCtx = useOrganizations();
+  const currentOrg = orgCtx.currentOrg;
+
+  const isOwner = currentOrg?.ownerEmail === user?.email;
+  const hasGlobalEdit = orgCtx.hasPermission?.('Create/edit/delete all tasks') || false;
+  const canEdit = isOwner || hasGlobalEdit || (task?.userEmail === user?.email && (orgCtx.hasPermission?.('Edit their own tasks') || false)) || ((task?.assignees || []).includes(user?.email) && (orgCtx.hasPermission?.('Edit tasks assigned to them') || false));
+
   const toDateTimeLocalValue = (value?: string) => {
     if (!value) return '';
 
@@ -149,9 +156,12 @@ export default function EditTaskModal({
 
                     </div>
 
+                    {!canEdit && (
+                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 rounded text-sm text-yellow-800">You do not have permission to edit this task.</div>
+                    )}
                     <div className="sticky bottom-0 bg-white dark:bg-dark-bg border-t border-gray-500/[0.2] py-4 p-6 flex justify-end gap-3">
                         <Button variant='secondary' onClick={onClose}>Close</Button>
-                        <Button type='submit' disabled={loading}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
+                        <Button type='submit' disabled={loading || !canEdit}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
                     </div>
                 </form>
             )}

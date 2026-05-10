@@ -5,6 +5,7 @@ import { Upload } from "@solar-icons/react";
 import { useRef, useState, useCallback } from "react";
 import { todo } from "../../../interface/todo";
 import { useOrganizations } from "../../../context/organizationContext";
+import toast from 'react-hot-toast';
 import { useTasks } from "../../../context/tasksContext";
 import { useUser } from "../../../context/authContext";
 import { extractTasksFromText } from "../../../helpers/voiceTaskExtractor";
@@ -29,7 +30,8 @@ function CreateTask() {
 
   const { addMultipleTasks, loading: savingTasks } = useTasks();
   const { user } = useUser();
-  const { currentOrg } = useOrganizations();
+  const orgCtx = useOrganizations();
+  const { currentOrg } = orgCtx;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const userRole = ((user as any)?.prefs?.role as string) || "free";
@@ -125,6 +127,13 @@ function CreateTask() {
 
   const handleSaveTasks = async () => {
     if (!generatedTasks?.length) return;
+    // Permission check: only allow save if user has Create tasks permission or is owner
+    const canCreate = currentOrg ? (orgCtx.hasPermission?.('Create tasks') || currentOrg.ownerEmail === user?.email) : true;
+    if (!canCreate) {
+      toast.error('You do not have permission to create tasks in this organization');
+      return;
+    }
+
     const saved = await addMultipleTasks(
       generatedTasks.map((task) =>
         mapTodoToSavePayload(task, user?.$id ?? "", user?.email ?? "", currentOrg?.$id)

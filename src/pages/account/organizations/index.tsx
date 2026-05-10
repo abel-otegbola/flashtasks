@@ -18,7 +18,8 @@ import TaskDetailsModal from '../../../components/modals/taskDetailsModal';
 import CreateTaskModal from '../../../components/modals/createTaskModal';
 
 export default function OrganizationsPage() {
-  const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, updateOrganization, deleteOrganization, loading } = useOrganizations();
+  const orgCtx = useOrganizations();
+  const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, updateOrganization, deleteOrganization, loading } = orgCtx;
   const { tasks, getOrganizationTasks } = useTasks(); 
   const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -225,10 +226,12 @@ export default function OrganizationsPage() {
                         ))}
                       </div>
                     )}
+                    { (isOwner || orgCtx.hasPermission?.('Create tasks')) && (
                     <Button onClick={() => setShowCreateTask(true)} size="small">
                       <PlusIcon />
                       Create New Task
                     </Button>
+                    ) }
                     {showCreateTask && (
                       <CreateTaskModal
                         isOpen={showCreateTask}
@@ -374,11 +377,11 @@ export default function OrganizationsPage() {
                   <div className="mb-4">
                     <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
                       <h2 className="font-semibold text-lg">Members</h2>
-                      {isOwner || isAdmin ? (
+                      {isOwner ? (
                         <Button size="small" onClick={() => { setSelectedMember(null); setShowAddMember(true); }}>
                           Add new member
                         </Button>
-                      ): null}
+                      ) : null}
                     </div>
                     
                     <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-dark/[0.4]">

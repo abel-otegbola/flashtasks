@@ -5,6 +5,8 @@ import { databases, tablesDB } from "../appwrite/appwrite";
 import { todo } from '../interface/todo';
 import toast from "react-hot-toast";
 import { indexTask } from '../services/indexer';
+import { useOrganizations } from './organizationContext';
+import { useUser } from './authContext';
 
 type TasksContextValues = {
     tasks: todo[];
@@ -49,6 +51,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     const [tasks, setTasks] = useState<todo[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const orgCtx = useOrganizations();
+    const { user } = useUser();
 
     const getNextOrderIndex = (tasksToInspect: todo[]) => {
         const maxOrderIndex = tasksToInspect.reduce((max, task) => {
@@ -57,6 +61,37 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         }, -1);
 
         return maxOrderIndex + 1;
+    };
+
+    const getTaskOrganizationId = (task?: Pick<todo, 'organizationId'> | null) => task?.organizationId || '';
+
+    const canAccessOrganizationTask = (task: Pick<todo, 'organizationId' | 'userEmail' | 'userId' | 'assignees'>, mode: 'create' | 'update' | 'delete') => {
+        const orgId = getTaskOrganizationId(task);
+        if (!orgId) {
+            return task.userEmail === user?.email || task.userId === user?.$id;
+        }
+
+        const hasFullAccess = orgCtx.hasPermission?.('Create/edit/delete all tasks', orgId) || false;
+        if (hasFullAccess) return true;
+
+        if (mode === 'create') {
+            return orgCtx.hasPermission?.('Create tasks', orgId) || false;
+        }
+
+        const isOwnerTask = task.userEmail === user?.email;
+        const isAssignee = Boolean(user?.email && (task.assignees || []).includes(user.email));
+
+        if (isOwnerTask && orgCtx.hasPermission?.('Edit their own tasks', orgId)) return true;
+        if (isAssignee && orgCtx.hasPermission?.('Edit tasks assigned to them', orgId)) return true;
+
+        return false;
+    };
+
+    const denyTaskAccess = (action: string) => {
+        const message = `You do not have permission to ${action} this task`;
+        setError(message);
+        toast.error(message);
+        return message;
     };
 
     // Get all tasks for the current user
@@ -113,6 +148,18 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     // Add a single task
     const addTask = async (task: Omit<todo, '$id' | 'id' | '$createdAt'>): Promise<todo | null> => {
         setError(null);
+
+        if (task.organizationId) {
+            const canCreate = orgCtx.hasPermission?.('Create tasks', task.organizationId) || orgCtx.hasPermission?.('Create/edit/delete all tasks', task.organizationId) || false;
+            if (!canCreate) {
+                denyTaskAccess('create');
+                return null;
+            }
+        } else if (task.userEmail && user?.email && task.userEmail !== user.email) {
+            denyTaskAccess('create');
+            return null;
+        }
+
         setLoading(true);
         
         try {
@@ -161,6 +208,20 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     // Add multiple tasks at once
     const addMultipleTasks = async (tasksToAdd: Omit<todo, '$id' | 'id' | '$createdAt'>[]): Promise<todo[] | null> => {
         setError(null);
+
+        const unauthorizedTask = tasksToAdd.find((task) => {
+            if (task.organizationId) {
+                return !(orgCtx.hasPermission?.('Create tasks', task.organizationId) || orgCtx.hasPermission?.('Create/edit/delete all tasks', task.organizationId));
+            }
+
+            return Boolean(task.userEmail && user?.email && task.userEmail !== user.email);
+        });
+
+        if (unauthorizedTask) {
+            denyTaskAccess('create');
+            return null;
+        }
+
         setLoading(true);
         
         try {
@@ -214,6 +275,20 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     // Update a task
     const updateTask = async (taskId: string, updates: Partial<todo>): Promise<todo | null> => {
         setError(null);
+
+        const existingTask = tasks.find((task) => task.$id === taskId);
+        if (!existingTask) {
+            const message = 'Task not found';
+            setError(message);
+            toast.error(message);
+            return null;
+        }
+
+        if (!canAccessOrganizationTask(existingTask, 'update')) {
+            denyTaskAccess('update');
+            return null;
+        }
+
         setLoading(true);
         
         try {
@@ -246,6 +321,20 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     // Delete a task
     const deleteTask = async (taskId: string): Promise<void> => {
         setError(null);
+
+        const existingTask = tasks.find((task) => task.$id === taskId);
+        if (!existingTask) {
+            const message = 'Task not found';
+            setError(message);
+            toast.error(message);
+            return;
+        }
+
+        if (!canAccessOrganizationTask(existingTask, 'delete')) {
+            denyTaskAccess('delete');
+            return;
+        }
+
         setLoading(true);
         
         try {
@@ -273,6 +362,13 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     // Move all pending tasks to today by updating their dueDate
     const movePendingToToday = async (): Promise<number> => {
         setError(null);
+
+        const unauthorizedTask = tasks.find((task) => task.status === 'pending' && !canAccessOrganizationTask(task, 'update'));
+        if (unauthorizedTask) {
+            denyTaskAccess('update');
+            return 0;
+        }
+
         try {
             const today = new Date().toISOString().split('T')[0];
             const pendingTasks = tasks.filter(t => t.status === 'pending');
@@ -331,6 +427,18 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
 
     const reorderTasks = async (orderedTaskIds: string[]) => {
         setError(null);
+
+        const unauthorizedTask = orderedTaskIds
+            .map((taskId) => tasks.find((task) => task.$id === taskId))
+            .find((task) => {
+                if (!task) return false;
+                return !canAccessOrganizationTask(task, 'update');
+            });
+
+        if (unauthorizedTask) {
+            denyTaskAccess('update');
+            return;
+        }
 
         try {
             for (const [index, taskId] of orderedTaskIds.entries()) {
