@@ -23,7 +23,6 @@ export function useRealtimeTranscription({
   onError,
   lang,
 }: UseRealtimeTranscriptionOptions = {}): UseRealtimeTranscriptionReturn {
-  // ── Feature detection ──────────────────────────────────────────────────────
   const SpeechRecognitionAPI =
     typeof window !== "undefined"
       ? ((window as any).SpeechRecognition ??
@@ -33,23 +32,16 @@ export function useRealtimeTranscription({
 
   const isSupported = Boolean(SpeechRecognitionAPI);
 
-  // ── State ──────────────────────────────────────────────────────────────────
   const [status, setStatus] = useState<TranscriptionStatus>("idle");
   const [recordingTime, setRecordingTime] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  // ── Refs ───────────────────────────────────────────────────────────────────
   const recognitionRef = useRef<any>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusRef = useRef<TranscriptionStatus>("idle");
-
-  const lastCommittedIndexRef = useRef(0);
-
   const seenFinalTextsRef = useRef<Set<string>>(new Set());
-
   const isRestartingRef = useRef(false);
 
-  // ── Timer helpers ──────────────────────────────────────────────────────────
   const startTimer = () => {
     setRecordingTime(0);
     timerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000);
@@ -62,7 +54,6 @@ export function useRealtimeTranscription({
     }
   };
 
-  // ── Error helper ───────────────────────────────────────────────────────────
   const emitError = (msg: string) => {
     setError(msg);
     onError?.(msg);
@@ -71,7 +62,6 @@ export function useRealtimeTranscription({
     stopTimer();
   };
 
-  // ── buildRecognition ───────────────────────────────────────────────────────
   const buildRecognition = useCallback(() => {
     const recognition = new SpeechRecognitionAPI();
 
@@ -82,7 +72,6 @@ export function useRealtimeTranscription({
     recognition.onstart = () => {
       setStatus("recording");
       statusRef.current = "recording";
-      // Only reset the timer on the very first start, not on auto-restarts.
       if (!isRestartingRef.current) {
         startTimer();
       }
@@ -92,20 +81,18 @@ export function useRealtimeTranscription({
     recognition.onresult = (event: any) => {
       let interimText = "";
 
-      for (let i = lastCommittedIndexRef.current; i < event.results.length; i++) {
+      // Iterate from 0 every time — mobile browsers reset resultIndex to 0
+      // so lastCommittedIndexRef is unreliable. seenFinalTextsRef handles dedup.
+      for (let i = 0; i < event.results.length; i++) {
         const transcript: string = event.results[i][0].transcript;
 
         if (event.results[i].isFinal) {
-          // Normalise: lowercase + collapse whitespace for dedup key
           const key = transcript.trim().toLowerCase().replace(/\s+/g, " ");
 
           if (!seenFinalTextsRef.current.has(key)) {
             seenFinalTextsRef.current.add(key);
             onChunkTranscribed?.(transcript.trim(), true);
           }
-
-          // Always advance the pointer past committed results
-          lastCommittedIndexRef.current = i + 1;
         } else {
           interimText += transcript;
         }
@@ -129,7 +116,6 @@ export function useRealtimeTranscription({
     };
 
     recognition.onend = () => {
-      // Only auto-restart if we're still supposed to be recording.
       if (
         recognitionRef.current === recognition &&
         statusRef.current === "recording" &&
@@ -137,7 +123,6 @@ export function useRealtimeTranscription({
       ) {
         isRestartingRef.current = true;
 
-        // FIX 3: 300 ms cooldown prevents rapid restart loops on mobile.
         setTimeout(() => {
           if (
             recognitionRef.current === recognition &&
@@ -146,7 +131,6 @@ export function useRealtimeTranscription({
             try {
               recognition.start();
             } catch {
-              // Already starting — safe to ignore.
               isRestartingRef.current = false;
             }
           } else {
@@ -159,7 +143,6 @@ export function useRealtimeTranscription({
     return recognition;
   }, [lang, onChunkTranscribed]);
 
-  // ── startRecording ─────────────────────────────────────────────────────────
   const startRecording = useCallback(() => {
     if (!isSupported) {
       emitError("Speech recognition is not supported in this browser.");
@@ -168,9 +151,6 @@ export function useRealtimeTranscription({
     if (statusRef.current === "recording") return;
 
     setError(null);
-
-    // Reset dedup state for a fresh session.
-    lastCommittedIndexRef.current = 0;
     seenFinalTextsRef.current = new Set();
     isRestartingRef.current = false;
 
@@ -179,7 +159,6 @@ export function useRealtimeTranscription({
     recognition.start();
   }, [isSupported, buildRecognition]);
 
-  // ── stopRecording ──────────────────────────────────────────────────────────
   const stopRecording = useCallback(() => {
     const recognition = recognitionRef.current;
     if (!recognition) return;
@@ -187,9 +166,6 @@ export function useRealtimeTranscription({
     recognitionRef.current = null;
     statusRef.current = "idle";
     isRestartingRef.current = false;
-
-    // Clear dedup state so a subsequent session starts fresh.
-    lastCommittedIndexRef.current = 0;
     seenFinalTextsRef.current = new Set();
 
     recognition.stop();
@@ -197,7 +173,6 @@ export function useRealtimeTranscription({
     setStatus("idle");
   }, []);
 
-  // ── transcribeFile ─────────────────────────────────────────────────────────
   const transcribeFile = useCallback(
     (file: File): Promise<string> =>
       new Promise((resolve, reject) => {
@@ -215,35 +190,31 @@ export function useRealtimeTranscription({
         recognition.lang = lang ?? navigator.language ?? "en-US";
 
         const segments: string[] = [];
-        // Dedup for file transcription too.
+        // Local dedup set — isolated from the live recording ref
         const seen = new Set<string>();
 
         recognition.onresult = (event: any) => {
-        let latestInterimText = "";
+          let latestInterimText = "";
 
-        // Process ALL results from index 0 each time (mobile-safe)
-        for (let i = 0; i < event.results.length; i++) {
-          const transcript: string = event.results[i][0].transcript;
+          for (let i = 0; i < event.results.length; i++) {
+            const transcript: string = event.results[i][0].transcript;
 
-          if (event.results[i].isFinal) {
-            // Deduplicate final results by normalized content
-            const key = transcript.trim().toLowerCase().replace(/\s+/g, " ");
-            if (!seenFinalTextsRef.current.has(key)) {
-              seenFinalTextsRef.current.add(key);
-              onChunkTranscribed?.(transcript.trim(), true);
+            if (event.results[i].isFinal) {
+              const key = transcript.trim().toLowerCase().replace(/\s+/g, " ");
+              // Use local `seen`, not the shared seenFinalTextsRef
+              if (!seen.has(key)) {
+                seen.add(key);
+                segments.push(transcript.trim());
+              }
+            } else {
+              latestInterimText = transcript;
             }
-          } else {
-            // Interim results are cumulative - just keep the latest one
-            // (no need to accumulate with += since each interim contains all prior words)
-            latestInterimText = transcript;
           }
-        }
 
-        // Emit the most recent interim text if available
-        if (latestInterimText.trim()) {
-          onChunkTranscribed?.(latestInterimText.trim(), false);
-        }
-      };
+          if (latestInterimText.trim()) {
+            onChunkTranscribed?.(latestInterimText.trim(), false);
+          }
+        };
 
         recognition.onerror = (event: any) => {
           URL.revokeObjectURL(url);
