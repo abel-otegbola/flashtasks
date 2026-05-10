@@ -175,7 +175,56 @@ export function useRealtimeTranscription({
 
   const transcribeFile = useCallback(
     (file: File): Promise<string> =>
-      new Promise((resolve, reject) => {
+      new Promise(async (resolve, reject) => {
+        // Try Groq transcription endpoint first (if API key provided)
+        const GROQ_API_BASE = "https://api.groq.com/openai/v1";
+        const GROQ_TRANSCRIBE_URL = `${GROQ_API_BASE}/audio/transcriptions`;
+        const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY ?? "";
+        const GROQ_MODEL = import.meta.env.VITE_GROQ_STT_MODEL ?? "whisper-1";
+
+        if (GROQ_API_KEY) {
+          try {
+            const fd = new FormData();
+            fd.append("file", file);
+            fd.append("model", GROQ_MODEL);
+
+            const res = await fetch(GROQ_TRANSCRIBE_URL, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${GROQ_API_KEY}`,
+              },
+              body: fd,
+            });
+
+            if (!res.ok) {
+              const txt = await res.text().catch(() => "");
+              throw new Error(`Groq transcription error ${res.status}: ${txt}`);
+            }
+
+            const body = await res.json().catch(() => ({}));
+
+            // Groq / OpenAI-style responses vary; attempt to extract transcript
+            let transcript = "";
+            if (typeof body.text === "string") transcript = body.text;
+            else if (typeof body.transcript === "string") transcript = body.transcript;
+            else if (Array.isArray(body.choices) && body.choices[0]?.message?.content) transcript = body.choices[0].message.content;
+            else if (body?.result?.[0]?.content?.text) transcript = body.result[0].content.text;
+
+            transcript = (transcript || "").trim();
+
+            if (transcript) {
+              resolve(transcript);
+              return;
+            }
+            // if empty, fall through to local fallback
+          } catch (err) {
+            // Non-fatal - fall back to browser SpeechRecognition approach below
+            // eslint-disable-next-line no-console
+            console.warn("Groq transcription failed, falling back to browser recognition:", err);
+          }
+        }
+
+        // Fallback: local/browser SpeechRecognition-based transcription (original behavior)
         if (!isSupported) {
           reject(new Error("Speech recognition not supported in this browser."));
           return;

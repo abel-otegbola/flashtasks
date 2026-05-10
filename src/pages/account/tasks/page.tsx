@@ -14,9 +14,12 @@ import TaskListView from "../../../components/cards/taskListView";
 import Dropdown from "../../../components/dropdown/dropdown";
 import Kanban from "../../../components/views/kanban";
 import Calendar from "../../../components/views/calendar";
+import ResponsivePagination from "react-responsive-pagination";
+import "react-responsive-pagination/themes/minimal-light-dark.css";
 
 
 type ViewMode = 'kanban' | 'list' | 'grid' | 'calendar';
+const LIST_PAGE_SIZE = 8;
 
 const getTaskOrderIndex = (task: todo) => {
     const orderIndex = (task as todo & { orderIndex?: number }).orderIndex;
@@ -44,6 +47,7 @@ function Tasks() {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [dragOverSectionKey, setDragOverSectionKey] = useState<string | null>(null);
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+    const [currentListPage, setCurrentListPage] = useState(1);
     const { user } = useUser();
 
     useEffect(() => {
@@ -54,6 +58,16 @@ function Tasks() {
 
     const sortedTasks = sortTasksByOrder(tasks);
     const filteredTasks = filterStatus === 'all' ? sortedTasks : sortedTasks.filter(task => task.status === filterStatus);
+    const listTotalPages = Math.max(1, Math.ceil(filteredTasks.length / LIST_PAGE_SIZE));
+    const currentListTasks = filteredTasks.slice((currentListPage - 1) * LIST_PAGE_SIZE, currentListPage * LIST_PAGE_SIZE);
+
+    useEffect(() => {
+        setCurrentListPage(1);
+    }, [filterStatus, viewMode]);
+
+    useEffect(() => {
+        setCurrentListPage((page) => Math.min(page, listTotalPages));
+    }, [listTotalPages]);
 
     const openTaskDetails = (task: todo) => {
         setSelectedTask(task);
@@ -233,15 +247,15 @@ function Tasks() {
                             </div>
                             
                             {/* List Items */}
-                            {filteredTasks.map((task, index) => (
+                            {currentListTasks.map((task, index) => (
                                 <TaskListView
                                     key={task.$id}
                                     task={task}
                                     openTaskDetails={openTaskDetails}
-                                    index={index}
+                                    index={(currentListPage - 1) * LIST_PAGE_SIZE + index}
                                     draggable
                                     onDrop={async () => {
-                                        await reorderVisibleTasks(filteredTasks, task.$id);
+                                        await reorderVisibleTasks(currentListTasks, task.$id);
                                         setDraggedTaskId(null);
                                     }}
                                     onDragStart={(dragTask, event) => {
@@ -254,6 +268,17 @@ function Tasks() {
                                     }}
                                 />
                             ))}
+
+                            {listTotalPages > 1 && (
+                                <div className="flex justify-center pt-4">
+                                    <ResponsivePagination
+                                        current={currentListPage}
+                                        total={listTotalPages}
+                                        onPageChange={setCurrentListPage}
+                                        className="pagination"
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

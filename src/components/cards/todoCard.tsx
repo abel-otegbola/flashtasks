@@ -12,8 +12,6 @@ import TaskCheckbox from "../ui/taskCheckbox";
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
 import FocusMode from "../focusMode/focusMode";
 import { formatDeliveredTime } from "../../helpers/messageTime";
-import { getGravatar } from "../../helpers/getGravatar";
-import useGetAvatar from "../../customHooks/useGetAvatar";
 import GetAvatar from "../../customHooks/useGetAvatar";
 import { PlayIcon } from "@phosphor-icons/react";
 
