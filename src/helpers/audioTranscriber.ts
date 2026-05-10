@@ -41,6 +41,7 @@ export function useRealtimeTranscription({
   const statusRef = useRef<TranscriptionStatus>("idle");
   const seenFinalTextsRef = useRef<Set<string>>(new Set());
   const isRestartingRef = useRef(false);
+  const lastInterimRef = useRef<string>("");
 
   const startTimer = () => {
     setRecordingTime(0);
@@ -112,6 +113,30 @@ function dedupeTranscript(text: string): string {
       isRestartingRef.current = false;
     };
 
+    // Helper: return trailing new words from `current` that are not already
+    // present at the end of `prev`. Comparison is word-based and case-insensitive.
+    const getTrailingNewText = (prev: string, current: string) => {
+      if (!current) return "";
+      if (!prev) return current;
+      const prevWords = prev.trim().split(/\s+/).filter(Boolean);
+      const curWords = current.trim().split(/\s+/).filter(Boolean);
+      if (curWords.length === 0) return "";
+
+      let overlap = 0;
+      const maxCheck = Math.min(prevWords.length, curWords.length);
+      for (let k = maxCheck; k >= 1; k--) {
+        const prevSlice = prevWords.slice(prevWords.length - k).join(' ').toLowerCase();
+        const curSlice = curWords.slice(0, k).join(' ').toLowerCase();
+        if (prevSlice === curSlice) {
+          overlap = k;
+          break;
+        }
+      }
+
+      const trailing = curWords.slice(overlap).join(' ');
+      return trailing;
+    };
+
     recognition.onresult = (event: any) => {
       let interimText = "";
 
@@ -125,6 +150,8 @@ function dedupeTranscript(text: string): string {
 
           if (!seenFinalTextsRef.current.has(key)) {
             seenFinalTextsRef.current.add(key);
+            // On final results, clear interim tracker to avoid overlap with next interim
+            lastInterimRef.current = "";
             onChunkTranscribed?.(transcript.trim(), true);
           }
         } else {
@@ -133,7 +160,11 @@ function dedupeTranscript(text: string): string {
       }
 
       if (interimText.trim()) {
-        onChunkTranscribed?.(interimText.trim(), false);
+        const trailing = getTrailingNewText(lastInterimRef.current, interimText.trim());
+        if (trailing.trim()) {
+          onChunkTranscribed?.(trailing.trim(), false);
+        }
+        lastInterimRef.current = interimText.trim();
       }
     };
 
@@ -157,6 +188,8 @@ function dedupeTranscript(text: string): string {
       ) {
         isRestartingRef.current = true;
 
+        // Slightly longer restart delay to avoid rapid restarts on flaky mobile
+        const RESTART_DELAY_MS = 700;
         setTimeout(() => {
           if (
             recognitionRef.current === recognition &&
@@ -170,7 +203,7 @@ function dedupeTranscript(text: string): string {
           } else {
             isRestartingRef.current = false;
           }
-        }, 300);
+        }, RESTART_DELAY_MS);
       }
     };
 
@@ -277,6 +310,7 @@ function dedupeTranscript(text: string): string {
         const segments: string[] = [];
         // Local dedup set — isolated from the live recording ref
         const seen = new Set<string>();
+        let lastInterimLocal = "";
 
         recognition.onresult = (event: any) => {
           let latestInterimText = "";
@@ -291,13 +325,32 @@ function dedupeTranscript(text: string): string {
                 seen.add(key);
                 segments.push(transcript.trim());
               }
+              // clear local interim tracker when we commit a final
+              lastInterimLocal = "";
             } else {
               latestInterimText = transcript;
             }
           }
 
           if (latestInterimText.trim()) {
-            onChunkTranscribed?.(latestInterimText.trim(), false);
+            const trailing = (function(prev: string, current: string) {
+              if (!current) return "";
+              if (!prev) return current;
+              const prevWords = prev.trim().split(/\s+/).filter(Boolean);
+              const curWords = current.trim().split(/\s+/).filter(Boolean);
+              if (curWords.length === 0) return "";
+              let overlap = 0;
+              const maxCheck = Math.min(prevWords.length, curWords.length);
+              for (let k = maxCheck; k >= 1; k--) {
+                const prevSlice = prevWords.slice(prevWords.length - k).join(' ').toLowerCase();
+                const curSlice = curWords.slice(0, k).join(' ').toLowerCase();
+                if (prevSlice === curSlice) { overlap = k; break; }
+              }
+              return curWords.slice(overlap).join(' ');
+            })(lastInterimLocal, latestInterimText.trim());
+
+            if (trailing.trim()) onChunkTranscribed?.(trailing.trim(), false);
+            lastInterimLocal = latestInterimText.trim();
           }
         };
 
