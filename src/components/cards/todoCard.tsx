@@ -39,9 +39,9 @@ function TodoCard(task: TodoCardProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const { deleteTask, updateTask } = useTasks();
   const { user } = useUser();
-  const orgCtx = useOrganizations();
+  const { organizations } = useOrganizations();
   const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
-  const canEdit = canEditTask(task, user, orgCtx.currentOrg, orgCtx.hasPermission);
+  const canEdit = !organizations.find((org) => org.$id === task.organizationId); // allow editing if it's a personal task (no organization)
 
   const statusColors: Record<
     string,
@@ -201,6 +201,7 @@ function TodoCard(task: TodoCardProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      console.log(task);
                       if (!canEdit) {
                         toast.error('You do not have permission to edit this task');
                         return;
