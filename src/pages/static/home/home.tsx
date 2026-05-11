@@ -37,7 +37,7 @@ function Home() {
             <BlurReveal preset="slide-up" delay={0.2} duration={2}>Efficiently manage your tasks and boost productivity</BlurReveal>
           </div>
           <div className="flex gap-4 items-center justify-center flex-wrap w-full">
-            <Button href="/auth/signup" className='py-[2px] sm:w-fit w-full'><BlurReveal preset="slide-up">Get free demo</BlurReveal></Button>
+            <Button href="/auth/signup" className='py-[2px] sm:w-fit w-full'><BlurReveal preset="slide-up">Get started</BlurReveal></Button>
             <Button href="/auth/signup" variant='secondary' className='py-[2px] sm:w-fit w-full'><BlurReveal preset="slide-up">Learn more</BlurReveal></Button>
           </div>
 
