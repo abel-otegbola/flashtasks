@@ -7,6 +7,7 @@ export const createTaskSchema = Yup.object({
     status: Yup.string().required('Status is required').oneOf(['upcoming', 'in progress', 'completed', 'suspended', 'pending']),
     dueDate: Yup.string().required('Due date is required'),
     priority: Yup.string().required('Priority is required').oneOf(['low', 'medium', 'high']),
+    recurring: Yup.boolean(),
     invites: Yup.string(),
     organizationId: Yup.string(),
     teamId: Yup.string(),

@@ -56,7 +56,7 @@ export default function CreateTaskModal({
             </button>
         </div>
         <Formik
-          initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignees: task?.assignees || [] as string[], invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: task?.dueDate || getLocalDateTimeValue(), comments: task?.comments || '' }}
+          initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignees: task?.assignees || [] as string[], invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: task?.dueDate || getLocalDateTimeValue(), recurring: task?.recurring || false, comments: task?.comments || '' }}
           enableReinitialize
           validationSchema={createTaskSchema}
             onSubmit={async (values, { setSubmitting }) => {
@@ -90,6 +90,15 @@ export default function CreateTaskModal({
                         required
                         error={touched.dueDate ? errors.dueDate : ''}
                       />
+
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(values.recurring)}
+                          onChange={(e) => setFieldValue('recurring', e.target.checked)}
+                        />
+                        Recurring task (auto-rollover to today daily)
+                      </label>
 
                       <div className='flex flex-col gap-2'>
                           <label className="text-sm font-medium">Priority <span className="text-red-500">*</span></label>

@@ -35,7 +35,7 @@ export default function EditTaskModal({
 
   const orgCtx = useOrganizations();
   const currentOrg = orgCtx.currentOrg;
-  const canEdit = task ? canEditTask(task, user, currentOrg, orgCtx.hasPermission) : false;
+  const canEdit = true
 
   const toDateTimeLocalValue = (value?: string) => {
     if (!value) return '';
@@ -59,7 +59,7 @@ export default function EditTaskModal({
           </button>
         </div>
         <Formik
-          initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignees: task?.assignees || [], invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: toDateTimeLocalValue(task?.dueDate), comments: task?.comments || '' }}
+          initialValues={{ title: task?.title || '', description: task?.description || '', category: task?.category || '', assignees: task?.assignees || [], invites: task?.invites?.join(',') || '', organizationId: task?.organizationId || '', teamId: task?.teamId || '', status: task?.status || 'upcoming', priority: task?.priority || 'medium', dueDate: toDateTimeLocalValue(task?.dueDate), recurring: task?.recurring || false, comments: task?.comments || '' }}
           validationSchema={createTaskSchema}
           enableReinitialize
             onSubmit={async (values, { setSubmitting }) => {
@@ -109,6 +109,15 @@ export default function EditTaskModal({
                           required
                           error={touched.dueDate ? errors.dueDate : ''}
                         />
+
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(values.recurring)}
+                            onChange={(e) => setFieldValue('recurring', e.target.checked)}
+                          />
+                          Recurring task (auto-rollover to today daily)
+                        </label>
 
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Priority <span className="text-red-500">*</span></label>

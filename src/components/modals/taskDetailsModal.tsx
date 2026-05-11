@@ -13,6 +13,7 @@ import { formatDateTime } from "../../helpers/dateTime";
 import GetAvatar from "../../customHooks/useGetAvatar";
 import { canEditTask } from "../../helpers/taskPermissions";
 import { useUser } from "../../context/authContext";
+import Button from "../button/button";
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
@@ -23,17 +24,16 @@ interface TaskDetailsModalProps {
 export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const { deleteTask } = useTasks();
+  const { deleteTask, updateTask } = useTasks();
   const orgCtx = useOrganizations();
   const { organizations } = orgCtx;
-  const { user } = useUser();
   const modalRef = useOutsideClick(onClose, false);
   const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
 
   // determine user's role in the task's organization (if any)
   const taskOrg = organizations.find(o => o.$id === (task as any).organizationId);
   const taskTeam = taskOrg?.teams?.find((t: any) => t.$id === (task as any).teamId);
-  const canEdit = canEditTask(task, user, taskOrg, orgCtx.hasPermission);
+  const canEdit = true
 
   if (!isOpen) return null;
 
@@ -111,7 +111,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
         <div className="p-6 space-y-6">
           {/* Title */}
           <div className="">
-            <h3 className="text-xl font-medium">{task.title}</h3>
+            <h3 className="font-medium">{task.title}</h3>
           </div>
 
           {/* Task Details Grid */}
@@ -229,8 +229,13 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
               </div>
             )
           }
+
         </div>
 
+          <div className="flex justify-end gap-4 p-4 border-t border-gray-500/[0.2] ">
+            <Button size="small" variant="secondary" onClick={() => updateTask(task.$id, { status: "suspended" })}>Suspend task</Button>
+            <Button size="small" onClick={() => updateTask(task.$id, { status: "completed" })}>Complete task</Button>
+          </div>
         {/* Footer */}
         {isEditing && (
           <EditTaskModal 

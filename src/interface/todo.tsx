@@ -14,6 +14,7 @@ export interface todo {
   orderIndex?: number;
   status: 'pending' | 'upcoming' | 'in progress' | 'completed' | 'suspended';
   priority?: 'low' | 'medium' | 'high';
+  recurring?: boolean;
   dueDate?: string;
   $createdAt: string;
   $updatedAt?: string;

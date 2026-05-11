@@ -47,6 +47,14 @@ const sortTasksByOrder = (tasksToSort: todo[]) => [...tasksToSort].sort((left, r
     return left.$id.localeCompare(right.$id);
 });
 
+const getTodayLocalDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const TasksProvider = ({ children }: { children: ReactNode}) => {
     const [tasks, setTasks] = useState<todo[]>([]);
     const [loading, setLoading] = useState(false);
@@ -110,6 +118,43 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         return message;
     };
 
+    const rollOverRecurringTasks = async (tasksToProcess: todo[]) => {
+        const today = getTodayLocalDate();
+        const recurringTasksToUpdate = tasksToProcess.filter((task) => {
+            if (!task.recurring) return false;
+            const taskDate = task.dueDate?.slice(0, 10);
+            return taskDate !== today;
+        });
+
+        if (recurringTasksToUpdate.length === 0) {
+            return tasksToProcess;
+        }
+
+        const updatedById = new Map<string, todo>();
+
+        await Promise.all(recurringTasksToUpdate.map(async (task) => {
+            try {
+                const response = await databases.updateDocument(
+                    DATABASE_ID,
+                    TASKS_COLLECTION_ID,
+                    task.$id,
+                    { dueDate: today }
+                );
+
+                const updatedTask = response as unknown as todo;
+                updatedById.set(updatedTask.$id, updatedTask);
+
+                try {
+                    await indexTask('update', updatedTask);
+                } catch {}
+            } catch (rolloverError) {
+                console.error('Failed recurring rollover for task', task.$id, rolloverError);
+            }
+        }));
+
+        return tasksToProcess.map((task) => updatedById.get(task.$id) || task);
+    };
+
     // Get all tasks for the current user
     const getTasks = async (userEmail: string) => {
         setLoading(true);
@@ -124,8 +169,10 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                     Query.limit(100)
                 ]
             );
+            const fetchedTasks = response.documents as unknown as todo[];
+            const tasksAfterRollover = await rollOverRecurringTasks(fetchedTasks);
 
-            setTasks(sortTasksByOrder(response.documents as unknown as todo[]));
+            setTasks(sortTasksByOrder(tasksAfterRollover));
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
             setError(errorMessage);
@@ -149,8 +196,10 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                     Query.limit(100)
                 ]
             );
+            const fetchedTasks = response.documents as unknown as todo[];
+            const tasksAfterRollover = await rollOverRecurringTasks(fetchedTasks);
 
-            setTasks(sortTasksByOrder(response.documents as unknown as todo[]));
+            setTasks(sortTasksByOrder(tasksAfterRollover));
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
             setError(errorMessage);
@@ -185,6 +234,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                 category: task.category,
                 status: task.status || 'pending',
                 priority: task.priority || 'medium',
+                recurring: task.recurring || false,
                 comments: task.comments || '0',
                 userId: task.userId,
                 userEmail: task.userEmail,
@@ -251,6 +301,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                     category: task.category,
                     status: task.status || 'pending',
                     priority: task.priority || 'medium',
+                    recurring: task.recurring || false,
                     comments: task.comments || '0',
                     userId: task.userId,
                     userEmail: task.userEmail,
