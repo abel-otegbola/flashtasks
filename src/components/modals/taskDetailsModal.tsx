@@ -234,7 +234,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
 
         </div>
 
-          <div className="sticky bottom-0 bg-white dark:bg-dark-bg flex justify-end gap-4 p-4 border-t border-gray-500/[0.1] ">
+          <div className="sticky bottom-0 bg-white dark:bg-dark-bg overflow-x-auto flex flex-wrap justify-end gap-4 p-4 border-t border-gray-500/[0.1] ">
             <Button size="small" variant="secondary" onClick={() => setIsFocusMode(true)}><Play /> Start focus mode</Button>
           {
             task.status === "in progress" ? (
