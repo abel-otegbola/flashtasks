@@ -1,7 +1,7 @@
 'use client';
 import { useState } from "react";
 import { todo } from "../../interface/todo";
-import { PenNewSquare } from "@solar-icons/react";
+import { PenNewSquare, Play } from "@solar-icons/react";
 import { useTasks } from "../../context/tasksContext";
 import { useOrganizations } from '../../context/organizationContext';
 import { TrashIcon, XIcon } from "@phosphor-icons/react";
@@ -14,6 +14,7 @@ import GetAvatar from "../../customHooks/useGetAvatar";
 import { canEditTask } from "../../helpers/taskPermissions";
 import { useUser } from "../../context/authContext";
 import Button from "../button/button";
+import FocusMode from "../focusMode/focusMode";
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   const { organizations } = orgCtx;
   const modalRef = useOutsideClick(onClose, false);
   const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
+  const [isFocusMode, setIsFocusMode] = useState(false);
 
   // determine user's role in the task's organization (if any)
   const taskOrg = organizations.find(o => o.$id === (task as any).organizationId);
@@ -70,7 +72,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
 
   return (
     <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white dark:bg-dark-bg shadow-xl w-[94%] max-w-2xl max-h-[80vh] border border-gray-500/[0.2] rounded-lg overflow-hidden">
+      <div ref={modalRef} className="bg-white dark:bg-dark-bg shadow-xl w-[94%] overflow-y-auto max-w-2xl max-h-[80vh] border border-gray-500/[0.1] rounded-lg overflow-hidden">
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -115,7 +117,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           </div>
 
           {/* Task Details Grid */}
-          <div className="p-3 rounded-lg border border-gray-500/[0.2]">
+          <div className="p-3 rounded-lg border border-gray-500/[0.1]">
             <div className="grid sm:grid-cols-4 grid-cols-2 gap-4">
               {/* Category */}
               <div className="flex flex-col gap-2">
@@ -232,8 +234,15 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
 
         </div>
 
-          <div className="flex justify-end gap-4 p-4 border-t border-gray-500/[0.2] ">
+          <div className="sticky bottom-0 bg-white dark:bg-dark-bg flex justify-end gap-4 p-4 border-t border-gray-500/[0.1] ">
+            <Button size="small" variant="secondary" onClick={() => setIsFocusMode(true)}><Play /> Start focus mode</Button>
+          {
+            task.status === "in progress" ? (
             <Button size="small" variant="secondary" onClick={() => updateTask(task.$id, { status: "suspended" })}>Suspend task</Button>
+            ) : (
+              <Button size="small" variant="secondary" onClick={() => updateTask(task.$id, { status: "in progress" })}>Resume task</Button>
+            )
+          }
             <Button size="small" onClick={() => updateTask(task.$id, { status: "completed" })}>Complete task</Button>
           </div>
         {/* Footer */}
@@ -253,6 +262,12 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           buttonText="Delete"
           setOpen={setShowDeleteConfirmation}
           onConfirm={handleDelete}
+        />
+      )}
+      {isFocusMode && (
+        <FocusMode 
+          task={task}
+          setOpen={(value) => setIsFocusMode(value)}
         />
       )}
     </div>
