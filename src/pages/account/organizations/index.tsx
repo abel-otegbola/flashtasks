@@ -193,7 +193,7 @@ export default function OrganizationsPage() {
             <div className="mx-auto">
 
               <div className='flex gap-4 justify-between flex-wrap mb-6'>
-                <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1'>
+                <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1 overflow-x-auto'>
                 {
                   ["Tasks", "About", "teams", "members", "settings"].map((tab) => {
                     if (tab === "settings" && !(isOwner || isAdmin)) return null;

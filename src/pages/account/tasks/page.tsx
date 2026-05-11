@@ -38,14 +38,13 @@ const sortTasksByOrder = (taskList: todo[]) => [...taskList].sort((left, right) 
 
 function Tasks() {
     const [showModal, setShowModal] = useState(false);
-    const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+    const [viewMode, setViewMode] = useState<ViewMode>('list');
     const { tasks, loading, getTasks, movePendingToToday, updateTask, deleteTask, reorderTasks } = useTasks();
     const [showMoveConfirm, setShowMoveConfirm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<todo | null>(null);
     const [taskToDelete, setTaskToDelete] = useState<todo | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [filterStatus, setFilterStatus] = useState<string>('all');
-    const [dragOverSectionKey, setDragOverSectionKey] = useState<string | null>(null);
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
     const [currentListPage, setCurrentListPage] = useState(1);
     const { user } = useUser();
