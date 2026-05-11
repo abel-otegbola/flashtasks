@@ -18,7 +18,7 @@ export default function MobileNav() {
     const navTabs: navTab[] = [
         { id: 1, label: "Home", to: "/account/dashboard", icon: <Home /> },
         { id: 2, label: "tasks", to: "/account/tasks", icon: <Server /> },
-        { id: 2, label: "New", to: "/account/tasks/new", icon: <PlusIcon /> },
+        { id: 3, label: "New", to: "/account/tasks/new", icon: <PlusIcon /> },
         { id: 4, label: "Organizations", to: "/account/organizations", icon: <UsersGroupTwoRounded /> },
         { id: 5, label: "Settings", to: !user ? "/login" : "/account/settings", icon: <Settings /> },
     ]

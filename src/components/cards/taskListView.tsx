@@ -8,7 +8,6 @@ import { formatDeliveredTime } from "../../helpers/messageTime";
 import { PlayIcon } from "@phosphor-icons/react";
 import FocusMode from "../focusMode/focusMode";
 import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
-import { useOrganizations } from "../../context/organizationContext";
 import toast from 'react-hot-toast';
 
 type Props = {
@@ -27,7 +26,6 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     const [isDragging, setIsDragging] = useState(false)
     const [startPomodoro, setStartPomodoro] = useState<todo | null>(null);
     const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
-    const { organizations } = useOrganizations();
 
   const canEdit = true; // allow editing if it's a personal task (no organization)
 

@@ -15,6 +15,7 @@ export interface Link {
 
 function Sidebar() {
     const [open, setOpen] = useState(false)
+    const [openCompact, setOpenCompact] = useState(false)
     const pathname = useLocation().pathname;
     const { user, getPhotoUrl, logOut } = useUser();
     const navigate = useNavigate();
@@ -37,6 +38,21 @@ function Sidebar() {
         };
     }, [getPhotoUrl, user?.email]);
 
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        if (window.innerWidth < 768) {
+            setOpen(false);
+            return;
+        }
+    }, [pathname]);
+
+    const handleSidebarDismiss = () => {
+        setOpen(false);
+    };
+
     const generalLinks: Link[] = [
         { id: 0, label: "Dashboard", icon: <Home size={16} />, link: "/account/dashboard" },
         { id: 1, label: "Tasks", icon: <Server size={16} />, link: "/account/tasks" },
@@ -50,16 +66,21 @@ function Sidebar() {
         // Logout is handled specially to run the logout effect
         { id: 3, label: "Logout", icon: <Logout size={16} />, link: "#" },
     ]
-    const modalRef = useOutsideClick(setOpen, false)
+    const modalRef = useOutsideClick(handleSidebarDismiss, false)
 
     return (
-        <div ref={modalRef} className={`md:sticky top-0 left-0 h-screen w-0 md:p-4 duration-500 ${open ? "md:w-[100px]": "md:w-[280px]"}`}>
-            <button className={`md:absolute fixed sm:top-10 top-6 md:right-[2px] right-5 flex flex-col justify-center items-center bg-white/[0.7] dark:bg-dark-bg/[0.7] backdrop-blur-md gap-1 w-5 h-8 z-[50] p-[2px] px-[13px] border border-gray-500/[0.2] rounded-full`} onClick={() => setOpen(!open)}>
-                <span className={`w-[7px] h-[1px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "rotate-[45deg] translate-y-[4px]" : "rotate-[0deg]"}`}></span>
-                <span className={`duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "py-[0px] w-[0px] h-[0px] translate-x-[-12px]" : "translate-x-[4px] py-[0.5px] px-[4px] w-[8px] h-[0.5px]"}`}></span>
-                <span className={`w-[7px] h-[1px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "rotate-[-45deg] translate-y-[-4px]" : "rotate-[0deg]"}`}></span>
+        <div ref={modalRef} className={`md:sticky top-0 left-0 h-screen w-0 md:p-4 duration-500 ${openCompact ? "md:w-[100px]": "md:w-[280px]"}`}>
+            <button className={`md:absolute fixed sm:top-10 top-6 md:right-[2px] right-5 flex flex-col justify-center items-center bg-white/[0.7] dark:bg-dark-bg/[0.7] backdrop-blur-md gap-1 w-5 h-8 z-[50] p-[2px] px-[13px] border border-gray-500/[0.2] rounded-full`} onClick={() => setOpenCompact(!openCompact)}>
+                <span className={`w-[7px] h-[1.5px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${openCompact ? "rotate-[45deg] translate-y-[4px]" : "rotate-[0deg]"}`}></span>
+                <span className={`duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${openCompact ? "py-[0px] w-[0px] h-[0px] translate-x-[-12px]" : "translate-x-[4px] py-[0.5px] px-[4px] w-[8px] h-[0.5px]"}`}></span>
+                <span className={`w-[7px] h-[1.5px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${openCompact ? "rotate-[-45deg] translate-y-[-4px]" : "rotate-[0deg]"}`}></span>
             </button>
-            <div className={`flex flex-col justify-between md:h-full bg-white dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2] h-[100vh] text-[13px] md:rounded-[20px] md:sticky fixed md:top-0 top-0 py-4 px-4 right-0 overflow-y-auto overflow-x-hidden z-[5] transition-all duration-700 ${open ? "sm:w-[70px] w-[280px] translate-x-[0px] opacity-[1]": "sm:w-full translate-x-[400px] md:translate-x-[0px] md:opacity-[1] opacity-[0]"}`}>  
+            <button className={`md:absolute fixed sm:hidden top-6 md:right-[2px] right-5 flex flex-col justify-center items-center bg-white/[0.7] dark:bg-dark-bg/[0.7] backdrop-blur-md gap-1 w-5 h-8 z-[50] p-[2px] px-[13px] border border-gray-500/[0.2] rounded-full`} onClick={() => setOpen(!open)}>
+                <span className={`w-[7px] h-[1.5px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "rotate-[45deg] translate-y-[4px]" : "rotate-[0deg]"}`}></span>
+                <span className={`duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "py-[0px] w-[0px] h-[0px] translate-x-[-12px]" : "translate-x-[4px] py-[0.5px] px-[4px] w-[8px] h-[0.5px]"}`}></span>
+                <span className={`w-[7px] h-[1.5px] py-[0.5px] px-[6px] duration-500 transition-all bg-dark-bg dark:bg-white/[0.5] rounded-[2px] ${open ? "rotate-[-45deg] translate-y-[-4px]" : "rotate-[0deg]"}`}></span>
+            </button>
+            <div className={`flex flex-col justify-between md:h-full bg-white dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2] h-[100vh] text-[13px] md:rounded-[20px] md:sticky fixed md:top-0 top-0 py-4 px-4 right-0 overflow-y-auto overflow-x-hidden z-[5] transition-all duration-700 ${open ? "sm:w-[70px] w-[280px] translate-x-[0px] opacity-[1]" : "sm:w-full translate-x-[400px] md:translate-x-[0px] md:opacity-[1] opacity-[0]"}`}>  
                 <Link to={"/"} className="p-4 rounded-lg border border-gray-500/[0.2] w-fit mb-4">
                     <LogoIcon className="w-[12px]" />
                 </Link>
@@ -67,14 +88,14 @@ function Sidebar() {
                 {/* Navigation Links */}
                 <div className="flex-1 flex flex-col gap-6">
                     <div className="flex flex-col gap-2">
-                        <p className={`text-gray-400 mb-2 ${open ? "sm:opacity-0" : ""}`}>GENERAL</p>
+                        <p className={`text-gray-400 mb-2 ${open ? "sm:opacity-0" : ""} ${openCompact ? "md:opacity-0 md:h-0 md:mb-0 md:overflow-hidden" : ""}`}>GENERAL</p>
                         {
                         generalLinks.map(link => {
                                 return (
-                                <Link key={link.id} onClick={() => setOpen(false)} to={ link.link} className={`relative flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
+                                <Link key={link.id} onClick={handleSidebarDismiss} to={ link.link} className={`relative flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
                                     <div className="flex items-center gap-1">
                                         <span className="w-[24px] opacity-[0.6]">{link.icon}</span>
-                                        <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""}`}>{link.label} </span>
+                                        <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""} ${openCompact ? "md:hidden" : ""}`}>{link.label} </span>
                                     </div>
                                     { link.subtext ? <span className="flex items-center justify-center bg-primary text-white text-[9px] rounded-full px-[6px]">{link.subtext}</span> : ""}
                                 </Link>
@@ -84,7 +105,7 @@ function Sidebar() {
                     </div>
                     
                     <div className="flex flex-col gap-2">
-                        <p className={`text-gray-400 mb-2 ${open ? "sm:opacity-0" : ""}`}>OTHERS</p>
+                        <p className={`text-gray-400 mb-2 ${open ? "sm:opacity-0" : ""} ${openCompact ? "md:opacity-0 md:h-0 md:mb-0 md:overflow-hidden" : ""}`}>OTHERS</p>
                         {
                         otherLinks.map(link => {
                                 // For Logout, render a button that triggers the auth logout flow
@@ -92,11 +113,11 @@ function Sidebar() {
                                     return (
                                         <button
                                             key={link.id}
-                                            onClick={() => { setOpen(false); navigate('/account/notifications'); }}
+                                            onClick={() => { handleSidebarDismiss(); navigate('/account/notifications'); }}
                                             className={`relative w-full text-left flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium cursor-pointer ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
                                             <div className="flex items-center gap-1">
                                                 <span className="w-[24px] opacity-[0.6]">{link.icon}</span>
-                                                <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""}`}>{link.label} </span>
+                                                <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""} ${openCompact ? "md:hidden" : ""}`}>{link.label} </span>
                                             </div>
                                         </button>
                                     )
@@ -106,21 +127,21 @@ function Sidebar() {
                                     return (
                                         <button
                                             key={link.id}
-                                            onClick={async () => { setOpen(false); await logOut(); navigate('/auth/waitlist'); }}
+                                            onClick={async () => { handleSidebarDismiss(); await logOut(); navigate('/auth/waitlist'); }}
                                             className={`relative w-full text-left flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium cursor-pointer ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
                                             <div className="flex items-center gap-1">
                                                 <span className="w-[24px] opacity-[0.6]">{link.icon}</span>
-                                                <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""}`}>{link.label} </span>
+                                                <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""} ${openCompact ? "md:hidden" : ""}`}>{link.label} </span>
                                             </div>
                                         </button>
                                     )
                                 }
 
                                 return (
-                                <Link key={link.id} onClick={() => setOpen(false)} to={ link.link} className={`relative flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
+                                <Link key={link.id} onClick={handleSidebarDismiss} to={ link.link} className={`relative flex items-center justify-between px-3 py-1 h-[32px] rounded-[6px] duration-300 font-medium ${pathname.includes(link.link) ? "bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]" : " hover:bg-bg-gray-100 dark:hover:bg-dark-bg"}`}>
                                     <div className="flex items-center gap-1">
                                         <span className="w-[24px] opacity-[0.6]">{link.icon}</span>
-                                        <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""}`}>{link.label} </span>
+                                        <span className={`flex-1 py-1 break-normal duration-500 ${open ? "sm:hidden" : ""} ${openCompact ? "md:hidden" : ""}`}>{link.label} </span>
                                     </div>
                                     { link.subtext ? <span className="flex items-center justify-center bg-primary text-white text-[9px] rounded-full px-[6px]">{link.subtext}</span> : ""}
                                 </Link>
@@ -133,19 +154,19 @@ function Sidebar() {
                 {/* User Info & Theme Toggle */}
                 <div className="flex flex-col gap-3 pt-4 border-t border-gray-500/[0.2] mt-4">
                     {/* Theme Toggle */}
-                    <div className="flex items-center justify-between px-3 py-2">
-                        <span className={`text-sm text-gray-600 dark:text-gray-400 ${open ? "sm:hidden" : ""}`}>Theme</span>
-                        <ThemeSelector />
+                    <div className={`flex items-center justify-between ${openCompact ? "px-0.5" : "px-3"} py-2"`}>
+                        <span className={`text-sm text-gray-600 dark:text-gray-400 ${open ? "sm:hidden" : ""} ${openCompact ? "md:hidden" : ""}`}>Theme</span>
+                        <ThemeSelector compact={openCompact} />
                     </div>
 
                     {/* User Info */}
                     {user && (
                         <div className={`flex items-center gap-3 p-1`}>
                             {/* User Avatar */}
-                            <GetAvatar email={user?.email || ""} className="w-12 h-12" />
+                            <GetAvatar email={user?.email || ""} className="w-10 h-10" />
                             
                             {/* User Details */}
-                            <div className={`flex-1 min-w-0 ${open ? "sm:hidden" : ""}`}>
+                            <div className={`flex-1 min-w-0 ${open ? "sm:hidden" : ""} ${openCompact ? "md:hidden" : ""}`}>
                                 <p className="font-medium text-sm truncate dark:text-white">
                                     {user.name || 'User'}
                                 </p>

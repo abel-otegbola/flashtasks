@@ -9,7 +9,7 @@ interface Theme {
 type Themes = Array<Theme>
 
 
-function ThemeSelector() {
+function ThemeSelector({ compact = false }: { compact?: boolean }) {
     const [theme, setTheme] = useState(localStorage.theme || 'light')
 
     const themes: Themes = [
@@ -45,15 +45,19 @@ function ThemeSelector() {
     }, [])
 
     return (
-        <button className="flex gap-2 border border-gray-500/[0.1] p-1 rounded-full">                      
+        <button className={`flex gap-2 border border-gray-500/[0.1] p-1 rounded-full`} aria-label={"Change theme, current theme is "+ theme} onClick={() => {
+            const currentIndex = themes.findIndex(t => t.title === theme);
+            const nextIndex = (currentIndex + 1) % themes.length;
+            setTheme(themes[nextIndex].title);
+        }}>                     
             {
             themes.map(item => {
                 return (
                     <span 
                         key={item.id} 
-                        className={`flex items-center leading-0 gap-1 text-[16px] p-2 h-fit rounded-full ${item.title === theme ? "bg-primary text-white" : ""}`} 
+                        className={`flex items-center leading-0 gap-1 text-[16px] p-2 h-fit rounded-full ${item.title === theme ? "bg-primary text-white" : ""} ${!compact ? "" : item.title === theme ? "": "hidden"} ""}`} 
                         aria-label={"Theme setting changed to "+ theme} 
-                        onClick={() => setTheme(item.title)} 
+                        onClick={() => compact ? setTheme(item.title === "light" ? "dark" : "light") : setTheme(item.title)} 
                     >{item.img}</span>
                 )
             })}
