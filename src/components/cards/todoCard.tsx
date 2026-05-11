@@ -41,7 +41,7 @@ function TodoCard(task: TodoCardProps) {
   const { user } = useUser();
   const { organizations } = useOrganizations();
   const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
-  const canEdit = !organizations.find((org) => org.$id === task.organizationId); // allow editing if it's a personal task (no organization)
+  const canEdit = true// allow editing if it's a personal task (no organization)
 
   const statusColors: Record<
     string,

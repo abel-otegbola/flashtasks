@@ -29,7 +29,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
     const { organizations } = useOrganizations();
 
-  const canEdit = !organizations.find((org) => org.$id === task.organizationId);
+  const canEdit = true; // allow editing if it's a personal task (no organization)
 
   return (
     <>
