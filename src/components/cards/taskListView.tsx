@@ -3,15 +3,13 @@ import { useTasks } from "../../context/tasksContext"
 import TaskCheckbox from "../ui/taskCheckbox"
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
 import Confirmationmessage from "../modals/confirmation";
-import { useEffect, useState, type DragEvent } from "react";
+import { useState, type DragEvent } from "react";
 import { formatDeliveredTime } from "../../helpers/messageTime";
 import { PlayIcon } from "@phosphor-icons/react";
 import FocusMode from "../focusMode/focusMode";
 import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 import { useOrganizations } from "../../context/organizationContext";
-import { useUser } from "../../context/authContext";
 import toast from 'react-hot-toast';
-import { canEditTask } from "../../helpers/taskPermissions";
 
 type Props = {
     task: todo;
@@ -29,11 +27,9 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     const [isDragging, setIsDragging] = useState(false)
     const [startPomodoro, setStartPomodoro] = useState<todo | null>(null);
     const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
-    const orgCtx = useOrganizations();
-    const { user } = useUser();
+    const { organizations } = useOrganizations();
 
-    const currentOrg = orgCtx.currentOrg;
-    const canEdit = canEditTask(task, user, currentOrg, orgCtx.hasPermission);
+  const canEdit = !organizations.find((org) => org.$id === task.organizationId);
 
   return (
     <>
