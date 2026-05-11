@@ -172,22 +172,22 @@ export function useRealtimeTranscription({
         recognition.lang = "en-US";
 
         recognition.onresult = (event: any) => {
+          let finalizedText = "";
           let interimText = "";
 
-          for (
-            let i = event.resultIndex;
-            i < event.results.length;
-            i++
-          ) {
-            const transcript =
-              event.results[i][0].transcript;
+          // Rebuild the live transcript each event so newer chunks append
+          // without replacing earlier recognized words.
+          for (let i = 0; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
 
-            if (!event.results[i].isFinal) {
-              interimText += transcript;
+            if (event.results[i].isFinal) {
+              finalizedText += `${transcript} `;
+            } else {
+              interimText += `${transcript} `;
             }
           }
 
-          onInterimTranscript?.(interimText.trim());
+          onInterimTranscript?.(`${finalizedText}${interimText}`.trim());
         };
 
         recognition.onerror = (event: any) => {
