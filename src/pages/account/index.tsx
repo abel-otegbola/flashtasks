@@ -19,6 +19,7 @@ import { getGravatar } from "../../helpers/getGravatar";
 import useGetAvatar from "../../customHooks/useGetAvatar";
 import GetAvatar from "../../customHooks/useGetAvatar";
 import { resolveAccountLandingPath } from "../../helpers/appPreferences";
+import MobileNav from "../../components/mobileNav/mobileNav";
 
 function AccountPages() {
     const { user } = useUser();
@@ -72,6 +73,11 @@ function AccountPages() {
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/tasks/new" element={<CreateTask />} />
             </Routes>
+            
+            
+            <div className=" block md:hidden mt-16">
+                <MobileNav />
+            </div>
         </div>
     </div>
   )
