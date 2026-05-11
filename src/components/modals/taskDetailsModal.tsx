@@ -11,6 +11,8 @@ import { useOutsideClick } from "../../customHooks/useOutsideClick";
 import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 import { formatDateTime } from "../../helpers/dateTime";
 import GetAvatar from "../../customHooks/useGetAvatar";
+import { canEditTask } from "../../helpers/taskPermissions";
+import { useUser } from "../../context/authContext";
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
@@ -22,17 +24,25 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const { deleteTask } = useTasks();
-  const { organizations } = useOrganizations();
+  const orgCtx = useOrganizations();
+  const { organizations } = orgCtx;
+  const { user } = useUser();
   const modalRef = useOutsideClick(onClose, false);
   const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
 
   // determine user's role in the task's organization (if any)
   const taskOrg = organizations.find(o => o.$id === (task as any).organizationId);
   const taskTeam = taskOrg?.teams?.find((t: any) => t.$id === (task as any).teamId);
+  const canEdit = canEditTask(task, user, taskOrg, orgCtx.hasPermission);
 
   if (!isOpen) return null;
 
   const handleDelete = async () => {
+    if (!canEdit) {
+      setShowDeleteConfirmation(false);
+      return;
+    }
+
     await deleteTask(task.$id);
     setShowDeleteConfirmation(false);
     onClose();
@@ -62,13 +72,14 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
     <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
       <div ref={modalRef} className="bg-white dark:bg-dark-bg shadow-xl w-[94%] max-w-2xl max-h-[80vh] border border-gray-500/[0.2] rounded-lg overflow-hidden">
         {/* Header */}
-          <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="px-2 opacity-[0.7] leading-4">Created on {formatDateTime(task.$createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsEditing(!isEditing)}
+              disabled={!canEdit}
               className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
               title={isEditing ? "Cancel Edit" : "Edit Task"}
             >
@@ -76,6 +87,8 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             </button>
             <button
               onClick={() => {
+                if (!canEdit) return;
+
                 if (confirmBeforeDelete) {
                   setShowDeleteConfirmation(true);
                   return;

@@ -63,12 +63,28 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         return maxOrderIndex + 1;
     };
 
+    const normalizeEmail = (value?: string | null) => value?.trim().toLowerCase() || '';
+
+    const isOwnedByCurrentUser = (task: Pick<todo, 'userEmail' | 'userId'>) => {
+        const currentEmail = normalizeEmail(user?.email);
+        const taskEmail = normalizeEmail(task.userEmail);
+
+        return Boolean(
+            currentEmail && (
+                taskEmail === currentEmail ||
+                task.userId === user?.$id ||
+                task.userId === (user as any)?.userId ||
+                task.userId === (user as any)?._id?.toString?.()
+            )
+        );
+    };
+
     const getTaskOrganizationId = (task?: Pick<todo, 'organizationId'> | null) => task?.organizationId || '';
 
     const canAccessOrganizationTask = (task: Pick<todo, 'organizationId' | 'userEmail' | 'userId' | 'assignees'>, mode: 'create' | 'update' | 'delete') => {
         const orgId = getTaskOrganizationId(task);
         if (!orgId) {
-            return task.userEmail === user?.email || task.userId === user?.$id;
+            return isOwnedByCurrentUser(task);
         }
 
         const hasFullAccess = orgCtx.hasPermission?.('Create/edit/delete all tasks', orgId) || false;
@@ -78,7 +94,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             return orgCtx.hasPermission?.('Create tasks', orgId) || false;
         }
 
-        const isOwnerTask = task.userEmail === user?.email;
+        const isOwnerTask = isOwnedByCurrentUser(task);
         const isAssignee = Boolean(user?.email && (task.assignees || []).includes(user.email));
 
         if (isOwnerTask && orgCtx.hasPermission?.('Edit their own tasks', orgId)) return true;
@@ -283,13 +299,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             toast.error(message);
             return null;
         }
-
-        if (!canAccessOrganizationTask(existingTask, 'update')) {
-            denyTaskAccess('update');
-            return null;
-        }
-
-        setLoading(true);
         
         try {
             // Remove $createdAt and $updatedAt from updates as they're auto-managed by Appwrite
@@ -314,7 +323,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             toast.error(errorMessage);
             return null;
         } finally {
-            setLoading(false);
         }
     };
 
@@ -334,8 +342,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             denyTaskAccess('delete');
             return;
         }
-
-        setLoading(true);
         
         try {
             await databases.deleteDocument(
@@ -355,7 +361,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             toast.error(errorMessage);
             return;
         } finally {
-            setLoading(false);
         }
     };
 

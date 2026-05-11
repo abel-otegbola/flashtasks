@@ -14,6 +14,7 @@ import { createTaskSchema } from '../../schema/createTaskSchema';
 import DueDateTimePicker from "../input/dueDateTimePicker";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
 import Dropdown from "../dropdown/dropdown";
+import { canEditTask } from "../../helpers/taskPermissions";
 
 interface EditTaskModalProps {
   isOpen: boolean;
@@ -34,10 +35,7 @@ export default function EditTaskModal({
 
   const orgCtx = useOrganizations();
   const currentOrg = orgCtx.currentOrg;
-
-  const isOwner = currentOrg?.ownerEmail === user?.email;
-  const hasGlobalEdit = orgCtx.hasPermission?.('Create/edit/delete all tasks') || false;
-  const canEdit = isOwner || hasGlobalEdit || (task?.userEmail === user?.email && (orgCtx.hasPermission?.('Edit their own tasks') || false)) || ((task?.assignees || []).includes(user?.email) && (orgCtx.hasPermission?.('Edit tasks assigned to them') || false));
+  const canEdit = task ? canEditTask(task, user, currentOrg, orgCtx.hasPermission) : false;
 
   const toDateTimeLocalValue = (value?: string) => {
     if (!value) return '';

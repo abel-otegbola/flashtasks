@@ -15,6 +15,9 @@ import { formatDeliveredTime } from "../../helpers/messageTime";
 import GetAvatar from "../../customHooks/useGetAvatar";
 import { PlayIcon } from "@phosphor-icons/react";
 import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
+import { useUser } from '../../context/authContext';
+import { canEditTask } from '../../helpers/taskPermissions';
+import toast from 'react-hot-toast';
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -35,7 +38,10 @@ function TodoCard(task: TodoCardProps) {
   const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { deleteTask, updateTask } = useTasks();
+  const { user } = useUser();
+  const orgCtx = useOrganizations();
   const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
+  const canEdit = canEditTask(task, user, orgCtx.currentOrg, orgCtx.hasPermission);
 
   const statusColors: Record<
     string,
@@ -89,6 +95,11 @@ function TodoCard(task: TodoCardProps) {
       <SwipeDeleteItem
         className={`relative flex flex-col overflow-hidden transition-all cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
         onSwipeLeft={() => {
+          if (!canEdit) {
+            toast.error('You do not have permission to delete this task');
+            return;
+          }
+
           if (confirmBeforeDelete) {
             setShowDeleteConfirmation(true);
             return;
@@ -96,7 +107,14 @@ function TodoCard(task: TodoCardProps) {
 
           void deleteTask(task.$id);
         }}
-        onSwipeRight={() => updateTask(task.$id, { status: status === 'completed' ? 'pending' : 'completed' }) }
+        onSwipeRight={() => {
+          if (!canEdit) {
+            toast.error('You do not have permission to update this task');
+            return;
+          }
+
+          return updateTask(task.$id, { status: status === 'completed' ? 'pending' : 'completed' });
+        }}
         onLongPress={() => setShowFocusMode(true)}
       >
       <div
@@ -137,6 +155,11 @@ function TodoCard(task: TodoCardProps) {
                     <TaskCheckbox
                       checked={status === 'completed'}
                       onCheckedChange={(checked) => {
+                        if (!canEdit) {
+                          toast.error('You do not have permission to update this task');
+                          return;
+                        }
+
                         void updateTask(task.$id, { status: checked ? 'completed' : 'pending' });
                       }}
                       ariaLabel={`Mark ${title} as completed`}
@@ -178,6 +201,10 @@ function TodoCard(task: TodoCardProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!canEdit) {
+                        toast.error('You do not have permission to edit this task');
+                        return;
+                      }
                       setShowEditModal(true);
                       setOpenMenu(false);
                     }}
@@ -188,6 +215,10 @@ function TodoCard(task: TodoCardProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!canEdit) {
+                        toast.error('You do not have permission to delete this task');
+                        return;
+                      }
                       if (confirmBeforeDelete) {
                         setShowDeleteConfirmation(true);
                         setOpenMenu(false);
@@ -265,6 +296,12 @@ function TodoCard(task: TodoCardProps) {
           buttonText="Delete"
           setOpen={setShowDeleteConfirmation}
           onConfirm={async () => {
+            if (!canEdit) {
+              toast.error('You do not have permission to delete this task');
+              setShowDeleteConfirmation(false);
+              return;
+            }
+
             await deleteTask(task.$id);
             setShowDeleteConfirmation(false);
           }}

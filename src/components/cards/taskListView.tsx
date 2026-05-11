@@ -3,7 +3,7 @@ import { useTasks } from "../../context/tasksContext"
 import TaskCheckbox from "../ui/taskCheckbox"
 import SwipeDeleteItem from "../ui/swipeDeleteItem";
 import Confirmationmessage from "../modals/confirmation";
-import { useState, type DragEvent } from "react";
+import { useEffect, useState, type DragEvent } from "react";
 import { formatDeliveredTime } from "../../helpers/messageTime";
 import { PlayIcon } from "@phosphor-icons/react";
 import FocusMode from "../focusMode/focusMode";
@@ -11,6 +11,7 @@ import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 import { useOrganizations } from "../../context/organizationContext";
 import { useUser } from "../../context/authContext";
 import toast from 'react-hot-toast';
+import { canEditTask } from "../../helpers/taskPermissions";
 
 type Props = {
     task: todo;
@@ -32,9 +33,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     const { user } = useUser();
 
     const currentOrg = orgCtx.currentOrg;
-    const isOwner = currentOrg?.ownerEmail === user?.email;
-    const hasGlobalEdit = orgCtx.hasPermission?.('Create/edit/delete all tasks') || false;
-    const canEdit = isOwner || hasGlobalEdit || (task.userEmail === user?.email && (orgCtx.hasPermission?.('Edit their own tasks') || false)) || ((task.assignees || []).includes(user?.email) && (orgCtx.hasPermission?.('Edit tasks assigned to them') || false));
+    const canEdit = canEditTask(task, user, currentOrg, orgCtx.hasPermission);
 
   return (
     <>
