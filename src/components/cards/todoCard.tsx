@@ -38,10 +38,9 @@ function TodoCard(task: TodoCardProps) {
   const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { deleteTask, updateTask } = useTasks();
-  const { user } = useUser();
-  const { organizations } = useOrganizations();
   const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
   const canEdit = true// allow editing if it's a personal task (no organization)
+  const compactMode = localStorage.getItem('compactMode') === 'true';
 
   const statusColors: Record<
     string,
@@ -178,11 +177,15 @@ function TodoCard(task: TodoCardProps) {
                     </button>
                 )
             }
-              <p
-                className={`p-1 px-3 font-medium rounded-full text-[10px] w-fit ${color.bg} ${color.text}`}
-              >
-                {category}
-              </p>
+            {
+              !compactMode && (
+                <p
+                  className={`p-1 px-3 font-medium rounded-full text-[10px] w-fit ${color.bg} ${color.text}`}
+                >
+                  {category}
+                </p>
+              )
+            }
             </div>
 
             <div className="relative" ref={menuRef}>
@@ -239,38 +242,50 @@ function TodoCard(task: TodoCardProps) {
           </div>
 
           <h2 className="font-semibold text-[12px]">{title}</h2>
-          <p className="text-[10px] text-gray-400 line-clamp-2">{description}</p>
+          {
+            !compactMode && (
+              <p className="text-[10px] text-gray-400 line-clamp-2">{description}</p>
+            )
+          }
           {/* Organization / Team display */}
-          <div className="mt-2 flex gap-2 items-center justify-between flex-wrap">
-            {/* find org/team names */}
-            {(() => {
-              try {
-                const org = (useOrganizations().organizations || []).find(o => o.$id === (task as any).organizationId);
-                if (org) {
-                  const team = (org.teams || []).find((t: any) => t.$id === (task as any).teamId);
-                  return (
-                    <>
-                      <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-[#202020]">{org.name}</span>
-                      {team && <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-[#202020]">{team.name}</span>}
-                    </>
-                  )
-                }
-                return null;
-              } catch { return null }
-            })()}
-            <p className="text-xs">Due: {task.dueDate ? formatDeliveredTime(task.dueDate, undefined, 'future') : 'No date'}</p>
-          </div>
+          {
+            !compactMode && (
+            <div className="mt-2 flex gap-2 items-center justify-between flex-wrap">
+              {/* find org/team names */}
+              {(() => {
+                try {
+                  const org = (useOrganizations().organizations || []).find(o => o.$id === (task as any).organizationId);
+                  if (org) {
+                    const team = (org.teams || []).find((t: any) => t.$id === (task as any).teamId);
+                    return (
+                      <>
+                        <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-[#202020]">{org.name}</span>
+                        {team && <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-[#202020]">{team.name}</span>}
+                      </>
+                    )
+                  }
+                  return null;
+                } catch { return null }
+              })()}
+              <p className="text-xs">Due: {task.dueDate ? formatDeliveredTime(task.dueDate, undefined, 'future') : 'No date'}</p>
+            </div>
+            )
+          }
         </div>
 
-        <div className="flex justify-between gap-4 flex-wrap p-2 px-4 border-t border-gray-100 dark:border-gray-500/[0.2]">
-          <div className="flex ml-2">
-            {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => <GetAvatar key={index} email={initial} className="-ml-2" />)}
+        {
+          !compactMode && (
+          <div className="flex justify-between gap-4 flex-wrap p-2 px-4 border-t border-gray-100 dark:border-gray-500/[0.2]">
+            <div className="flex ml-2">
+              {[...assigneeList, task.userEmail].filter(Boolean).map((initial, index) => <GetAvatar key={index} email={initial} className="-ml-2" />)}
+            </div>
+            <p className="text-[12px] flex gap-1 items-center text-gray-500">
+              <ChatLine size={12} color="currentColor" />
+              {comments}
+            </p>
           </div>
-          <p className="text-[12px] flex gap-1 items-center text-gray-500">
-            <ChatLine size={12} color="currentColor" />
-            {comments}
-          </p>
-        </div>
+          )
+        }
       </div>
       </SwipeDeleteItem>
 

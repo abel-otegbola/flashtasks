@@ -26,6 +26,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     const [isDragging, setIsDragging] = useState(false)
     const [startPomodoro, setStartPomodoro] = useState<todo | null>(null);
     const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
+    const compactMode = localStorage.getItem('compactMode') === 'true';
 
   const canEdit = true; // allow editing if it's a personal task (no organization)
 
@@ -86,69 +87,82 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
         }}
     >
         <div className="flex items-start md:items-center p-4 pr-0 md:col-span-1">
-            {
-                task.status === 'completed' ? (
-                    <TaskCheckbox
-                        ariaLabel="completed"
-                        checked={true}
-                        onCheckedChange={() => {}}
-                    />
-                ) : (
-                    <button
-                        className=""
-                        aria-label="Start Pomodoro for task"
-                        title="Focus mode"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setStartPomodoro(task);
-                        }}
-                    >
-                        <PlayIcon size={16} className="text-gray-400" />
-                    </button>
-                )
-            }
+            <TaskCheckbox
+                ariaLabel="completed"
+                checked={task.status === 'completed'}
+                onCheckedChange={() => updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' })}
+            />
         </div>
         <div 
             key={task.$id}
             onClick={() => openTaskDetails(task)}
             role="button"
             tabIndex={0}
-            className={`md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 flex-1`}
+            className={`md:grid ${!compactMode ? 'md:grid-cols-12' : 'md:grid-cols-6'} flex flex-col gap-4 px-4 py-3 flex-1`}
         >
             {/* Mobile Layout */}
             <div className="md:col-span-4 flex flex-col gap-1 md:order-none order-1">
-                <h3 className="font-semibold text-sm">{task.title}</h3>
-                <p className="text-xs text-gray-400 line-clamp-2 md:line-clamp-1">{task.description}</p>
+                <h3 className={`font-semibold text-sm ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
+                    {task.title}
+                </h3>
+                {
+                    !compactMode && (
+                        <p className="text-xs text-gray-400 line-clamp-2 md:line-clamp-1">{task.description}</p>
+                    )
+                }
             </div>
             
             {/* Desktop Layout - Remaining columns */}
-            <div className="md:col-span-2 md:flex hidden items-center md:justify-start">
-                <span className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700">
-                    {task.category}
-                </span>
-            </div>
-            <div className="md:col-span-2 md:flex hidden items-center md:justify-start text-nowrap">
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                    task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                    task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                    task.status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                    task.status === 'pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                }`}>
-                    {task.status}
-                </span>
-            </div>
-            <div className="md:col-span-2 flex items-center md:justify-start md:order-none order-0">
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                    task.priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                    task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                }`}>
-                    {task.priority || 'medium'}
-                </span>
-            </div>
-            <div className="md:col-span-2 flex items-center text-xs text-gray-500 dark:text-gray-400 md:order-none order-1">
+            {
+                !compactMode && (
+                <div className="md:col-span-2 md:flex hidden items-center md:justify-start">
+                    <span className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700">
+                        {task.category}
+                    </span>
+                </div>
+                )
+            }
+            {
+                !compactMode && (
+                <div className="md:col-span-2 md:flex hidden items-center md:justify-start text-nowrap">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                        task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                        task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                        task.status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                        task.status === 'pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    }`}>
+                        {task.status}
+                    </span>
+                </div>
+                )
+            }
+            {
+                !compactMode && (
+                <div className="md:col-span-2 flex items-center md:justify-start md:order-none order-0">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                        task.priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                        task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                        'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    }`}>
+                        {task.priority || 'medium'}
+                    </span>
+                </div>
+                )
+            }
+            <div className="md:col-span-2 flex items-center gap-6 justify-between text-xs text-gray-500 dark:text-gray-400 md:order-none order-1">
                 {task.dueDate ? formatDeliveredTime(task.dueDate, undefined, 'future') : 'No date'}
+                <button
+                    className=""
+                    aria-label="Start Pomodoro for task"
+                    title="Focus mode"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setStartPomodoro(task);
+                    }}
+                >
+                    <PlayIcon size={18} className="text-gray-400" />
+                </button>
             </div>
         </div>
     

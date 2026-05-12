@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { useUser } from "../../context/authContext";
 import Dashboard from "./dashboard/dashboard";
@@ -15,8 +14,6 @@ import CreateTask from "./create-task/createTask";
 import SettingsPage from "./settings";
 import Pricing from "./pricing";
 import Notifications from "./notifications";
-import { getGravatar } from "../../helpers/getGravatar";
-import useGetAvatar from "../../customHooks/useGetAvatar";
 import GetAvatar from "../../customHooks/useGetAvatar";
 import { resolveAccountLandingPath } from "../../helpers/appPreferences";
 import MobileNav from "../../components/mobileNav/mobileNav";

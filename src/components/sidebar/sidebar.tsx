@@ -3,10 +3,9 @@ import { useEffect, useState, type ReactElement } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LogoIcon from "../../assets/icons/logo";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
-import { Bell, Calendar, DollarMinimalistic, Home, IconProps, Logout, Server, Settings, UsersGroupTwoRounded } from "@solar-icons/react";
+import { Bell, DollarMinimalistic, Home, IconProps, Logout, Server, Settings, UsersGroupTwoRounded } from "@solar-icons/react";
 import ThemeSelector from "../themeSelector/themeSelector";
 import { useUser } from "../../context/authContext";
-import { getGravatar } from "../../helpers/getGravatar";
 import GetAvatar from "../../customHooks/useGetAvatar";
 
 export interface Link {
@@ -17,26 +16,8 @@ function Sidebar() {
     const [open, setOpen] = useState(false)
     const [openCompact, setOpenCompact] = useState(false)
     const pathname = useLocation().pathname;
-    const { user, getPhotoUrl, logOut } = useUser();
+    const { user, logOut } = useUser();
     const navigate = useNavigate();
-    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-    
-    useEffect(() => {
-        let active = true;
-
-        const loadPhoto = async () => {
-            const nextPhotoUrl = await getPhotoUrl(user?.email || "");
-            if (active) {
-                setPhotoUrl(nextPhotoUrl);
-            }
-        };
-
-        loadPhoto();
-
-        return () => {
-            active = false;
-        };
-    }, [getPhotoUrl, user?.email]);
 
     useEffect(() => {
         if (typeof window === "undefined") {
