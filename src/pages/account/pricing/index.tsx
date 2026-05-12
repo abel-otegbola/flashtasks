@@ -1,8 +1,12 @@
 import { CheckCircleIcon } from "@phosphor-icons/react";
 import Button from "../../../components/button/button";
+import PaddleSubscription from "../../../components/payment/PaddleSubscription";
+import { useUser } from "../../../context/authContext";
 
 function Pricing() {
-const pricingPlans = [
+  const { user } = useUser();
+
+  const pricingPlans = [
     {
         id: 'starter',
         name: 'Starter',
@@ -27,6 +31,7 @@ const pricingPlans = [
         accent: 'bg-sky-100 text-sky-700',
         purpose: 'For freelancers, creators, and professionals who want smarter planning and faster execution.',
         featured: true,
+        role: 'pro',
         features: [
             'Unlimited workspaces',
             'AI task breakdown',
@@ -45,6 +50,7 @@ const pricingPlans = [
         cadence: 'Per month',
         accent: 'bg-violet-100 text-violet-700',
         purpose: 'Built for startups, agencies, and teams managing projects, collaboration, and productivity at scale.',
+        role: 'team',
         features: [
             'Everything in Pro',
             'Up to 10 team members',
@@ -73,7 +79,68 @@ const pricingPlans = [
             'Lifetime updates',
         ],
     },
-]
+  ];
+
+  const currentRole = (user as any)?.prefs?.role || 'starter';
+  const isCurrentPlan = (planId: string) => currentRole === planId;
+
+  const renderCta = (plan: any) => {
+    if (plan.id === 'starter') {
+      return (
+        <Button
+          href={user ? undefined : "/signup"}
+          variant="secondary"
+          className="w-full justify-center"
+        >
+          Start Free
+        </Button>
+      );
+    }
+
+    if (plan.id === 'lifetime') {
+      return (
+        <Button
+          href={user ? undefined : "/signup"}
+          variant={plan.featured ? 'primary' : 'secondary'}
+          className="w-full justify-center"
+        >
+          {user ? 'Get Lifetime Access' : 'Sign up to unlock'}
+        </Button>
+      );
+    }
+
+    if (!user) {
+      return (
+        <Button
+          href="/signup"
+          variant={plan.featured ? 'primary' : 'secondary'}
+          className="w-full justify-center"
+        >
+          Sign up to subscribe
+        </Button>
+      );
+    }
+
+    if (isCurrentPlan(plan.id)) {
+      return (
+        <Button
+          variant="secondary"
+          className="w-full justify-center"
+          disabled
+        >
+          Current Plan
+        </Button>
+      );
+    }
+
+    return (
+      <PaddleSubscription
+        role={plan.role as 'pro' | 'team'}
+        label={`Upgrade to ${plan.name}`}
+        className="w-full"
+      />
+    );
+  };
 
   return (
     <div className="min-h-screen">
@@ -101,6 +168,9 @@ const pricingPlans = [
                             {plan.badge ? (
                                 <span className="text-[11px] uppercase tracking-wide text-amber-700 bg-amber-100 px-2 py-1 rounded-full">{plan.badge}</span>
                             ) : null}
+                            {isCurrentPlan(plan.id) && (
+                                <span className="text-[11px] uppercase tracking-wide text-green-700 bg-green-100 px-2 py-1 rounded-full">Active</span>
+                            )}
                         </div>
 
                         <div className="flex flex-col gap-1">
@@ -118,13 +188,7 @@ const pricingPlans = [
                             ))}
                         </ul>
 
-                        <Button
-                            href="/signup"
-                            variant={plan.featured ? 'primary' : 'secondary'}
-                            className="w-full justify-center"
-                        >
-                            {plan.id === 'starter' ? 'Start Free' : 'Choose Plan'}
-                        </Button>
+                        {renderCta(plan)}
                     </article>
                 ))}
             </div>

@@ -1,61 +1,66 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import Button from '../button/button';
-import { loadDodo, openDodoCheckout } from '../../services/dodo';
+import { loadPaddle, openPaddleCheckout } from '../../services/paddle';
 import { useUser } from '../../context/authContext';
 
 interface Props {
-  planId?: string;
+  productId?: string;
+  priceId?: string;
   label?: string;
   className?: string;
-  role?: 'pro' | 'enterprise';
+  role?: 'pro' | 'team';
 }
 
-export default function DodoSubscription({ planId, label = 'Subscribe', className = '', role }: Props) {
+export default function PaddleSubscription({ productId, priceId, label = 'Subscribe', className = '', role }: Props) {
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
   const { user } = useUser();
 
-  const publicKey = import.meta.env.VITE_DODO_PUBLIC_KEY;
-  const defaultPlanId = role === 'enterprise' 
-    ? import.meta.env.VITE_DODO_ENTERPRISE_PLAN_ID 
-    : import.meta.env.VITE_DODO_PRO_PLAN_ID;
-  const pid = planId || defaultPlanId;
+  const publicKey = import.meta.env.VITE_PADDLE_PUBLIC_KEY;
+  const defaultProductId = role === 'team' 
+    ? import.meta.env.VITE_PADDLE_TEAM_PRODUCT_ID 
+    : import.meta.env.VITE_PADDLE_PRO_PRODUCT_ID;
+  const defaultPriceId = role === 'team'
+    ? import.meta.env.VITE_PADDLE_TEAM_PRICE_ID
+    : import.meta.env.VITE_PADDLE_PRO_PRICE_ID;
+  const pid = productId || defaultProductId;
+  const priceid = priceId || defaultPriceId;
 
   useEffect(() => {
     if (!publicKey) return;
-    loadDodo(publicKey).then(() => setReady(true)).catch(() => setReady(false));
+    loadPaddle(publicKey).then(() => setReady(true)).catch(() => setReady(false));
   }, [publicKey]);
 
   const handleClick = async () => {
     if (!pid) {
-      alert('Plan ID not configured');
+      alert('Product ID not configured');
       return;
     }
 
     setLoading(true);
     try {
-      const paymentData = await openDodoCheckout(pid, {
+      const paymentData = await openPaddleCheckout(priceid || pid, {
         email: (user as any)?.email,
         name: (user as any)?.name,
-        metadata: { 
+        customData: { 
           userId: (user as any)?.$id || null,
-          planId: pid,
+          productId: pid,
           role: role || 'pro'
         },
       });
 
       // Notify backend to provision subscription
       try {
-        const response = await fetch('/api/dodo/activate', { 
+        const response = await fetch('/api/paddle/activate', { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             userId: (user as any)?.$id || null,
-            planId: pid,
+            productId: pid,
             role: role || 'pro',
-            transactionId: paymentData?.transaction_id,
-            subscriptionId: paymentData?.subscription_id
+            subscriptionId: paymentData?.subscription_id,
+            transactionId: paymentData?.transaction_id
           }) 
         });
         
@@ -74,7 +79,7 @@ export default function DodoSubscription({ planId, label = 'Subscribe', classNam
       if (e?.message === 'checkout-closed') {
         // user closed checkout
       } else {
-        console.error('Dodo checkout error', e);
+        console.error('Paddle checkout error', e);
         alert('Payment failed. Please try again.');
       }
     } finally {
@@ -88,7 +93,7 @@ export default function DodoSubscription({ planId, label = 'Subscribe', classNam
         {loading ? 'Processing...' : label}
       </Button>
       {!publicKey && (
-        <div className="text-xs text-red-500 mt-2">Dodo public key not configured (VITE_DODO_PUBLIC_KEY)</div>
+        <div className="text-xs text-red-500 mt-2">Paddle public key not configured (VITE_PADDLE_PUBLIC_KEY)</div>
       )}
     </div>
   )

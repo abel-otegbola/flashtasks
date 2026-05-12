@@ -1,20 +1,21 @@
-// Dodo Payments integration
-export function loadDodo(publicKey: string) {
+// Paddle Payments integration
+export function loadPaddle(publicKey: string) {
   return new Promise<void>((resolve, reject) => {
     if (typeof window === 'undefined') return resolve();
     // @ts-ignore
-    if ((window as any).DodoPayments) {
+    if ((window as any).Paddle) {
       return resolve();
     }
 
     const script = document.createElement('script');
-    script.src = 'https://js.dodo.africa/dodo-payments.js';
+    script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
     script.async = true;
     script.onload = () => {
       try { 
-        (window as any).DodoPayments.init({ publicKey }); 
+        // @ts-ignore
+        window.Paddle?.Setup({ token: publicKey }); 
       } catch (e) {
-        console.error('Dodo init error:', e);
+        console.error('Paddle init error:', e);
       }
       resolve();
     };
@@ -23,24 +24,28 @@ export function loadDodo(publicKey: string) {
   });
 }
 
-export function openDodoCheckout(planId: string, options: any = {}) {
-  // expects Dodo script loaded and initialized
+export function openPaddleCheckout(priceId: string, options: any = {}) {
+  // expects Paddle script loaded and initialized
   // @ts-ignore
-  const DodoPayments = (window as any).DodoPayments;
-  if (!DodoPayments) throw new Error('Dodo Payments not loaded');
+  const Paddle = (window as any).Paddle;
+  if (!Paddle) throw new Error('Paddle Payments not loaded');
 
   return new Promise<any>((resolve, reject) => {
     try {
-      DodoPayments.checkout({
-        plan: planId,
-        customer_email: options.email,
-        customer_name: options.name,
-        metadata: options.metadata || {},
-        onSuccess: (data: any) => {
-          resolve(data);
+      // @ts-ignore
+      Paddle.Checkout.open({
+        items: [{ priceId: priceId }],
+        customer: {
+          email: options.email,
+          name: options.name
         },
-        onCancel: () => {
-          reject(new Error('checkout-closed'));
+        customData: options.customData || {},
+        settings: {
+          allowLogout: false,
+          displayMode: 'overlay'
+        },
+        onComplete: (data: any) => {
+          resolve(data);
         },
         onError: (error: any) => {
           reject(error);

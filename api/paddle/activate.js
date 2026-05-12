@@ -1,64 +1,68 @@
-// Endpoint to activate subscription and update user role
-// This should verify the webhook was received before granting access
+// POST endpoint to activate subscription and update user role
+/* eslint-env node */
+/* global process */
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method not allowed');
+
   try {
-    const body = await new Promise((resolve) => {
-      let data = '';
-      req.on('data', chunk => data += chunk);
-      req.on('end', () => resolve(JSON.parse(data || '{}')));
-    });
+    const { userId, productId, role, transactionId, subscriptionId } = req.body;
 
-    const { userId, productId } = body;
-    console.log('[paddle/activate] payload', body);
-
-    if (!userId) {
-      return res.status(400).json({ success: false, error: 'userId required' });
+    if (!userId || !role) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Determine role based on product ID
-    const proProductId = process.env.VITE_PADDLE_PRO_PRODUCT_ID;
-    const enterpriseProductId = process.env.VITE_PADDLE_ENTERPRISE_PRODUCT_ID;
-    
-    let role = 'free';
-    if (productId === proProductId) {
-      role = 'pro';
-    } else if (productId === enterpriseProductId) {
-      role = 'enterprise';
-    }
+    console.log('[paddle/activate] Activating subscription for user:', userId, 'role:', role);
 
     // Update user preferences in Appwrite
-    const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
-    const APPWRITE_PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
-    const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY;
+    const appwriteEndpoint = process.env.APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
+    const projectId = process.env.APPWRITE_PROJECT_ID;
+    const apiKey = process.env.APPWRITE_API_KEY;
 
-    if (!APPWRITE_API_KEY || !APPWRITE_PROJECT_ID) {
-      console.error('Missing Appwrite credentials');
-      return res.status(500).json({ success: false, error: 'Server configuration error' });
+    if (!apiKey || !projectId) {
+      console.warn('[paddle/activate] Missing Appwrite configuration');
+      return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    // Update user prefs via Appwrite REST API
-    const response = await fetch(`${APPWRITE_ENDPOINT}/account/prefs`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Appwrite-Project': APPWRITE_PROJECT_ID,
-        'X-Appwrite-Key': APPWRITE_API_KEY,
-      },
-      body: JSON.stringify({
+    // Update user prefs to include role
+    try {
+      const response = await fetch(
+        `${appwriteEndpoint}/account/prefs`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Appwrite-Project': projectId,
+            'X-Appwrite-Key': apiKey,
+            'X-Fallback-Cookies': req.headers.cookie || ''
+          },
+          body: JSON.stringify({
+            role: role,
+            subscriptionId: subscriptionId || '',
+            transactionId: transactionId || '',
+            productId: productId || '',
+            activatedAt: new Date().toISOString()
+          })
+        }
+      );
+
+      if (!response.ok) {
+        console.error('[paddle/activate] Failed to update user prefs:', await response.text());
+        return res.status(500).json({ error: 'Failed to update user subscription' });
+      }
+
+      console.log('[paddle/activate] User role updated successfully');
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Subscription activated successfully',
         role: role
-      })
-    });
-
-    if (!response.ok) {
-      console.error('Failed to update user prefs:', await response.text());
-      return res.status(500).json({ success: false, error: 'Failed to update user role' });
+      });
+    } catch (error) {
+      console.error('[paddle/activate] Error updating user:', error);
+      return res.status(500).json({ error: 'Failed to activate subscription' });
     }
-
-    console.log(`[paddle/activate] User ${userId} upgraded to ${role}`);
-    return res.status(200).json({ success: true, role });
-  } catch (e) {
-    console.error('activate error', e);
-    return res.status(500).json({ success: false, error: e.message });
+  } catch (error) {
+    console.error('[paddle/activate] Error processing request:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
