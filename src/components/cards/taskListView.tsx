@@ -98,10 +98,10 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
             onClick={() => openTaskDetails(task)}
             role="button"
             tabIndex={0}
-            className={`md:grid ${!compactMode ? 'md:grid-cols-12' : 'md:grid-cols-6'} flex flex-col gap-4 px-4 py-3 flex-1`}
+            className={`${!compactMode ? 'md:grid md:grid-cols-12' : 'grid grid-cols-6'} flex flex-col gap-4 px-4 py-3 flex-1`}
         >
             {/* Mobile Layout */}
-            <div className="md:col-span-4 flex flex-col gap-1 md:order-none order-1">
+            <div className={`${!compactMode ? 'md:col-span-4' : 'col-span-4'} flex flex-col justify-center gap-1 md:order-none order-1`}>
                 <h3 className={`font-semibold text-sm ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
                     {task.title}
                 </h3>
@@ -150,8 +150,8 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
                 </div>
                 )
             }
-            <div className="md:col-span-2 flex items-center gap-6 justify-between text-xs text-gray-500 dark:text-gray-400 md:order-none order-1">
-                {task.dueDate ? formatDeliveredTime(task.dueDate, undefined, 'future') : 'No date'}
+            <div className={`${!compactMode ? 'md:col-span-2' : 'col-span-2'} flex items-center gap-6 justify-end text-xs text-gray-500 dark:text-gray-400 md:order-none order-1`}>
+                {task.dueDate ? formatDeliveredTime(task.dueDate, undefined, 'future') : null}
                 <button
                     className=""
                     aria-label="Start Pomodoro for task"
