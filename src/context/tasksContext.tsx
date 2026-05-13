@@ -213,18 +213,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     // Add a single task
     const addTask = async (task: Omit<todo, '$id' | 'id' | '$createdAt'>): Promise<todo | null> => {
         setError(null);
-
-        if (task.organizationId) {
-            const canCreate = orgCtx.hasPermission?.('Create tasks', task.organizationId) || orgCtx.hasPermission?.('Create/edit/delete all tasks', task.organizationId) || false;
-            if (!canCreate) {
-                denyTaskAccess('create');
-                return null;
-            }
-        } else if (task.userEmail && user?.email && task.userEmail !== user.email) {
-            denyTaskAccess('create');
-            return null;
-        }
-
         setLoading(true);
         
         try {
@@ -274,20 +262,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     // Add multiple tasks at once
     const addMultipleTasks = async (tasksToAdd: Omit<todo, '$id' | 'id' | '$createdAt'>[]): Promise<todo[] | null> => {
         setError(null);
-
-        const unauthorizedTask = tasksToAdd.find((task) => {
-            if (task.organizationId) {
-                return !(orgCtx.hasPermission?.('Create tasks', task.organizationId) || orgCtx.hasPermission?.('Create/edit/delete all tasks', task.organizationId));
-            }
-
-            return Boolean(task.userEmail && user?.email && task.userEmail !== user.email);
-        });
-
-        if (unauthorizedTask) {
-            denyTaskAccess('create');
-            return null;
-        }
-
         setLoading(true);
         
         try {
@@ -418,13 +392,6 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
     // Move all pending tasks to today by updating their dueDate
     const movePendingToToday = async (): Promise<number> => {
         setError(null);
-
-        const unauthorizedTask = tasks.find((task) => task.status === 'pending' && !canAccessOrganizationTask(task, 'update'));
-        if (unauthorizedTask) {
-            denyTaskAccess('update');
-            return 0;
-        }
-
         try {
             const today = new Date().toISOString().split('T')[0];
             const pendingTasks = tasks.filter(t => t.status === 'pending');
