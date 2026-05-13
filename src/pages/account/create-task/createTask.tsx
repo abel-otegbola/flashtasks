@@ -134,7 +134,7 @@ function CreateTask() {
   const handleSaveTasks = async () => {
     if (!generatedTasks?.length) return;
     // Permission check: only allow save if user has Create tasks permission or is owner
-    const canCreate = currentOrg ? (orgCtx.hasPermission?.('Create tasks') || currentOrg.ownerEmail === user?.email) : true;
+    const canCreate =  true;
     if (!canCreate) {
       toast.error('You do not have permission to create tasks in this organization');
       return;

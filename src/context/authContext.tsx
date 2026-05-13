@@ -104,17 +104,30 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                 ? res.documents.find(org => org.$id === teamId)?.members || []
                 : [];
 
-            const nextMember = {
-                $id: loggedIn.$id,
-                name: loggedIn.name || loggedIn.email,
-                email: loggedIn.email,
-                role: nextRole,
-                permissions: nextPermissions,
-            };
-            const nextMembers = [
-                ...existingMembers,
-                nextMember,
-            ];
+            // Check if member already exists to prevent duplicates
+            const memberExists = existingMembers.some(m => m.$id === loggedIn.$id || m.email?.toLowerCase() === loggedIn.email.toLowerCase());
+            
+            let nextMembers = existingMembers;
+            if (!memberExists) {
+              const nextMember = {
+                  $id: loggedIn.$id,
+                  name: loggedIn.name || loggedIn.email,
+                  email: loggedIn.email,
+                  role: nextRole,
+                  permissions: nextPermissions,
+              };
+              nextMembers = [
+                  ...existingMembers,
+                  nextMember,
+              ];
+            } else {
+              // Update existing member with new role/permissions
+              nextMembers = existingMembers.map(m => 
+                m.$id === loggedIn.$id || m.email?.toLowerCase() === loggedIn.email.toLowerCase()
+                  ? { ...m, role: nextRole, permissions: nextPermissions }
+                  : m
+              );
+            }
 
             await databases.updateDocument(DATABASE_ORG_ID, ORG_COLLECTION_ID, teamId, { members: nextMembers });
 

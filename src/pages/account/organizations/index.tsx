@@ -6,20 +6,20 @@ import Input from '../../../components/input/input';
 import CreateOrganizationModal from '../../../components/modals/createOrganizationModal';
 import EditOrganizationModal from '../../../components/modals/editOrganizationModal';
 import AddMemberModal from '../../../components/modals/addMemberModal';
-import { GridFourIcon, PencilSimpleLineIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
+import { PencilSimpleLineIcon, PlusIcon } from '@phosphor-icons/react';
 import { OrganizationSkeletonLoader } from '../../../components/skeletons';
 import Confirmationmessage from '../../../components/modals/confirmation';
-import { ADMIN_PERMISSIONS, Organization } from '../../../interface/organization';
-import { useUser } from '../../../context/authContext';
+import { Organization } from '../../../interface/organization';
 import { useTasks } from '../../../context/tasksContext';
 import TaskListView from '../../../components/cards/taskListView';
 import { todo } from '../../../interface/todo';
 import TaskDetailsModal from '../../../components/modals/taskDetailsModal';
 import CreateTaskModal from '../../../components/modals/createTaskModal';
+import { formatDeliveredTime } from '../../../helpers/messageTime';
 
 export default function OrganizationsPage() {
   const orgCtx = useOrganizations();
-  const { organizations, currentOrg, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, updateOrganization, deleteOrganization, loading } = orgCtx;
+  const { organizations, currentOrg, invitedMembers, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, updateOrganization, deleteOrganization, getAllInvitedMembers, loading } = orgCtx;
   const { tasks, getOrganizationTasks } = useTasks(); 
   const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -38,57 +38,25 @@ export default function OrganizationsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
-  const { user } = useUser();
-
-  const normalizeMember = (member: any) => {
-    if (typeof member === 'string') {
-      return { $id: member, name: member, email: member, role: 'member', permissions: [] };
-    }
-
-    return {
-      ...member,
-      $id: member?.$id || member?.userId || member?.email,
-      name: member?.name || member?.fullname || member?.email || member?.$id || member?.userId || '',
-      email: member?.email || member?.userId || member?.$id || '',
-      role: member?.role || 'member',
-      permissions: member?.permissions || [],
-    };
-  };
 
   useEffect(() => {
       getOrganizationTasks(selectedOrg?.$id || "");
+      getAllInvitedMembers(selectedOrg?.$id || "");
   }, [selectedOrg ]);
+
+  useEffect(() => {
+    console.log(organizations);
+  }, [organizations]);
 
   const initialLoading = loading && organizations.length === 0 && !currentOrg;
 
-  const organizationMembers = currentOrg
-    ? [
-        ...(currentOrg.members || []).map(normalizeMember),
-        ...(currentOrg.ownerEmail && !(currentOrg.members || []).some((member) => normalizeMember(member).email === currentOrg.ownerEmail)
-          ? [{ $id: currentOrg.ownerEmail, name: currentOrg.ownerEmail, email: currentOrg.ownerEmail, role: 'owner' as const, permissions: ADMIN_PERMISSIONS }]
-          : []),
-      ]
-    : [];
+  const isOwner = true
 
-  useEffect(() => {
-    if (!currentOrg) return;
-    setSettingsName(currentOrg.name || '');
-    setSettingsSlug(currentOrg.slug || '');
-    setSettingsDescription(currentOrg.description || '');
-  }, [currentOrg]);
-
-  const isOwner = currentOrg?.ownerEmail === user?.email;
-
-  const isAdmin = currentOrg?.members?.some((member) => normalizeMember(member).email === user?.email && normalizeMember(member).role === 'admin');
+  const isAdmin = true
 
   const openTaskDetails = (task: todo) => {
       setSelectedTask(task);
       setDetailsOpen(true);
-  };
-
-  const getTeamMemberLabel = (memberId: string) => {
-    const member = organizationMembers.find((item) => item.$id === memberId);
-    return member?.name || member?.email || memberId;
   };
 
   const openTeamEditor = (team: any) => {
@@ -103,22 +71,22 @@ export default function OrganizationsPage() {
     setEditingTeamMembers([]);
   };
 
-  const handleSaveTeam = async () => {
-    if (!currentOrg || !editingTeamId) return;
+  // const handleSaveTeam = async () => {
+  //   if (!currentOrg || !editingTeamId) return;
 
-    const nextTeams = (currentOrg.teams || []).map((team) => {
-      if (team.$id !== editingTeamId) return team;
+  //   const nextTeams = (currentOrg.teams || []).map((team) => {
+  //     if (team.$id !== editingTeamId) return team;
 
-      return {
-        ...team,
-        name: editingTeamName.trim() || team.name,
-        members: editingTeamMembers,
-      };
-    });
+  //     return {
+  //       ...team,
+  //       name: editingTeamName.trim() || team.name,
+  //       members: editingTeamMembers,
+  //     };
+  //   });
 
-    await updateOrganization(currentOrg.$id, { teams: nextTeams });
-    closeTeamEditor();
-  };
+  //   await updateOrganization(currentOrg.$id, { teams: nextTeams });
+  //   closeTeamEditor();
+  // };
 
   const handleAddTeam = async () => {
     if (!teamName || !currentOrg) return;
@@ -179,7 +147,7 @@ export default function OrganizationsPage() {
                 <span className="w-12 h-12 aspect-square flex items-center justify-center bg-primary/10 text-primary rounded-full font-bold">{org.name.charAt(0).toUpperCase()}</span>
                 <div className="flex flex-col gap-2 text-start justify-start">
                     <div className="font-medium">{org.name}</div>
-                    <div className="text-xs text-gray-500 line-clamp-2 md:line-clamp-1">{org.description}</div>
+                    <div className="text-xs text-gray-500 line-clamp-2 md:line-clamp-1">{org?.total || 0} members</div>
                 </div>
               </button>
             ))}
@@ -195,7 +163,7 @@ export default function OrganizationsPage() {
               <div className='flex gap-4 justify-between flex-wrap mb-6'>
                 <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1 overflow-x-auto'>
                 {
-                  ["Tasks", "About", "teams", "members", "settings"].map((tab) => {
+                  ["Tasks", "About", "members", "settings"].map((tab) => {
                     if (tab === "settings" && !(isOwner || isAdmin)) return null;
                     else return (
                       <button key={tab} onClick={() => setSelectedTab(tab)} className={`py-2 px-1 text-sm capitalize rounded-tl rounded-tr ${tab === selectedTab ? 'border-b border-primary text-primary' : 'text-gray-500'}`}>
@@ -246,11 +214,11 @@ export default function OrganizationsPage() {
                 selectedTab === "About" && (
                   <div className="mb-4">
                     <h2 className="font-semibold text-lg mb-2">{currentOrg.name}</h2>
-                    <p className="text-gray-500">{currentOrg.description}</p>
+                    {/* <p className="text-gray-500">{currentOrg.description}</p> */}
                     
                     <div className="my-4">
-                      <p>{currentOrg.members?.length || 0} members </p>
-                      <p>{currentOrg.teams?.length || 0} teams</p>
+                      <p>{currentOrg.total || 0} members </p>
+                      {/* <p>{currentOrg.teams?.length || 0} teams</p> */}
                     </div>
                     
                     <div>
@@ -267,7 +235,7 @@ export default function OrganizationsPage() {
                     <div className="mb-4">
                       <div className="flex justify-between items-center gap-2">
                         <h4 className="font-semibold text-lg mb-2">Teams</h4>
-                        <div className="flex items-center gap-2">
+                        {/* <div className="flex items-center gap-2">
                           <Input
                             value={teamName}
                             className="flex-1 py-[2px] bg-transparent"
@@ -279,10 +247,10 @@ export default function OrganizationsPage() {
                           <Button size="small" onClick={handleAddTeam} disabled={!teamName.trim()}>
                             Add
                           </Button>
-                        </div>
+                        </div> */}
                       </div>
                       <div className="flex flex-col gap-2 py-4">
-                        {(currentOrg.teams || []).map((team) => (
+                        {/* {(currentOrg.teams || []).map((team) => (
                           <div key={team.$id} className="p-3 border border-gray-500/[0.2] rounded">
                             {editingTeamId === team.$id ? (
                               <div className="flex flex-col gap-4">
@@ -303,35 +271,23 @@ export default function OrganizationsPage() {
 
                                 <div>
                                   <h5 className="text-xs uppercase tracking-wide text-gray-500 mb-2">Team Members</h5>
-                                  {organizationMembers.length === 0 ? (
+                                  {
+                                  organizationMembers.length === 0 ? (
                                     <div className="text-sm text-gray-500">No members available yet.</div>
                                   ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                      {organizationMembers.map((member) => {
-                                        const checked = editingTeamMembers.includes(member.$id);
-
-                                        return (
+                                      {organizationMembers.map((member) => (
                                           <label key={member.$id} className="flex items-center gap-3 p-2 rounded border border-gray-500/[0.1] cursor-pointer">
-                                            <input
-                                              type="checkbox"
-                                              checked={checked}
-                                              onChange={(e) => {
-                                                setEditingTeamMembers((prev) =>
-                                                  e.target.checked
-                                                    ? [...prev, member.$id]
-                                                    : prev.filter((id) => id !== member.$id)
-                                                );
-                                              }}
-                                            />
+                                            
                                             <div className="min-w-0">
                                               <div className="text-sm font-medium truncate">{member.name || member.email}</div>
                                               <div className="text-xs text-gray-500 truncate">{member.email}</div>
                                             </div>
                                           </label>
-                                        );
-                                      })}
+                                      ))
+                                      }
                                     </div>
-                                  )}
+                                    )}
                                 </div>
                               </div>
                             ) : (
@@ -366,8 +322,8 @@ export default function OrganizationsPage() {
                               </div>
                             )}
                           </div>
-                        ))}
-                      </div>
+                        ))}*/}
+                      </div> 
                     </div>
                   </div>
                 )
@@ -383,37 +339,25 @@ export default function OrganizationsPage() {
                         </Button>
                       ) : null}
                     </div>
-                    
-                    <div className="border border-gray-500/[0.1] rounded-lg mb-4 bg-white dark:bg-dark/[0.4]">
-                      <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Organization owner</h4>
-                      <div className="flex flex-col gap-2 p-4">
-                          <div className="flex items-center justify-between rounded">
-                            <div>
-                              <div className="font-medium">{currentOrg.ownerEmail}</div>
-                              <div className="text-xs text-gray-500">Owner</div>
-                            </div>
-                            <div className="text-xs text-gray-400">{currentOrg.ownerEmail}</div>
-                          </div>
-                      </div>
-                    </div>
 
                     <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-dark/[0.4]">
                       <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Members</h4>
                       <div className="flex flex-col gap-2 p-4">
-                        {(currentOrg.members || []).map(m => (
+                        {(invitedMembers || []).map(m => (
                           <div key={m.$id} className="flex items-start justify-between gap-3 p-4 rounded-lg bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]">
                             <div className='w-full'>
                               <div className='flex justify-between w-full'>
                                 <div>
-                                  <div className="font-medium">{m.name || m.email}</div>
-                                  <div className="text-xs text-gray-500">{m.role}</div>
+                                  <div className="font-medium">{m.name || m.email} 
+                                  </div>
+                                  <div className="text-xs text-gray-400 mt-1">{m.email}</div>
                                 </div>
-                                {(isOwner || (isAdmin && m.role !== 'owner')) && (
+                                {(isOwner || (isAdmin && m.roles?.includes('owner'))) && (
                                   <div className="flex items-center gap-2 shrink-0">
                                     <button onClick={() => { setSelectedMember(m); setShowAddMember(true); }} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
                                       Edit
                                     </button>
-                                    {m.role !== 'owner' && (
+                                    {m.roles?.includes('owner') && (
                                       <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
                                         Remove
                                       </button>
@@ -421,16 +365,16 @@ export default function OrganizationsPage() {
                                   </div>
                                   )}
                               </div>
-                              {m.permissions?.length ? (
+                              {m.roles?.length ? (
                                 <div className="mt-2 flex flex-wrap gap-1">
-                                  {m.permissions.map((permission) => (
-                                    <span key={permission} className="rounded-full bg-gray-100 px-4 py-[6px] text-[10px] dark:bg-[#202022]">
-                                      {permission}
+                                  {m.roles.map((role) => (
+                                    <span key={role} className="rounded-full bg-gray-100 px-4 py-[6px] text-[10px] dark:bg-[#202022]">
+                                      {role}
                                     </span>
                                   ))}
                                 </div>
                               ) : null}
-                              <div className="text-xs text-gray-400 mt-1">{m.email}</div>
+                              <p className={`mt-2 py-1 rounded-full text-sm`}>{m.joined ? ` (joined ${formatDeliveredTime(m.joined)})` : "Invite pending"}</p>
                             </div>
                           </div>
                         ))}
@@ -454,35 +398,6 @@ export default function OrganizationsPage() {
                         <Button variant="secondary" size="small" onClick={() => { setSelectedOrg(currentOrg); setShowEdit(true); }}>
                           Open Editor
                         </Button>
-                      </div>
-                    </div>
-
-                    <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-dark-bg">
-                      <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Organization profile</h4>
-                      <div className="grid grid-cols-1 gap-4 p-4">
-                          <Input
-                            value={settingsName}
-                            onChange={(e: any) => setSettingsName(e.target.value)}
-                            placeholder="Organization name"
-                            className="w-full bg-transparent"
-                            label='Organization title'
-                          />
-                        <div className='flex flex-col gap-2'>
-                          <label className="text-sm font-medium">Description</label>
-                          <textarea
-                            value={settingsDescription}
-                            onChange={(e) => setSettingsDescription(e.target.value)}
-                            className="w-full min-h-[120px] p-3 rounded-md border border-gray-500/[0.2] bg-white dark:bg-dark-bg outline-none"
-                          />
-                        </div>
-                        <div className="flex items-center justify-between gap-3 flex-wrap">
-                          <div className="text-xs text-gray-500">
-                            {currentOrg.members?.length || 0} members · {currentOrg.teams?.length || 0} teams
-                          </div>
-                          <Button size="small" onClick={handleSaveSettings} disabled={!settingsName.trim()}>
-                            Save changes
-                          </Button>
-                        </div>
                       </div>
                     </div>
 

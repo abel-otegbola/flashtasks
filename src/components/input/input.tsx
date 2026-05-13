@@ -40,6 +40,7 @@ export default function Input({ className, disabled, label, name, value, type, o
                     type={type === "password" && show ? "text" : type}
                     value={value}
                     placeholder={placeholder}
+                    disabled={disabled}
                     onFocus={() => setFocus(true)}
                     onBlur={() => setFocus(false)}
                     onChange={onChange}

@@ -21,33 +21,9 @@ interface Props {
 
 export default function CreateOrganizationModal({ isOpen, onClose }: Props) {
   const { createOrganization, loading } = useOrganizations();
-  const [membersText, setMembersText] = useState('');
-  const [teamsText, setTeamsText] = useState('');
-  const { user } = useUser();
-  const ownerEmail = (user as any)?.email;
   const modalRef = useOutsideClick(onClose, false)
 
   if (!isOpen) return null;
-
-  const parseMembers = (): OrgMember[] => {
-    if (!membersText.trim()) return [];
-    return membersText.split(',').map(s => {
-      const email = s.trim();
-      return { $id: ID.unique(), email, name: email.split('@')[0], role: 'member', permissions: [] } as OrgMember;
-    });
-  }
-
-  // Ensure owner is not removed if provided in the members input
-  const parseMembersExcludingOwner = (): OrgMember[] => {
-    const all = parseMembers();
-    if (!ownerEmail) return all;
-    return all.filter(m => m.email !== ownerEmail);
-  }
-
-  const parseTeams = () => {
-    if (!teamsText.trim()) return [];
-    return teamsText.split(',').map(s => ({ name: s.trim() }));
-  }
 
   return (
     <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
@@ -59,15 +35,11 @@ export default function CreateOrganizationModal({ isOpen, onClose }: Props) {
           </button>
         </div>
         <Formik
-            initialValues={{ name: '', description: '' }}
+            initialValues={{ name: '' }}
             validationSchema={createOrganizationSchema}
             onSubmit={async (values, { setSubmitting }) => {
               const payload: CreateOrganizationPayload = {
                 name: values.name.trim(),
-                description: values.description.trim(),
-                // exclude owner from the explicit members list; orgContext will ensure owner is added as owner
-                members: parseMembersExcludingOwner(),
-                teams: parseTeams()
               };
               await createOrganization(payload);
               onClose();
@@ -80,23 +52,6 @@ export default function CreateOrganizationModal({ isOpen, onClose }: Props) {
                         <div className='flex flex-col gap-2'>
                             <label className="text-sm font-medium">Name <span className="text-red-500">*</span></label>
                             <Input value={values.name} name='name' onChange={handleChange} placeholder="Organization name" error={touched.name ? errors.name : ""} />
-                        </div>
-
-                        <div className='flex flex-col gap-2'>
-                            <label className="text-sm font-medium">Description</label>
-                            <textarea value={values.description} name='description' onChange={handleChange} className="w-full p-2 rounded-md border border-gray-500/[0.2] bg-white dark:bg-dark-bg outline-none" />
-                            {touched.description && errors.description && <div className="text-red-500 text-sm">{errors.description}</div>}
-                        </div>
-
-                        <div className='flex flex-col gap-2'>
-                            <label className="text-sm font-medium">Members (comma-separated emails)</label>
-                            <TagInput tags={membersText} onChange={(e) => setMembersText(e.toString())} />
-                            <div className="text-xs text-gray-500">Do not include your email here — you'll be added automatically as owner.</div>
-                        </div>
-
-                        <div className='flex flex-col gap-2'>
-                            <label className="text-sm font-medium">Teams (comma-separated names)</label>
-                            <TagInput tags={teamsText} onChange={(e) => setTeamsText(e.toString())} />
                         </div>
                     </div>
 

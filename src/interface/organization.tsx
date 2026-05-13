@@ -9,7 +9,7 @@ export const MEMBER_PERMISSIONS = [
   'Create tasks',
   'Edit their own tasks',
   'Complete tasks',
-  'View shared tasks/projects',
+  'View shared tasks',
   'Edit tasks assigned to them',
 ];
 
@@ -17,11 +17,11 @@ export interface OrgInvite {
   $id: string;
   orgId: string;
   orgName?: string;
-  name: string;
+  name?: string;
   email: string;
-  role: 'admin' | 'member';
-  permissions: string[];
+  roles: string[];
   status: 'pending' | 'accepted' | 'declined';
+  joined?: string;
   inviterEmail?: string;
   acceptedAt?: string;
 }
@@ -32,7 +32,7 @@ export interface OrgMember {
   name?: string;
   email?: string;
   role?: string;
-  permissions?: string[];
+  roles?: string[];
 }
 
 export interface Team {
@@ -44,12 +44,9 @@ export interface Team {
 export interface Organization {
   $id: string;
   name: string;
-  ownerEmail?: string;
-  slug?: string;
-  description?: string;
-  members?: OrgMember[];
-  teams?: Team[];
-  createdAt?: string;
+  total?: number;
+  $createdAt?: string;
+  $updatedAt?: string;
 }
 
 export interface CreateOrganizationPayload {

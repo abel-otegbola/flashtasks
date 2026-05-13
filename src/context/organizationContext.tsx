@@ -9,17 +9,18 @@ import { useUser } from './authContext';
 type OrganizationContextValues = {
   organizations: Organization[];
   currentOrg?: Organization | null;
+  invitedMembers: OrgInvite[];
   loading: boolean;
-  createOrganization: (payload: CreateOrganizationPayload) => Promise<Organization>;
+  createOrganization: (payload: CreateOrganizationPayload) => void;
   selectOrganization: (orgId: string) => void;
   addTeam: (payload: CreateTeamPayload) => Promise<Team>;
   removeTeam: (orgId: string, teamId: string) => Promise<boolean>;
-  addMemberToOrg: (orgId: string, member: OrgMember) => Promise<boolean>;
-  createOrgInvite: (orgId: string, invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'>) => Promise<boolean>;
-  updateOrganization: (orgId: string, data: Partial<any>) => Promise<Organization>;
+  getAllInvitedMembers: (orgId: string) => void;
+  createOrgInvite: (orgId: string, invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'>) => void;
+  updateOrganization: (orgId: string, data: Partial<any>) => void;
   deleteOrganization: (orgId: string) => Promise<boolean>;
   removeMemberFromOrg: (orgId: string, memberId: string) => Promise<boolean>;
-  updateTeamMembers: (orgId: string, teamId: string, memberIds: string[]) => Promise<boolean>;
+  updateTeamMember: (orgId: string, memberId: string, roles: string[]) => Promise<boolean>;
   hasPermission?: (permission: string, orgId?: string) => boolean;
 }
 
@@ -32,91 +33,37 @@ export function useOrganizations() {
 export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null);
+  const [invitedMembers, setInvitedMembers] = useState<OrgInvite[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
-
-  // Helper: get current user's permissions for a given organization
-  const getUserPermissionsForOrg = (org?: Organization | null) => {
-    if (!user) return [] as string[];
-    if (!org) return [] as string[];
-
-    // Owner has all admin + member permissions
-    if (org.ownerEmail === user.email) {
-      return Array.from(new Set([...(ADMIN_PERMISSIONS || []), ...(MEMBER_PERMISSIONS || [])]));
-    }
-
-    const member = (org.members || []).find((m: any) => (m.email || m.$id) === user.email || (m.$id === user.$id));
-    if (!member) return [];
-
-    if (member.role === 'admin') return member.permissions && member.permissions.length ? member.permissions : ADMIN_PERMISSIONS;
-    return member.permissions && member.permissions.length ? member.permissions : MEMBER_PERMISSIONS;
-  };
-
-  const hasPermission = (permission: string, orgId?: string) => {
-    const org = orgId ? organizations.find(o => o.$id === orgId) : currentOrg;
-    const perms = getUserPermissionsForOrg(org);
-    return perms.includes(permission);
-  };
 
   const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
   const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORGANIZATIONS_COLLECTION_ID || 'organizations';
   
   const loadOrganizations = async () => {
-  if (!user?.$id || !user?.email) {
-    setOrganizations([]);
-    setCurrentOrg(null);
-    return;
-  }
-
-  try {
-    const [memberRes, ownerRes] = await Promise.all([
-      // ✅ user is in members
-      databases.listDocuments(
-        DATABASE_ID,
-        ORG_COLLECTION_ID,
-        [
-          Query.equal("members.$id", user.$id),
-          Query.select(["*", "teams.*", "members.*"]),
-          Query.limit(100),
-        ]
-      ),
-
-      // ✅ user is owner
-      databases.listDocuments(
-        DATABASE_ID,
-        ORG_COLLECTION_ID,
-        [
-          Query.equal("ownerEmail", user.email),
-          Query.select(["*", "teams.*", "members.*"]),
-          Query.limit(100),
-        ]
-      )
-    ]);
-
-    // 🔁 merge + remove duplicates
-    const combined = [
-      ...memberRes.documents,
-      ...ownerRes.documents
-    ];
-
-    const unique = Array.from(
-      new Map(combined.map(doc => [doc.$id, doc])).values()
-    );
-
-    if (!unique.length) {
+    if (!user?.$id || !user?.email) {
       setOrganizations([]);
       setCurrentOrg(null);
       return;
     }
 
-    setOrganizations(unique as unknown as Organization[]);
-    setCurrentOrg(unique[0] as unknown as Organization);
-
-  } catch (err) {
-    console.error("Error loading organizations", err);
-    toast.error("Failed to load organizations");
-  }
-};
+    try {
+      // ✅ user is in members
+      teams.list()
+      .then(res => res.teams || [])
+      .then(teams => {
+        console.log(teams)
+        setOrganizations(teams)
+      })
+      .catch(err => {
+        console.error('Error loading organizations from teams endpoint', err);
+        toast.error('Failed to load organizations');
+      });
+    } catch (err) {
+      console.error("Error loading organizations", err);
+      toast.error("Failed to load organizations");
+    }
+  };
 
   // load organizations for current user on mount or when user changes
   useEffect(() => {
@@ -135,41 +82,24 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const createOrganization = async (payload: CreateOrganizationPayload) => {
     setLoading(true);
     try {
-      let members: OrgMember[] = [];
-      if (payload.members && payload.members.length > 0) {
-        members = payload.members.map(m => ({ $id: m.$id || ID.unique(), name: m.name, email: m.email, role: m.role, permissions: m.permissions || [] }));
-      }
-
-      const teams = payload.teams && payload.teams.length > 0 ? payload.teams.map(t => ({ $id: ID.unique(), name: t.name, members: t.members || [] })) : [];
-
-      const orgData: any = {
-        name: payload.name,
-        ownerEmail: (user as any)?.email,
-        slug: payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        description: payload.description || '',
-        members,
-        teams
-      };
-
-      const res = await databases.createDocument(DATABASE_ID, ORG_COLLECTION_ID, ID.unique(), orgData);
-
-      const newOrg: Organization = {
-        $id: res.$id,
-        name: res.name,
-        ownerEmail: res.ownerEmail || (user as any)?.email,
-        slug: res.slug,
-        description: res.description,
-        members: res.members || [],
-        teams: res.teams || [],
-        createdAt: res.$createdAt,
-      };
-
-      setOrganizations(prev => [newOrg, ...prev]);
-      setCurrentOrg(newOrg);
-      toast.success('Organization created');
-      // index organization
-      try { await (await import('../services/indexer')).indexOrganization('create', newOrg); } catch {};
-      return newOrg;
+      teams.create({ teamId: ID.unique(), name: payload.name, roles: ['owner'] })
+      .then((team) => {
+        const newOrg: Organization = {
+          $id: team.$id,
+          name: team.name,
+          total: 1,
+        };
+        
+        setOrganizations(prev => [newOrg, ...prev]);
+        setCurrentOrg(newOrg);
+        toast.success('Organization created');
+        return newOrg;
+      })
+      .catch(err => {
+        console.error('Error creating team in Appwrite:', err);
+        toast.error('Failed to create organization');
+        throw err;
+      });
     } catch (err) {
       console.error('Error creating organization', err);
       toast.error('Failed to create organization');
@@ -182,23 +112,20 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const updateOrganization = async (orgId: string, data: Partial<any>) => {
     setLoading(true);
     try {
-      const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, data);
-
-      const updatedOrg: Organization = {
-        $id: updated.$id,
-        name: updated.name,
-        slug: updated.slug,
-        description: updated.description,
-        members: updated.members || [],
-        teams: updated.teams || [],
-        createdAt: updated.$createdAt,
-      };
-
-      setOrganizations(prev => prev.map(o => o.$id === updatedOrg.$id ? updatedOrg : o));
-      if (currentOrg?.$id === orgId) setCurrentOrg(updatedOrg);
-      try { await (await import('../services/indexer')).indexOrganization('update', updatedOrg); } catch {};
-      toast.success('Organization updated');
-      return updatedOrg;
+      // If name is being updated, also update the Appwrite team
+      if (data.name) {
+        try {
+          await teams.updateName({ teamId: orgId, name: data.name })
+          .then(res => {
+            setOrganizations(prev => prev.map(o => o.$id === res.$id ? res : o));
+            if (currentOrg?.$id === orgId) setCurrentOrg(res);
+            toast.success('Organization updated');
+            return res;
+          })
+        } catch (err) {
+          console.warn('Could not update team name in Appwrite:', err);
+        }
+      }
     } catch (err) {
       console.error('Error updating organization', err);
       toast.error('Failed to update organization');
@@ -211,7 +138,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const deleteOrganization = async (orgId: string) => {
     setLoading(true);
     try {
-      await databases.deleteDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId);
+      await teams.delete({ teamId: orgId });
 
       const remainingOrganizations = organizations.filter((org) => org.$id !== orgId);
       setOrganizations(remainingOrganizations);
@@ -233,31 +160,33 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     setCurrentOrg(org);
   };
 
+  const getAllInvitedMembers = async (orgId: string) => {
+    try {
+      const memberships = await teams.listMemberships({ teamId: orgId });
+
+      setInvitedMembers((memberships.memberships || []).map((membership: any) => ({
+        ...membership,
+        $id: membership.$id,
+        email: membership.userEmail,
+        name: membership.userName,
+        role: membership.roles?.[0] || 'member',
+        orgId,
+        permissions: membership.roles?.includes('owner') ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS,
+        status: membership.confirm ? 'accepted' : 'pending',
+      })) as OrgInvite[]);
+    } catch (err) {
+      console.error('Error fetching team memberships', err);
+      return [];
+    }
+  };
+
+
   const addTeam = async (payload: CreateTeamPayload) => {
     if (!currentOrg) throw new Error('No organization selected');
     setLoading(true);
     try {
       const newTeam: Team = { $id: ID.unique(), name: payload.name, members: payload.members || [] };
-
-      // Update in Appwrite
-      const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, currentOrg.$id, {
-        teams: [...(currentOrg.teams || []), newTeam]
-      });
-
-      const updatedOrg: Organization = {
-        $id: updated.$id,
-        name: updated.name,
-        slug: updated.slug,
-        description: updated.description,
-        members: updated.members || [],
-        teams: updated.teams || [],
-        createdAt: updated.$createdAt,
-      };
-
-      setOrganizations(prev => prev.map(o => o.$id === updatedOrg.$id ? updatedOrg : o));
-      setCurrentOrg(updatedOrg);
       toast.success('Team added');
-      try { await (await import('../services/indexer')).indexOrganization('update', updatedOrg); } catch {};
       return newTeam;
     } catch (err) {
       console.error('Error adding team', err);
@@ -272,61 +201,11 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       const org = organizations.find(o => o.$id === orgId);
-      if (!org) return false;
-      const newTeams = (org.teams || []).filter((t: any) => t.$id !== teamId);
-      const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, { teams: newTeams });
-
-      const updatedOrg: Organization = {
-        $id: updated.$id,
-        name: updated.name,
-        slug: updated.slug,
-        description: updated.description,
-        members: updated.members || [],
-        teams: updated.teams || [],
-        createdAt: updated.$createdAt,
-      };
-
-      setOrganizations(prev => prev.map(o => o.$id === updatedOrg.$id ? updatedOrg : o));
-      if (currentOrg?.$id === orgId) setCurrentOrg(updatedOrg);
       toast.success('Team removed');
-      try { await (await import('../services/indexer')).indexOrganization('update', updatedOrg); } catch {};
       return true;
     } catch (err) {
       console.error('Error removing team', err);
       toast.error('Failed to remove team');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addMemberToOrg = async (orgId: string, member: OrgMember) => {
-    setLoading(true);
-    try {
-      const org = organizations.find(o => o.$id === orgId);
-      if (!org) return false;
-      const memberWithId = { $id: (member as any)?.$id || ID.unique(), name: member.name, email: member.email, role: member.role, permissions: member.permissions || [] };
-      const newMembers = [...(org.members || []), memberWithId];
-      const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, { members: newMembers });
-
-      const updatedOrg: Organization = {
-        $id: updated.$id,
-        name: updated.name,
-        slug: updated.slug,
-        description: updated.description,
-        members: updated.members || [],
-        teams: updated.teams || [],
-        createdAt: updated.$createdAt,
-      };
-
-      setOrganizations(prev => prev.map(o => o.$id === updatedOrg.$id ? updatedOrg : o));
-      if (currentOrg?.$id === orgId) setCurrentOrg(updatedOrg);
-      toast.success('Member added');
-      try { await (await import('../services/indexer')).indexOrganization('update', updatedOrg); } catch {};
-      return true;
-    } catch (err) {
-      console.error('Error adding member', err);
-      toast.error('Failed to add member');
       return false;
     } finally {
       setLoading(false);
@@ -340,63 +219,34 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       const org = organizations.find((item) => item.$id === orgId);
-      if (!org) return false;
-
-      const normalizedEmail = invite.email.trim().toLowerCase();
-      const existingMember = (org.members || []).some((member) => member.email?.toLowerCase() === normalizedEmail);
-      if (existingMember || org.ownerEmail?.toLowerCase() === normalizedEmail) {
-        toast.error('Member already belongs to this organization');
-        return false;
-      }
-
+      if (!org) return false;      
+      
       try {
-        await teams.get({ teamId: orgId });
-      } catch {
-        await teams.create({ teamId: orgId, name: org.name, roles: ['owner'] });
+        await teams.createMembership({
+          teamId: orgId,
+          roles: invite.roles?.includes('owner') ? ['owner'] : invite.roles?.includes('admin') ? ['admin'] : ['member'],
+          email: invite.email,
+          url: `https://flashtasks.app/account/notifications?teamId=${encodeURIComponent(orgId)}`,
+        });
+        toast.success('Invite sent');
+        getAllInvitedMembers(orgId);
+        return true;
+      } catch (err) {
+        console.warn('Could not add member to team:', err);
+        // Continue anyway - member might already be added
       }
-
-      await teams.createMembership({
-        teamId: orgId,
-        roles: [invite.role],
-        email: normalizedEmail,
-        name: invite.name,
-        url: `https://flashtasks.app/account/notifications?teamId=${encodeURIComponent(orgId)}`,
-      });
-
-      toast.success('Invite sent');
-      return true;
     } catch (err) {
-      console.error('Error creating invite', err);
-      toast.error('Failed to create invite');
+      console.error('Error creating team in Appwrite:', err);
+      toast.error('Failed to create organization');
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
   const removeMemberFromOrg = async (orgId: string, memberId: string) => {
     setLoading(true);
     try {
-      const org = organizations.find(o => o.$id === orgId);
-      if (!org) return false;
-      const newMembers = (org.members || []).filter(m => m.$id !== memberId);
-
-      const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, { members: newMembers });
-
-      const updatedOrg: Organization = {
-        $id: updated.$id,
-        name: updated.name,
-        slug: updated.slug,
-        description: updated.description,
-        members: updated.members || [],
-        teams: updated.teams || [],
-        createdAt: updated.$createdAt,
-      };
-
-      setOrganizations(prev => prev.map(o => o.$id === updatedOrg.$id ? updatedOrg : o));
-      if (currentOrg?.$id === orgId) setCurrentOrg(updatedOrg);
+      
       toast.success('Member removed');
-      try { await (await import('../services/indexer')).indexOrganization('update', updatedOrg); } catch {};
       return true;
     } catch (err) {
       console.error('Error removing member', err);
@@ -407,29 +257,16 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateTeamMembers = async (orgId: string, teamId: string, memberIds: string[]) => {
+  const updateTeamMember = async (orgId: string, memberId: string, roles: string[]) => {
     setLoading(true);
     try {
-      const org = organizations.find(o => o.$id === orgId);
-      if (!org) throw new Error('Organization not found');
-
-      const newTeams = (org.teams || []).map(t => t.$id === teamId ? { ...t, members: memberIds } : t);
-      const updated = await databases.updateDocument(DATABASE_ID, ORG_COLLECTION_ID, orgId, { teams: newTeams });
-
-      const updatedOrg: Organization = {
-        $id: updated.$id,
-        name: updated.name,
-        slug: updated.slug,
-        description: updated.description,
-        members: updated.members || [],
-        teams: updated.teams || [],
-        createdAt: updated.$createdAt,
-      };
-
-      setOrganizations(prev => prev.map(o => o.$id === updatedOrg.$id ? updatedOrg : o));
-      if (currentOrg?.$id === orgId) setCurrentOrg(updatedOrg);
+      await teams.updateMembership({
+        teamId: orgId,
+        membershipId: memberId,  
+        roles: roles
+      });
+      getAllInvitedMembers(orgId);
       toast.success('Team updated');
-      try { await (await import('../services/indexer')).indexOrganization('update', updatedOrg); } catch {};
       return true;
     } catch (err) {
       console.error('Error updating team members', err);
@@ -441,7 +278,23 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <OrganizationContext.Provider value={{ organizations, currentOrg, loading, createOrganization, selectOrganization, addTeam, removeTeam, addMemberToOrg, createOrgInvite, updateOrganization, deleteOrganization, removeMemberFromOrg, updateTeamMembers, hasPermission }}>
+    <OrganizationContext.Provider 
+      value={{ 
+        organizations, 
+        currentOrg, 
+        invitedMembers,
+        loading, 
+        createOrganization, 
+        selectOrganization, 
+        addTeam, 
+        removeTeam, 
+        getAllInvitedMembers,
+        createOrgInvite, 
+        updateOrganization, 
+        deleteOrganization, 
+        removeMemberFromOrg, 
+        updateTeamMember, 
+      }}>
       {children}
     </OrganizationContext.Provider>
   );
