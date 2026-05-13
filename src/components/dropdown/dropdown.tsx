@@ -60,7 +60,7 @@ export default function Dropdown({ variant = "primary", className, disabled, lab
                     onClick={() => !disabled && setIsOpen(!isOpen)}
                     disabled={disabled}
                 >
-                    <span className={`flex items-center gap-2 truncate ${!selectedOption ? "text-gray/[0.8]" : "text-primary"}`}>
+                    <span className={`flex items-center gap-2 truncate ${!selectedOption ? "text-gray/[0.8]" : ""}`}>
                         {selectedOption?.icon || leftIcon}
                         {selectedOption?.title || placeholder}
                     </span>

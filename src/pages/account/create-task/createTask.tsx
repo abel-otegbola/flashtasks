@@ -312,11 +312,14 @@ function CreateTask() {
                 <div className="col-span-2">Due Date</div>
               </div>
               {generatedTasks.map((task, index) => (
-                <NewTaskCard key={index} task={task} deleteTask={() => {
-                  setGeneratedTasks((prev) => prev ? prev.filter((t) => t.$id !== task.$id) : null);
-                }} saveTask={() => {
-                  handleSaveTasks();
-                }} index={index} />
+                <NewTaskCard 
+                  key={index} 
+                  task={task} 
+                  deleteTask={() => { setGeneratedTasks((prev) => prev ? prev.filter((t) => t.$id !== task.$id) : null);}} 
+                  saveTask={() => { handleSaveTasks() }} 
+                  index={index} 
+                  editGeneratedTask={(task) => setGeneratedTasks((prev) => prev ? prev.map((t) => t.$id === task.$id ? task : t) : null)}
+                />
               ))}
             </div>
           </div>

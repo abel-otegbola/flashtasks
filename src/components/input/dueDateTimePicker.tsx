@@ -57,7 +57,7 @@ function combineDateAndTime(datePart: string, timePart: string) {
 export default function DueDateTimePicker({
   value,
   onChange,
-  label = 'Due Date',
+  label,
   error,
   required = false,
   className = '',
@@ -106,15 +106,19 @@ export default function DueDateTimePicker({
 
   return (
     <div className={`relative ${className}`}>
-      <label className="text-sm font-medium">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+      {
+        label && (
+        <label className="text-sm font-medium">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        )
+      }
 
       <button
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        className={`mt-2 flex w-full items-center justify-between gap-3 rounded-[6px] border p-4 duration-500 bg-gray-500/[0.04] dark:text-gray outline-none ${
+        className={`mt-2 flex flex-wrap w-full items-center justify-between gap-3 rounded-[6px] border p-4 duration-500 bg-gray-500/[0.04] dark:text-gray outline-none ${
           error ? 'border-red-500 text-red-500' : 'border-gray-500/[0.2]'
         }`}
       >
@@ -122,7 +126,6 @@ export default function DueDateTimePicker({
           <CalendarIcon size={16} />
           <span>{formatDateTime(selectedDate, { year: 'numeric', month: 'short', day: 'numeric' })} at {timePart || '00:00'}</span>
         </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">Choose</span>
       </button>
 
       {isOpen && (
