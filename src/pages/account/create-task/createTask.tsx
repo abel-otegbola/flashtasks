@@ -27,6 +27,7 @@ function CreateTask() {
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [isTranscribingFile, setIsTranscribingFile] = useState(false);
+  const [status, setStatus] = useState<"idle" | "recording" | "Listening..." | "processing" | "saving" | "error">("idle");
 
   const { addMultipleTasks, loading: savingTasks } = useTasks();
   const { user } = useUser();
@@ -38,7 +39,7 @@ function CreateTask() {
   const maxRecordingTime = getMaxRecordingTime(userRole);
 
   const {
-    status,
+    status: transcriptionStatus,
     recordingTime,
     startRecording,
     stopRecording,
@@ -49,10 +50,13 @@ function CreateTask() {
     // Fast live browser transcription
     onInterimTranscript: (text) => {
       setInterimText(text);
+      setStatus("Listening...");
+      setFinalText((prev) => prev); // Trigger re-render to show interim
     },
 
     // Final accurate Groq transcript
     onFinalTranscript: (text) => {
+      setStatus("idle");
       setFinalText(text);
 
       // Clear interim once final arrives
@@ -60,8 +64,8 @@ function CreateTask() {
     },
   });
 
-  const isRecording = status === "recording";
-  const isSupported = status !== "error";
+  const isRecording = transcriptionStatus === "recording";
+  const isSupported = transcriptionStatus !== "error";
   const displayText = interimText ? `${finalText} ${interimText}`.trim() : finalText;
   const displayError = taskError || error;
 
@@ -94,6 +98,7 @@ function CreateTask() {
   };
 
   const handleGenerateTasks = async () => {
+    setStatus("processing");
     const textToProcess = finalText.trim();
     if (!textToProcess) {
       setTaskError("Please enter or speak some text first.");
@@ -122,6 +127,7 @@ function CreateTask() {
       setTaskError(err instanceof Error ? err.message : "Failed to generate tasks.");
       setGeneratedTasks(null);
     } finally {
+      setStatus("idle");
     }
   };
 
@@ -134,6 +140,7 @@ function CreateTask() {
       return;
     }
 
+    setStatus("saving")
     const saved = await addMultipleTasks(
       generatedTasks.map((task) =>
         mapTodoToSavePayload(task, user?.$id ?? "", user?.email ?? "", currentOrg?.$id)
@@ -143,6 +150,9 @@ function CreateTask() {
       setFinalText("");
       setInterimText("");
       setGeneratedTasks(null);
+      setStatus("idle")
+    } else {
+      setStatus("idle")
     }
   };
 
@@ -177,11 +187,9 @@ function CreateTask() {
                   }}
                   className="border-none w-full h-[100px] outline-none bg-transparent dark:text-white dark:placeholder-gray-400 resize-none"
                 />
-                {interimText && (
-                  <span className="absolute bottom-2 left-0 text-xs text-gray-400 italic pointer-events-none px-1">
-                    Listening…
+                  <span className="absolute bottom-2 left-0 text-xs italic pointer-events-none px-1">
+                    {status === "recording" ? `Recording... (${Math.floor(recordingTime / 1000)}s)` : status === "Listening..." ? "Processing audio..." : status === "processing" ? "Generating tasks..." : status === "saving" ? "Saving tasks..." : ""}
                   </span>
-                )}
               </form>
             )}
           </Formik>

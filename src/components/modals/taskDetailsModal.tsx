@@ -25,7 +25,7 @@ interface TaskDetailsModalProps {
 export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const { deleteTask, updateTask } = useTasks();
+  const { deleteTask, updateTask, loading } = useTasks();
   const orgCtx = useOrganizations();
   const { organizations } = orgCtx;
   const modalRef = useOutsideClick(onClose, false);
@@ -40,11 +40,6 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   if (!isOpen) return null;
 
   const handleDelete = async () => {
-    if (!canEdit) {
-      setShowDeleteConfirmation(false);
-      return;
-    }
-
     await deleteTask(task.$id);
     setShowDeleteConfirmation(false);
     onClose();
@@ -89,14 +84,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             </button>
             <button
               onClick={() => {
-                if (!canEdit) return;
-
-                if (confirmBeforeDelete) {
-                  setShowDeleteConfirmation(true);
-                  return;
-                }
-
-                void handleDelete();
+                setShowDeleteConfirmation(true);
               }}
               className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
               title="Delete Task"
@@ -253,17 +241,19 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             onClose={() => setIsEditing(false)}
           />
         )}
+        
+        {showDeleteConfirmation && (
+          <Confirmationmessage
+            title="Delete task?"
+            text="Are you sure you want to delete this task? This action cannot be undone."
+            buttonText="Delete"
+            setOpen={setShowDeleteConfirmation}
+            onConfirm={handleDelete}
+            loading={loading}
+          />
+        )}
       </div>
 
-      {showDeleteConfirmation && (
-        <Confirmationmessage
-          title="Delete task?"
-          text="Are you sure you want to delete this task? This action cannot be undone."
-          buttonText="Delete"
-          setOpen={setShowDeleteConfirmation}
-          onConfirm={handleDelete}
-        />
-      )}
       {isFocusMode && (
         <FocusMode 
           task={task}

@@ -389,10 +389,10 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             return;
         }
 
-        if (!canAccessOrganizationTask(existingTask, 'delete')) {
-            denyTaskAccess('delete');
-            return;
-        }
+        // if (!canAccessOrganizationTask(existingTask, 'delete')) {
+        //     denyTaskAccess('delete');
+        //     return;
+        // }
         
         try {
             await databases.deleteDocument(
