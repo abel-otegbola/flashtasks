@@ -44,7 +44,7 @@ export default function CreateTaskModal({
 
   if (!isOpen) return null;
 
-  const canCreate = currentOrg ? orgCtx.hasPermission?.('Create tasks') || currentOrg.ownerEmail === user?.email : true;
+  const canCreate = true;
 
   return (
     <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
@@ -131,8 +131,8 @@ export default function CreateTaskModal({
                   </div>
 
                   <div className="sticky bottom-0 bg-white dark:bg-dark-bg border-t border-gray-500/[0.2] p-6 py-4 flex justify-end gap-3">
-                      <Button variant='secondary' onClick={onClose}>Close</Button>
-                      <Button type='submit' disabled={loading || !canCreate}>{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
+                      <Button variant='secondary' onClick={onClose} size="small">Close</Button>
+                      <Button type='submit' disabled={loading || !canCreate} size="small">{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
                   </div>
               </form>
             )}
