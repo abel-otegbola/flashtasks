@@ -43,7 +43,6 @@ Field rules:
 
 Extra rules:
 - Omit items with confidence < 0.35.
-- Split run-ons: "call Tolu then email the client" → 2 tasks.
 - Tasks with no explicit date get dateISO: null (the caller will spread them).
 - If no tasks found, return [].
 
