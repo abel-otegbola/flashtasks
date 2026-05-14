@@ -20,7 +20,7 @@ export default function Login() {
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%] md:py-[5%] py-[80px]">
             <div className="flex flex-col items-center gap-4">
-              <div className=" px-4 rounded-lg border border-gray-500/[0.2] w-fit">
+              <div className=" p-4 rounded-lg border border-gray-500/[0.2] w-fit">
                 <LogoIcon className="w-[14px]"  />
               </div>
               
