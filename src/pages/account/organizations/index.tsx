@@ -366,7 +366,7 @@ export default function OrganizationsPage() {
                               {m.roles?.length ? (
                                 <div className="mt-2 flex flex-wrap gap-1">
                                   {m.roles.map((role) => (
-                                    <span key={role} className="rounded-full bg-gray-100 px-4 py-[6px] text-[10px] dark:bg-[#202022]">
+                                    <span key={role} className="rounded bg-gray-100 px-4 py-[2px] text-[10px] dark:bg-[#202022]">
                                       {role}
                                     </span>
                                   ))}
