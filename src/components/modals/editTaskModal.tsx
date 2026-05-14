@@ -15,6 +15,8 @@ import DueDateTimePicker from "../input/dueDateTimePicker";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
 import Dropdown from "../dropdown/dropdown";
 import { canEditTask } from "../../helpers/taskPermissions";
+import { useEffect, useState } from "react";
+import TaskCheckbox from "../ui/taskCheckbox";
 
 interface EditTaskModalProps {
   isOpen: boolean;
@@ -28,14 +30,31 @@ export default function EditTaskModal({
   task,
 }: EditTaskModalProps) {
 
-  const { organizations } = useOrganizations();
+  const { organizations, invitedMembers, getAllInvitedMembers } = useOrganizations();
   const { updateTask, loading } = useTasks();
+  const [selectedorg, setSelectedOrg] = useState<string | null>(null);
   const { user } = useUser();
   const modalRef = useOutsideClick(onClose, false)
-
-  const orgCtx = useOrganizations();
-  const currentOrg = orgCtx.currentOrg;
   const canEdit = true
+
+  useEffect(() => {
+    if (task?.organizationId) {
+      const org = organizations.find((org: Organization) => org.$id === task.organizationId);
+      setSelectedOrg(org?.$id || null);
+      getAllInvitedMembers(task.organizationId);
+    } else {
+      setSelectedOrg(null);
+    }
+  }, [task?.organizationId, organizations]);
+
+  useEffect(() => {
+    if (selectedorg) {
+      getAllInvitedMembers(selectedorg);
+    }
+    else {
+      getAllInvitedMembers("");
+    }
+  }, [selectedorg]);
 
   const toDateTimeLocalValue = (value?: string) => {
     if (!value) return '';
@@ -111,10 +130,10 @@ export default function EditTaskModal({
                         />
 
                         <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
+                          <TaskCheckbox
+                            ariaLabel="make task recurring"
                             checked={Boolean(values.recurring)}
-                            onChange={(e) => setFieldValue('recurring', e.target.checked)}
+                            onCheckedChange={(checked) => setFieldValue('recurring', checked)}
                           />
                           Recurring task (auto-rollover to today daily)
                         </label>
@@ -142,7 +161,7 @@ export default function EditTaskModal({
                             <label className="text-sm font-medium">Add to an organization</label>
                             <Dropdown
                               value={values.organizationId}
-                              onChange={(value) => setFieldValue('organizationId', value)}
+                              onChange={(value) => {setFieldValue('organizationId', value); setSelectedOrg(value)}}
                               options={organizations.map((org: Organization) => ({ title: org.name, id: org.$id }))}
                             />                       
                         </div>
@@ -154,8 +173,8 @@ export default function EditTaskModal({
                               options=
                             {
                               (
-                                (organizations.find((org: Organization) => org.$id === values.organizationId)?.members ?? [])
-                                .concat(values.invites ? values.invites.split(",").filter(Boolean).map((email: string) => ({ $id: email, email, name: email })) : [])
+                                (invitedMembers.map((member: any) => ({ ...member, title: member.name || member.email })) ?? [])
+                                .concat(values.invites ? values.invites.split(",").filter(Boolean).map((email: string) => ({ email, name: email })) : [])
                               ).map((member: any) => ({ title: member.name || member.email, id: member.email }))
                               }
                             />

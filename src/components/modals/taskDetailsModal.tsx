@@ -34,7 +34,6 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
 
   // determine user's role in the task's organization (if any)
   const taskOrg = organizations.find(o => o.$id === (task as any).organizationId);
-  const taskTeam = taskOrg?.teams?.find((t: any) => t.$id === (task as any).teamId);
   const canEdit = true
 
   if (!isOpen) return null;
@@ -71,7 +70,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="px-2 opacity-[0.7] leading-4">Created on {formatDateTime(task.$createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}</h2>
+            <h2 className="px-2 opacity-[0.7] leading-4 text-sm">Created on {formatDateTime(task.$createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -101,7 +100,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
         <div className="p-6 space-y-6">
           {/* Title */}
           <div className="">
-            <h3 className="font-medium">{task.title}</h3>
+            <h3 className="font-medium text-sm">{task.title}</h3>
           </div>
 
           {/* Task Details Grid */}
@@ -155,7 +154,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
               Description
             </label>
-            <p className="whitespace-pre-wrap">{task.description || 'No description provided'}</p>
+            <p className="whitespace-pre-wrap text-[12px]">{task.description || 'No description provided'}</p>
           </div>
 
           {/* Organization / Team Display */}
@@ -169,7 +168,6 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
                 {taskOrg ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{taskOrg.name}</span>
-                    {taskTeam && <span className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">{taskTeam.name}</span>}
                   </div>
                 ) : (
                   <div className="mt-2">Personal / No organization</div>
@@ -225,13 +223,18 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           <div className="sticky bottom-0 bg-white dark:bg-dark-bg overflow-x-auto flex flex-wrap justify-end gap-4 p-4 border-t border-gray-500/[0.1] ">
             <Button size="small" variant="secondary" onClick={() => setIsFocusMode(true)}><Play /> Start focus mode</Button>
           {
-            task.status === "in progress" ? (
+            task.status === "in progress" || task.status === "pending" ? (
             <Button size="small" variant="secondary" onClick={() => updateTask(task.$id, { status: "suspended" })}>Suspend task</Button>
             ) : (
               <Button size="small" variant="secondary" onClick={() => updateTask(task.$id, { status: "in progress" })}>Resume task</Button>
             )
           }
-            <Button size="small" onClick={() => updateTask(task.$id, { status: "completed" })}>Complete task</Button>
+          {
+            task.status !== "completed" ? 
+              <Button size="small" onClick={() => updateTask(task.$id, { status: "completed" })}>Complete task</Button>
+              :
+              <Button size="small" onClick={() => updateTask(task.$id, { status: "pending" })}>Restart task</Button>
+          }
           </div>
         {/* Footer */}
         {isEditing && (

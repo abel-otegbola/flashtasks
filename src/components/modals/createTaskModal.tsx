@@ -14,6 +14,7 @@ import TagInput from "../input/tagInput";
 import { Organization } from "../../interface/organization";
 import { useOrganizations } from "../../context/organizationContext";
 import Dropdown from "../dropdown/dropdown";
+import TaskCheckbox from "../ui/taskCheckbox";
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -80,7 +81,7 @@ export default function CreateTaskModal({
                       </div>
                       
                       <div className='flex flex-col gap-2'>
-                          <label className="text-sm font-medium">Category <span className="text-red-500">*</span></label>
+                          <label className="text-sm font-medium">Category</label>
                           <Input value={values.category} name='category' onChange={handleChange} placeholder="Task category" error={touched.category ? errors.category : ""} />
                       </div>
                       
@@ -92,16 +93,16 @@ export default function CreateTaskModal({
                       />
 
                       <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
+                        <TaskCheckbox
+                          ariaLabel="make task recurring"
                           checked={Boolean(values.recurring)}
-                          onChange={(e) => setFieldValue('recurring', e.target.checked)}
+                          onCheckedChange={(checked) => setFieldValue('recurring', checked)}
                         />
                         Recurring task (auto-rollover to today daily)
                       </label>
 
                       <div className='flex flex-col gap-2'>
-                          <label className="text-sm font-medium">Priority <span className="text-red-500">*</span></label>
+                          <label className="text-sm font-medium">Priority</label>
                           <Dropdown
                             variant="secondary"
                             value={values.priority}
@@ -112,20 +113,6 @@ export default function CreateTaskModal({
                               { title: "High", id: "high" }
                             ]}
                           />
-                      </div>
-
-                       <div className='flex flex-col gap-2'>
-                          <label className="text-sm font-medium">Assignees</label>
-                          <TagInput tags={values.assignees} onChange={(e) => setFieldValue('assignees', e)} placeholder="Assign the task to members" />
-                          <Dropdown value={values.assignees[0] || ""} onChange={(value) => setFieldValue('assignees', (values.assignees).includes(value) ? values.assignees : [...values.assignees, value])}
-                              options=
-                            {
-                              (
-                                (organizations.find((org: Organization) => org.$id === values.organizationId)?.members ?? [])
-                                .concat(values.invites ? values.invites.split(",").filter(Boolean).map((email: string) => ({ $id: email, email, name: email })) : [])
-                              ).map((member: any) => ({ title: member.name || member.email, id: member.email }))
-                              }
-                            />
                       </div>
 
                   </div>
