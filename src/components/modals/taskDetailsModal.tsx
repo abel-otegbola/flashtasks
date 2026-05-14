@@ -26,14 +26,13 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const { deleteTask, updateTask, loading } = useTasks();
-  const orgCtx = useOrganizations();
-  const { organizations } = orgCtx;
+  const { organizations } = useOrganizations();
   const modalRef = useOutsideClick(onClose, false);
   const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
   const [isFocusMode, setIsFocusMode] = useState(false);
 
   // determine user's role in the task's organization (if any)
-  const taskOrg = organizations.find(o => o.$id === (task as any).organizationId);
+  const taskOrg = organizations?.find(o => o.$id === (task as any).organizationId);
   const canEdit = true
 
   if (!isOpen) return null;

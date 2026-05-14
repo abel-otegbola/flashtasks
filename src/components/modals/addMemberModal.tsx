@@ -5,7 +5,6 @@ import { useOutsideClick } from '../../customHooks/useOutsideClick';
 import Button from '../button/button';
 import Input from '../input/input';
 import Dropdown from '../dropdown/dropdown';
-import TaskCheckbox from '../ui/taskCheckbox';
 import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, OrgInvite } from '../../interface/organization';
 import { useOrganizations } from '../../context/organizationContext';
 
@@ -22,7 +21,7 @@ const roleOptions = [
 
 const normalizeMember = (member: any) => {
   if (typeof member === 'string') {
-    return { $id: member, name: member, email: member, role: 'member', roles: [] };
+    return { $id: member, name: member, email: member, roles: [] };
   }
 
   return {
@@ -30,7 +29,6 @@ const normalizeMember = (member: any) => {
     $id: member?.$id || member?.userId || member?.email,
     name: member?.name || member?.fullname || member?.email || member?.$id || member?.userId || '',
     email: member?.email || member?.userId || member?.$id || '',
-    role: member?.role || 'member',
     roles: Array.isArray(member?.roles) ? member.roles : [],
   };
 };
@@ -39,8 +37,7 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
   const { currentOrg, createOrgInvite, updateTeamMember, loading } = useOrganizations();
   const modalRef = useOutsideClick(onClose, false);
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('member');
-  const [roles, setroles] = useState<string[]>(MEMBER_PERMISSIONS);
+  const [roles, setRoles] = useState<string>("member");
   const [error, setError] = useState('');
   const initialMember = member ? normalizeMember(member) : null;
   const editingMember = Boolean(initialMember?.$id);
@@ -50,30 +47,15 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
     
     if (initialMember) {
       setEmail(initialMember.email || '');
-      setRole((initialMember.role as 'admin' | 'member') || 'member');
-      setroles(initialMember.roles);
+      setRoles(initialMember.roles[0]);
     } else {
       setEmail('');
-      setRole('member');
-      setroles(MEMBER_PERMISSIONS);
+      setRoles('member');
     }
     setError('');
   }, [isOpen, member]);
 
   if (!isOpen || !currentOrg) return null;
-
-  const defaultrolesForRole = member.roles;
-
-  const handleRoleChange = (nextRole: string) => {
-    setRole(nextRole);
-    setroles(defaultrolesForRole(nextRole));
-  };
-
-  const togglePermission = (permission: string) => {
-    setroles((prev) =>
-      prev.includes(permission) ? prev.filter((item) => item !== permission) : [...prev, permission]
-    );
-  };
 
   const handleSubmit = async () => {
     const nextEmail = email.trim().toLowerCase();
@@ -84,10 +66,10 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
     }
     const invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'> = {
       email: nextEmail,
-      roles: roles,
+      roles: [roles],
     };
     if (editingMember) {
-      await updateTeamMember(currentOrg.$id, initialMember.$id, roles);
+      await updateTeamMember(currentOrg.$id, initialMember.$id, invite.roles);
       onClose();
       return;
     }
@@ -116,8 +98,8 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">Role</label>
             <Dropdown
-              value={role}
-              onChange={handleRoleChange}
+              value={roles}
+              onChange={(value) => setRoles(value)}
               options={roleOptions}
               placeholder="Select role"
             />
@@ -130,7 +112,7 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-              {(role === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS).map((permission) => {
+              {(roles === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS).map((permission) => {
                 const checked = roles.includes(permission);
                 const disabledToggle = permission === 'Invite/remove members';
 

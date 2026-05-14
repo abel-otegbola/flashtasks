@@ -29,7 +29,7 @@ export default function SignupPage() {
                 <h1 className="font-semibold text-[32px] text-dark-500 font-Elsie">Create Account</h1>
               </BlurReveal>
               <BlurReveal preset="slide-left">
-                <p className="text-gray text-center">Enter your details to create an account</p>
+                <p className="opacity-70 text-center">Enter your details to create an account</p>
               </BlurReveal>
             </div>
             <Formik
@@ -83,10 +83,22 @@ export default function SignupPage() {
               )}
             </Formik>
 
-            <Link to="/auth/login" className="text-center mt-4 text-[14px]">
-              <BlurReveal preset="slide-left">
-                Already have an account? <span className="text-primary">Login</span>
-              </BlurReveal>
+            
+            <div className="grid grid-cols-2 justify-center font-medium mt-4">
+              <Link to="/auth/forgot-password" className="px-4 text-right hover:text-primary text-[12px] border-r border-gray-500/[0.6]">
+                <BlurReveal preset="slide-left">
+                  <span className="">Forgot password?</span>
+                </BlurReveal>
+              </Link>
+              <Link to="/auth/login" className="px-4 text-start hover:text-primary text-[12px]">
+                <BlurReveal preset="slide-left">
+                  <span className="">Continue to Sign in</span>
+                </BlurReveal>
+              </Link>
+            </div>
+            
+            <Link to="/" className="text-center mt-4 text-[12px] opacity-70">
+              Back to Home
             </Link>
           </div>
         </div>

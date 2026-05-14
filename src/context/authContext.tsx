@@ -1,12 +1,11 @@
 'use client'
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import toast, { Toaster } from "react-hot-toast";
-import { ID, Query } from "appwrite";
+import { ID } from "appwrite";
 import { useNavigate } from "react-router-dom";
-import { account, databases, tablesDB, teams } from "../appwrite/appwrite";
+import { account, tablesDB, teams } from "../appwrite/appwrite";
 import { useLocalStorage } from '../customHooks/useLocaStorage';
 import { User } from '../interface/auth';
-import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS } from '../interface/organization';
 
 type values = {
     user: User;
@@ -36,8 +35,6 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     const router = useNavigate();
 
     const DATABASE_ID = import.meta.env.VITE_APPWRITE_USERS_DATABASE_ID || '';
-    const DATABASE_ORG_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
-    const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORGANIZATIONS_COLLECTION_ID || 'organizations';
     const USERS_TABLE_ID = import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users';
 
     const ensureMainUserRow = async (accountUser: any) => {
@@ -85,55 +82,17 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
         setLoading(true);
         try {
             const loggedIn = await account.get();
+            if (!loggedIn) {
+                toast.error('You must be logged in to accept the invite');
+                router("/auth/login?callbackURL=/account/dashboard");
+                return false;
+            }
 
             await ensureMainUserRow(loggedIn);
             const membership = await teams.updateMembershipStatus({ teamId, membershipId, userId, secret });
 
-            const res = await databases.listDocuments(
-                DATABASE_ORG_ID,
-                ORG_COLLECTION_ID,
-                [
-                    Query.select(["*", "teams.*", "members.*"]),
-                    Query.limit(100),
-                ]
-            );
-            const nextRole = membership.roles[0] || 'member';
-            const nextPermissions = membership.roles?.[0] === "admin" ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS;
-
-            const existingMembers = Array.isArray(res.documents)
-                ? res.documents.find(org => org.$id === teamId)?.members || []
-                : [];
-
-            // Check if member already exists to prevent duplicates
-            const memberExists = existingMembers.some(m => m.$id === loggedIn.$id || m.email?.toLowerCase() === loggedIn.email.toLowerCase());
-            
-            let nextMembers = existingMembers;
-            if (!memberExists) {
-              const nextMember = {
-                  $id: loggedIn.$id,
-                  name: loggedIn.name || loggedIn.email,
-                  email: loggedIn.email,
-                  role: nextRole,
-                  permissions: nextPermissions,
-              };
-              nextMembers = [
-                  ...existingMembers,
-                  nextMember,
-              ];
-            } else {
-              // Update existing member with new role/permissions
-              nextMembers = existingMembers.map(m => 
-                m.$id === loggedIn.$id || m.email?.toLowerCase() === loggedIn.email.toLowerCase()
-                  ? { ...m, role: nextRole, permissions: nextPermissions }
-                  : m
-              );
-            }
-
-            await databases.updateDocument(DATABASE_ORG_ID, ORG_COLLECTION_ID, teamId, { members: nextMembers });
-
-
             window.dispatchEvent(new Event('organizations:changed'));
-            toast.success(`Joined ${res.documents[0]?.name || 'organization'}`);
+            toast.success(`Joined ${membership?.teamName || 'organization'}`);
             return true;
         } catch (error) {
             console.error('Error accepting team invite', error);
@@ -202,6 +161,8 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             setLoading(false)
         });
     }
+
+    // verify email and forgot password flow
     
     const getPhotoUrl = async (email: string) => {
         try {

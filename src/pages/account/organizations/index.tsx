@@ -27,7 +27,7 @@ export default function OrganizationsPage() {
   const [showEdit, setShowEdit] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
-  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
+  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(currentOrg || null);
   const [selectedTab, setSelectedTab] = useState("Tasks");
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingTeamName, setEditingTeamName] = useState('');
@@ -41,12 +41,10 @@ export default function OrganizationsPage() {
 
   useEffect(() => {
       getOrganizationTasks(selectedOrg?.$id || "");
-      getAllInvitedMembers(selectedOrg?.$id || "");
+      if (selectedOrg) {
+        getAllInvitedMembers(selectedOrg?.$id || "");
+      }
   }, [selectedOrg ]);
-
-  useEffect(() => {
-    console.log(organizations);
-  }, [organizations]);
 
   const initialLoading = loading && organizations.length === 0 && !currentOrg;
 

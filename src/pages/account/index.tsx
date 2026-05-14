@@ -3,7 +3,7 @@ import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { useUser } from "../../context/authContext";
 import Dashboard from "./dashboard/dashboard";
 import Sidebar from "../../components/sidebar/sidebar";
-import { AddCircle, Bell, Magnifer } from "@solar-icons/react";
+import { AddCircle, Bell } from "@solar-icons/react";
 import { Formik } from "formik";
 import Button from "../../components/button/button";
 import LogoIcon from "../../assets/icons/logo";

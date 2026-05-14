@@ -1,8 +1,8 @@
 'use client'
-import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, Organization, OrgInvite, OrgMember, Team, CreateOrganizationPayload, CreateTeamPayload } from '../interface/organization';
-import { databases, teams } from '../appwrite/appwrite';
-import { ID, Query } from 'appwrite';
+import { teams } from '../appwrite/appwrite';
+import { ID } from 'appwrite';
 import toast from 'react-hot-toast';
 import { useUser } from './authContext';
 
@@ -52,7 +52,6 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       teams.list()
       .then(res => res.teams || [])
       .then(teams => {
-        console.log(teams)
         setOrganizations(teams)
       })
       .catch(err => {
