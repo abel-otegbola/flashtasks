@@ -138,7 +138,7 @@ function Tasks() {
                     </p>
                 </div>
 
-                <div className="flex items-center flex-wrap gap-4">
+                <div className="grid md:grid-cols-4 grid-cols-1 items-center gap-4">
                     <Button
                         variant="secondary"
                         size="small"
@@ -198,7 +198,7 @@ function Tasks() {
                                         }`}
                                         title={`${mode.charAt(0).toUpperCase() + mode.slice(1)} View`}
                                     >
-                                        <Icon size={20} />
+                                        <Icon size={18} />
                                     </button>
                                 );
                             })
@@ -220,7 +220,7 @@ function Tasks() {
                     />
                 </div>
                 
-                <p className="md:hidden">Swipe a task to the left to <span className="font-semibold text-red-500">delete</span> and right to <span className="font-semibold text-green-500">complete</span></p>
+                {/* <p className="md:hidden">Swipe a task to the left to <span className="font-semibold text-red-500">delete</span> and right to <span className="font-semibold text-green-500">complete</span></p> */}
             </div>
 
             {/* Kanban View */}

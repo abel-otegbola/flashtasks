@@ -17,6 +17,7 @@ import {
   getMaxRecordingTime,
 } from "../../../helpers/createTaskHelpers";
 import NewTaskCard from "../../../components/cards/newTaskCard";
+import CreateTaskModal from "../../../components/modals/createTaskModal";
 
 function CreateTask() {
   const [finalText, setFinalText] = useState("");
@@ -28,6 +29,7 @@ function CreateTask() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [isTranscribingFile, setIsTranscribingFile] = useState(false);
   const [status, setStatus] = useState<"idle" | "recording" | "Listening..." | "processing" | "saving" | "error">("idle");
+  const [showModal, setShowModal] = useState(false);
 
   const { addMultipleTasks, loading: savingTasks } = useTasks();
   const { user } = useUser();
@@ -165,6 +167,21 @@ function CreateTask() {
       <p className="text-gray-400">
         Continue from where you stopped yesterday and add today's tasks
       </p>
+       <Button
+            onClick={() => setShowModal(true)}
+            className="text-dark"
+            size="small"
+            variant="secondary"
+        > 
+            + Add New Task Manually
+        </Button>
+
+        <CreateTaskModal
+            isOpen={showModal}
+            onClose={() => setShowModal(false)}
+        />
+
+        <p>OR</p>
 
       <div className="flex flex-col gap-2 p-4 rounded-[10px] border border-gray-500/[0.2] shadow-[0px_4px_12px_0px_#80808010]">
         <div className="flex gap-2 w-full">
