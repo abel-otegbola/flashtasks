@@ -13,12 +13,8 @@ interface AddMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   member?: any;
+  currentUserPermissions?: string[];
 }
-
-const roleOptions = [
-  { id: 'admin', title: 'admin' },
-  { id: 'member', title: 'member' },
-];
 
 const normalizeMember = (member: any) => {
   if (typeof member === 'string') {
@@ -34,7 +30,7 @@ const normalizeMember = (member: any) => {
   };
 };
 
-export default function AddMemberModal({ isOpen, onClose, member }: AddMemberModalProps) {
+export default function AddMemberModal({ isOpen, onClose, member, currentUserPermissions }: AddMemberModalProps) {
   const { currentOrg, createOrgInvite, updateTeamMember, loading } = useOrganizations();
   const modalRef = useOutsideClick(onClose, false);
   const [email, setEmail] = useState('');
@@ -43,6 +39,15 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
   const [error, setError] = useState('');
   const initialMember = member ? normalizeMember(member) : null;
   const editingMember = Boolean(initialMember?.$id);
+
+  const options =  [
+    { id: 'admin', title: 'admin' },
+    { id: 'member', title: 'member' },
+  ];
+  const roleOptions = !currentUserPermissions?.includes('owner') ? options : [
+    { id: 'owner', title: 'owner' },
+    ...options,
+  ] 
 
   useEffect(() => {
     if (!isOpen) return;
@@ -73,7 +78,7 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
       roles: [...roles, ...permissions],
     };
     if (editingMember) {
-      await updateTeamMember(currentOrg.$id, initialMember.$id, invite.roles);
+      await updateTeamMember(currentOrg.$id, initialMember.$id, invite.roles[0] === "owner" ? ["owner"] : invite.roles);
       onClose();
       return;
     }
@@ -84,7 +89,7 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 dark:bg-black/30 backdrop-blur-xs px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs px-4">
       <div ref={modalRef} className="w-full sm:w-2xl w-full max-h-[85vh] overflow-y-auto rounded-lg border border-gray-500/[0.2] bg-white shadow-xl dark:bg-dark-bg">
         <div className="sticky top-0 z-[2] flex items-center justify-between border-b border-gray-500/[0.1] bg-white p-4 dark:bg-dark-bg">
           <h2 className="px-2 leading-4 opacity-[0.7]">{editingMember ? 'Edit member' : 'Invite member'}</h2>
@@ -105,7 +110,7 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
               value={roles[0] || 'member'}
               onChange={(value) => {
                 setRoles([value, ...roles.slice(1) ])
-                setPermissions(value === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS)
+                setPermissions(value === 'admin' ? ADMIN_PERMISSIONS : value === 'owner' ? [] : MEMBER_PERMISSIONS)
               }}
               options={roleOptions}
               placeholder="Select role"
@@ -119,6 +124,11 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
             </div>
 
             <div className="grid grid-cols-1 gap-3">
+              {
+                roles[0] === 'owner' ? (
+                  <p className="text-sm text-gray-500">Owners have all permissions by default.</p>
+                ) : (
+                  <>
               <Dropdown
                 value={permissions[0] || ''}
                 onChange={(value) => setPermissions([value, ...permissions.filter(p => p !== value) ])}
@@ -129,14 +139,16 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
                 tags={permissions}
                 onChange={(tags) => setPermissions(tags)}
                 disabled
-              />
+              /></>
+                )
+              }
             </div>
           </div>
 
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
         </div>
 
-        <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-500/[0.2] bg-white p-6 py-4 dark:bg-dark-bg">
+        <div className="sticky bottom-0 flex items-center justify-center gap-3 border-t border-gray-500/[0.2] bg-white p-6 py-4 dark:bg-dark-bg">
           <Button variant="secondary" size="small" onClick={onClose}>Close</Button>
           <Button onClick={handleSubmit} size="small" disabled={loading}>{loading ? 'Saving...' : editingMember ? 'Save changes' : 'Send invite'}</Button>
         </div>

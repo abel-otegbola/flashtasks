@@ -64,7 +64,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
   };
 
   return (
-    <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
       <div ref={modalRef} className="bg-white dark:bg-dark-bg shadow-xl w-[94%] overflow-y-auto max-w-2xl max-h-[80vh] border border-gray-500/[0.1] rounded-lg overflow-hidden">
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
@@ -219,7 +219,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
 
         </div>
 
-          <div className="sticky bottom-0 bg-white dark:bg-dark-bg overflow-x-auto flex flex-wrap justify-end gap-4 p-4 border-t border-gray-500/[0.1] ">
+          <div className="sticky bottom-0 bg-white dark:bg-dark-bg overflow-x-auto flex flex-wrap justify-center gap-4 p-4 border-t border-gray-500/[0.1] ">
             <Button size="small" variant="secondary" onClick={() => setIsFocusMode(true)}><Play /> Start focus mode</Button>
           {
             task.status === "in progress" || task.status === "pending" ? (

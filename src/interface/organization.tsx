@@ -1,4 +1,4 @@
-export const ADMIN_PERMISSIONS = [
+export const OWNER_PERMISSIONS = [
   'create_task',
   'edit_task',
   'delete_task',
@@ -8,6 +8,17 @@ export const ADMIN_PERMISSIONS = [
   'manage_org',
   'manage_teams',
   'manage_members',
+  'edit_assigned_task',
+];
+
+export const ADMIN_PERMISSIONS = [
+  'create_task',
+  'edit_task',
+  'delete_task',
+  'assign_task',
+  'complete_task',
+  'view_task',
+  'manage_teams',
 ];
 
 export const MEMBER_PERMISSIONS = [

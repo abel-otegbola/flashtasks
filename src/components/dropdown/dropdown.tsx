@@ -100,8 +100,8 @@ export default function Dropdown({ variant = "primary", className, disabled, lab
                                 <button
                                     key={option.id}
                                     type="button"
-                                    className={`w-full px-3 py-2 text-start text-[12px] flex items-center gap-2 hover:bg-primary hover:text-white transition-colors
-                                        ${option.title === value ? 'bg-primary text-white' : ''}
+                                    className={`w-full px-3 py-2 text-start text-[12px] flex items-center gap-2 hover:bg-primary/[0.12] transition-colors
+                                        ${option.title === value ? 'bg-primary/[0.12]' : ''}
                                     `}
                                     onClick={() => {handleSelect(option.id); option.onClick?.()}}
                                 >

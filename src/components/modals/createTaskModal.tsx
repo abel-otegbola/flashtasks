@@ -48,7 +48,7 @@ export default function CreateTaskModal({
   const canCreate = true;
 
   return (
-    <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
       <div ref={modalRef} className="bg-white dark:bg-dark-bg shadow-xl w-[94%] max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-500/[0.2] rounded-lg overflow-hidden">
         <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] z-[2] p-4 flex items-center justify-between">
             <h2 className="px-2 opacity-[0.7] leading-4">Create New Task</h2>
@@ -117,7 +117,7 @@ export default function CreateTaskModal({
 
                   </div>
 
-                  <div className="sticky bottom-0 bg-white dark:bg-dark-bg border-t border-gray-500/[0.2] p-6 py-4 flex justify-end gap-3">
+                  <div className="sticky bottom-0 bg-white dark:bg-dark-bg border-t border-gray-500/[0.2] p-6 py-4 flex justify-center gap-3">
                       <Button variant='secondary' onClick={onClose} size="small">Close</Button>
                       <Button type='submit' disabled={loading || !canCreate} size="small">{isSubmitting || loading ? <LoadingIcon className='animate-spin' /> : 'Save'}</Button>
                   </div>

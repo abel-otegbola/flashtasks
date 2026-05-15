@@ -14,7 +14,7 @@ interface ConfirmationMessageProps {
 export default function Confirmationmessage({ title, text, buttonText = "Delete", setOpen, onConfirm, loading }: ConfirmationMessageProps) {
     const modalRef = useOutsideClick(setOpen, false)
     return (
-        <div className='fixed inset-0 bg-white/30 dark:bg-black/30 flex items-center justify-center backdrop-blur-xs p-4 z-50'>
+        <div className='fixed inset-0 bg-black/30 flex items-center justify-center backdrop-blur-xs p-4 z-50'>
             <div ref={modalRef} className="bg-white dark:bg-dark-bg flex flex-col justify-between sm:w-[400px] w-full max-[460px]:w-[80%] rounded-lg shadow-lg border border-gray-500/[0.2]">
                 <div className="sticky top-0 border-b border-gray-500/[0.2] z-[2] p-4 flex items-center justify-between">
                     <h2 className="px-2 opacity-[0.7] leading-4">{title}</h2>

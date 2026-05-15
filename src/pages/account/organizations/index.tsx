@@ -16,6 +16,8 @@ import { todo } from '../../../interface/todo';
 import TaskDetailsModal from '../../../components/modals/taskDetailsModal';
 import CreateTaskModal from '../../../components/modals/createTaskModal';
 import { formatDeliveredTime } from '../../../helpers/messageTime';
+import GetAvatar from '../../../customHooks/useGetAvatar';
+import { useUser } from '../../../context/authContext';
 
 export default function OrganizationsPage() {
   const orgCtx = useOrganizations();
@@ -38,6 +40,8 @@ export default function OrganizationsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
+  const { user } = useUser()
+  const permissions = invitedMembers?.find(m => m.email === user?.email)?.roles || [];
 
   useEffect(() => {
       getOrganizationTasks(selectedOrg?.$id || "");
@@ -48,9 +52,9 @@ export default function OrganizationsPage() {
 
   const initialLoading = loading && organizations.length === 0 && !currentOrg;
 
-  const isOwner = true
+  const isOwner = permissions.includes("owner") || permissions.includes('manage_org')
 
-  const isAdmin = true
+  const isAdmin = permissions.includes('manage_teams') || permissions.includes('manage_members')
 
   const openTaskDetails = (task: todo) => {
       setSelectedTask(task);
@@ -192,12 +196,10 @@ export default function OrganizationsPage() {
                         ))}
                       </div>
                     )}
-                    { (isOwner || orgCtx.hasPermission?.('Create tasks')) && (
                     <Button onClick={() => setShowCreateTask(true)} size="small">
                       <PlusIcon />
                       Create New Task
                     </Button>
-                    ) }
                     {showCreateTask && (
                       <CreateTaskModal
                         isOpen={showCreateTask}
@@ -340,42 +342,68 @@ export default function OrganizationsPage() {
 
                     <div className="border border-gray-500/[0.1] rounded-lg bg-white dark:bg-dark/[0.4]">
                       <h4 className="text-sm font-medium p-4 border-b border-gray-500/[0.1]">Members</h4>
-                      <div className="flex flex-col gap-2 p-4">
+                      <div className="flex flex-col gap-2">
+                        {/* List Header - Hidden on mobile */}
+                        <div className={`hidden md:grid md:grid-cols-12 gap-4 px-4 py-2 text-sm font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]`}>
+                            <div className="col-span-3 px-4">User</div>
+                            <div className="col-span-2 px-4">Role</div>
+                            <div className="col-span-3 px-4">Permissions</div>
+                            <div className="col-span-2 px-4">Status</div>
+                            <div className="col-span-2 px-4">Actions</div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col p-4">
                         {(invitedMembers || []).map(m => (
-                          <div key={m.$id} className="flex items-start justify-between gap-3 p-4 rounded-lg bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]">
-                            <div className='w-full'>
-                              <div className='flex justify-between w-full'>
-                                <div className='flex gap-3'>
-                                  <div className="font-medium">{m.name || m.email} 
-                                  </div>
-                                  <span className="rounded bg-gray-100 px-4 py-[2px] text-[12px] dark:bg-[#202022]">
-                                    {m.roles[0]}
-                                  </span>
-                                </div>
-                                {(!isOwner || !(isAdmin && m.roles?.includes('owner'))) && (
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <button onClick={() => { setSelectedMember(m); setShowAddMember(true); }} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
-                                      Edit
-                                    </button>
-                                    {!m.roles?.includes('owner') && (
-                                      <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
-                                        Remove
-                                      </button>
-                                    )}
-                                  </div>
-                                  )}
+                          <div 
+                            key={m.$id}
+                            role="button"
+                            tabIndex={0}
+                            className={`grid md:grid-cols-12 grid-cols-6 flex flex-col md:gap-4 gap-2 px-4 py-3 flex-1 border-b border-gray-500/[0.2] last:border-0 pb-4`}
+                          >
+                            <div className={`md:col-span-3 col-span-4 flex items-center gap-1 `}>
+                              <GetAvatar email={m.email} className='w-12 h-12' />
+                              <div>
+                                <h3 className={`font-semibold text-sm`}>
+                                    {m.name}
+                                </h3>
+                                <p className="text-xs text-gray-400 line-clamp-2 md:line-clamp-1">{m.email}</p>
                               </div>
-                              <div className="text-sm text-gray-400 mt-1">{m.email}</div>
+                            </div>  
+                            
+                            <div className="col-span-2 flex items-center md:justify-start">
+                              <span className="rounded bg-gray-100 px-4 py-[2px] text-[12px] dark:bg-[#202022]">
+                                {m.roles[0]}
+                              </span>
+                            </div>
+                            <div className="md:col-span-3 col-span-6 flex flex-wrap items-center md:justify-start">
                               {m.roles?.length ? (
                                 <div className="mt-2 flex flex-wrap gap-1">
                                   {m.roles.slice(1, m.roles.length).map((role) => (
                                     <span key={role} className="rounded bg-gray-100 px-4 py-[2px] text-[12px] dark:bg-[#202022]">
-                                      {role}
+                                      {role.replace(/_/g, ' ')}
                                     </span>
                                   ))}
                                 </div>
                               ) : null}
-                              <p className={`mt-2 py-1 rounded-full text-sm`}>{m.joined ? ` (joined ${formatDeliveredTime(m.joined)})` : "Invite pending"}</p>
+                            </div>
+                            <div className="col-span-2 md:px-4 flex items-center md:justify-start">
+                              <p className={`rounded  px-4 py-[2px] text-[12px] ${m.joined ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'}`}>
+                                {m.joined ? `Active` : "Pending"}
+                              </p>
+                            </div>
+                            <div className="col-span-2 md:px-4 flex items-center md:justify-start">
+                              {(isOwner) && (
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <button onClick={() => { setSelectedMember(m); setShowAddMember(true); }} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
+                                    Edit
+                                  </button>
+                                  {!m.roles?.includes('owner') && (
+                                    <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
+                                      Remove
+                                    </button>
+                                  )}
+                                </div>
+                                )}
                             </div>
                           </div>
                         ))}
@@ -448,6 +476,7 @@ export default function OrganizationsPage() {
         setSelectedMember(null);
       }}
       member={selectedMember}
+      currentUserPermissions={permissions}
     />
       {/* Task Details Modal (for list/grid/calendar clicks) */}
               {selectedTask && (
