@@ -6,6 +6,7 @@ import ThemeSelector from "../themeSelector/themeSelector";
 import SearchBar from "../search/searchBar";
 import { useUser } from "../../context/authContext";
 import BlurReveal from "../animations/blurReveal";
+import GetAvatar from "../../customHooks/useGetAvatar";
 
 function Topbar() {
     const pathname = useLocation().pathname;
@@ -19,7 +20,7 @@ function Topbar() {
         const initial = ((user as any).name || (user as any).email || 'U')[0].toUpperCase();
         return (
             <Link to={"/account/dashboard"} className="flex gap-2 items-center">
-                <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">{initial}</div>
+                <GetAvatar email={initial} className="w-10 h-10" />
                 <div>
                     <span className="md:hidden block font-semibold">{(user as any).name || (user as any).email}</span>
                     <span className="block md:hidden text-sm">Dashboard</span>
@@ -70,7 +71,7 @@ function Topbar() {
         <div className={`flex justify-between items-center w-full md:px-[6%] px-4 py-3 z-[3] sticky top-0 bg-white dark:bg-dark-bg backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'border-b border-gray-500/[0.1]' : ''}`}>
             <Link to={"/"} className="md:w-[30%] text-start flex gap-2 items-center">
                 <LogoIcon className="w-[14px]"  />
-                <BlurReveal preset="slide-right" duration={3}><h3 className="text-xl font-semibold font-Elsie">Flashtasks</h3></BlurReveal>
+                <BlurReveal preset="slide-right" duration={3}><h3 className="text-xl font-semibold">Flashtasks</h3></BlurReveal>
             </Link>
             
             <ul className={`

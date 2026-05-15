@@ -2,7 +2,7 @@
 import { todo } from "../../interface/todo";
 import Button from "../button/button";
 import { useUser } from "../../context/authContext";
-import { XIcon } from "@phosphor-icons/react";
+import { MinusIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import { Formik } from "formik";
 import Input from "../input/input";
 import LoadingIcon from "../../assets/icons/loading";
@@ -15,6 +15,7 @@ import { Organization } from "../../interface/organization";
 import { useOrganizations } from "../../context/organizationContext";
 import Dropdown from "../dropdown/dropdown";
 import TaskCheckbox from "../ui/taskCheckbox";
+import { useState } from "react";
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export default function CreateTaskModal({
   const { organizations, currentOrg } = orgCtx;
   const { addTask, loading } = useTasks();
   const { user } = useUser();
+  const [openMore, setOpenMore] = useState(false)
   const modalRef = useOutsideClick(onClose, false)
 
   const getLocalDateTimeValue = () => {
@@ -68,52 +70,64 @@ export default function CreateTaskModal({
             >
             {({ isSubmitting, handleSubmit, errors, touched, values, setFieldValue, handleChange }) => (
                 <form onSubmit={handleSubmit} className='flex flex-col justify-between h-full'>
-                  <div className="p-6 space-y-3 overflow-y-auto pb-24">
+                  <div className="p-6 space-y-3 overflow-y-auto">
                       <div className='flex flex-col gap-2'>
                           <label className="text-sm font-medium">Title <span className="text-red-500">*</span></label>
                           <Input value={values.title} name='title' onChange={handleChange} placeholder="Task title" error={touched.title ? errors.title : ""} />
                       </div>
+                      <button onClick={(e) =>{ setOpenMore(!openMore); e.preventDefault()}} className="flex items-center gap-1 my-4 text-xs text-primary">
+                        { openMore ? 
+                          <><MinusIcon size={12} /> Close details</>
+                          : 
+                          <><PlusIcon size={12} /> Add more details</>
+                        }
+                        
+                      </button>
 
-                      <div className='flex flex-col gap-2'>
-                          <label className="text-sm font-medium">Description</label>
-                          <textarea value={values.description} name='description' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none" />
-                          {touched.description && errors.description && <div className="text-red-500 text-sm">{errors.description}</div>}
-                      </div>
-                      
-                      <div className='flex flex-col gap-2'>
-                          <label className="text-sm font-medium">Category</label>
-                          <Input value={values.category} name='category' onChange={handleChange} placeholder="Task category" error={touched.category ? errors.category : ""} />
-                      </div>
-                      
-                      <DueDateTimePicker
-                        value={values.dueDate}
-                        onChange={(nextValue) => setFieldValue('dueDate', nextValue)}
-                        required
-                        error={touched.dueDate ? errors.dueDate : ''}
-                      />
-
-                      <label className="flex items-center gap-2 text-sm">
-                        <TaskCheckbox
-                          ariaLabel="make task recurring"
-                          checked={Boolean(values.recurring)}
-                          onCheckedChange={(checked) => setFieldValue('recurring', checked)}
+                      <div className={`flex flex-col gap-4 overflow-hidden duration-500 transition-all ${openMore ? "h-full" : "h-0"}`}>
+                        <div className='flex flex-col gap-2'>
+                            <label className="text-sm font-medium">Description</label>
+                            <textarea value={values.description} name='description' onChange={handleChange} className="w-full p-4 rounded-md border border-gray-500/[0.2] bg-gray-500/[0.04] outline-none" />
+                            {touched.description && errors.description && <div className="text-red-500 text-sm">{errors.description}</div>}
+                        </div>
+                        
+                        <div className='flex flex-col gap-2'>
+                            <label className="text-sm font-medium">Category</label>
+                            <Input value={values.category} name='category' onChange={handleChange} placeholder="Task category" error={touched.category ? errors.category : ""} />
+                        </div>
+                        
+                        <DueDateTimePicker
+                          value={values.dueDate}
+                          label="Due date"
+                          onChange={(nextValue) => setFieldValue('dueDate', nextValue)}
+                          error={touched.dueDate ? errors.dueDate : ''}
                         />
-                        Recurring task (auto-rollover to today daily)
-                      </label>
 
-                      <div className='flex flex-col gap-2'>
-                          <label className="text-sm font-medium">Priority</label>
-                          <Dropdown
-                            variant="secondary"
-                            value={values.priority}
-                            onChange={(value) => setFieldValue('priority', value)}
-                            options={[
-                              { title: "Low", id: "low" },
-                              { title: "Medium", id: "medium" },
-                              { title: "High", id: "high" }
-                            ]}
+                        <label className="flex items-center gap-2 text-sm py-3">
+                          <TaskCheckbox
+                            ariaLabel="make task recurring"
+                            checked={Boolean(values.recurring)}
+                            onCheckedChange={(checked) => setFieldValue('recurring', checked)}
                           />
+                          Recurring task (auto-rollover to today daily)
+                        </label>
+
+                        <div className='flex flex-col gap-2'>
+                            <label className="text-sm font-medium">Priority</label>
+                            <Dropdown
+                              variant="secondary"
+                              value={values.priority}
+                              onChange={(value) => setFieldValue('priority', value)}
+                              options={[
+                                { title: "Low", id: "low" },
+                                { title: "Medium", id: "medium" },
+                                { title: "High", id: "high" }
+                              ]}
+                            />
+                        </div>
                       </div>
+
+                     
 
                   </div>
 
