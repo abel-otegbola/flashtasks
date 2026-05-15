@@ -138,7 +138,7 @@ function Tasks() {
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-4 grid-cols-1 items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                     <Button
                         variant="secondary"
                         size="small"
