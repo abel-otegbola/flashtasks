@@ -7,6 +7,7 @@ import Input from '../input/input';
 import Dropdown from '../dropdown/dropdown';
 import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, OrgInvite } from '../../interface/organization';
 import { useOrganizations } from '../../context/organizationContext';
+import TagInput from '../input/tagInput';
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -37,7 +38,8 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
   const { currentOrg, createOrgInvite, updateTeamMember, loading } = useOrganizations();
   const modalRef = useOutsideClick(onClose, false);
   const [email, setEmail] = useState('');
-  const [roles, setRoles] = useState<string>("member");
+  const [roles, setRoles] = useState<string[]>([]);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [error, setError] = useState('');
   const initialMember = member ? normalizeMember(member) : null;
   const editingMember = Boolean(initialMember?.$id);
@@ -47,10 +49,12 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
     
     if (initialMember) {
       setEmail(initialMember.email || '');
-      setRoles(initialMember.roles[0]);
+      setRoles(initialMember.roles);
+      setPermissions(initialMember.roles.slice(1, initialMember.roles.length));
     } else {
       setEmail('');
-      setRoles('member');
+      setRoles(['member']);
+      setPermissions(MEMBER_PERMISSIONS);
     }
     setError('');
   }, [isOpen, member]);
@@ -66,7 +70,7 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
     }
     const invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'> = {
       email: nextEmail,
-      roles: [roles],
+      roles: [...roles, ...permissions],
     };
     if (editingMember) {
       await updateTeamMember(currentOrg.$id, initialMember.$id, invite.roles);
@@ -98,8 +102,11 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">Role</label>
             <Dropdown
-              value={roles}
-              onChange={(value) => setRoles(value)}
+              value={roles[0] || 'member'}
+              onChange={(value) => {
+                setRoles([value, ...roles.slice(1) ])
+                setPermissions(value === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS)
+              }}
               options={roleOptions}
               placeholder="Select role"
             />
@@ -112,32 +119,17 @@ export default function AddMemberModal({ isOpen, onClose, member }: AddMemberMod
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-              {(roles === 'admin' ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS).map((permission) => {
-                const checked = roles.includes(permission);
-                const disabledToggle = permission === 'Invite/remove members';
-
-                return (
-                  <label
-                    key={permission}
-                    className={`flex items-start gap-3 rounded-lg border border-gray-500/[0.1] p-3 transition-colors ${disabledToggle ? 'opacity-60' : 'hover:bg-gray-500/[0.03]'}`}
-                  >
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium">{permission}</div>
-                      <div className="text-xs text-gray-500">
-                        {permission === 'Invite/remove members' && 'Invite or remove people from the organization.'}
-                        {permission === 'Create/edit/delete all tasks' && 'Manage every task in the organization.'}
-                        {permission === 'Manage projects' && 'Create and manage shared projects.'}
-                        {permission === 'Assign tasks' && 'Assign work to other members.'}
-                        {permission === 'Create tasks' && 'Create new tasks for yourself or the team.'}
-                        {permission === 'Edit their own tasks' && 'Update the tasks you created.'}
-                        {permission === 'Complete tasks' && 'Mark tasks as finished.'}
-                        {permission === 'View shared tasks/projects' && 'See shared workspaces and tasks.'}
-                        {permission === 'Edit tasks assigned to them' && 'Modify tasks assigned directly to them.'}
-                      </div>
-                    </div>
-                  </label>
-                );
-              })}
+              <Dropdown
+                value={permissions[0] || ''}
+                onChange={(value) => setPermissions([value, ...permissions.filter(p => p !== value) ])}
+                options={(roles.includes('admin') ? ADMIN_PERMISSIONS : MEMBER_PERMISSIONS).filter(p => !permissions.includes(p)).map((perm) => ({ id: perm, title: perm.replace(/_/g, ' ') }))}
+                placeholder="Select permission"
+              />
+              <TagInput
+                tags={permissions}
+                onChange={(tags) => setPermissions(tags)}
+                disabled
+              />
             </div>
           </div>
 

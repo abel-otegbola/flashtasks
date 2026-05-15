@@ -1,16 +1,21 @@
 export const ADMIN_PERMISSIONS = [
-  'Invite/remove members',
-  'Create/edit/delete all tasks',
-  'Manage projects',
-  'Assign tasks',
+  'create_task',
+  'edit_task',
+  'delete_task',
+  'assign_task',
+  'complete_task',
+  'view_task',
+  'manage_org',
+  'manage_teams',
+  'manage_members',
 ];
 
 export const MEMBER_PERMISSIONS = [
-  'Create tasks',
-  'Edit their own tasks',
-  'Complete tasks',
-  'View shared tasks',
-  'Edit tasks assigned to them',
+  'create_task',
+  'edit_task',
+  'complete_task',
+  'view_task',
+  'edit_assigned_task',
 ];
 
 export interface OrgInvite {

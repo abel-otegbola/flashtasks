@@ -345,17 +345,19 @@ export default function OrganizationsPage() {
                           <div key={m.$id} className="flex items-start justify-between gap-3 p-4 rounded-lg bg-bg-gray-100 dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2]">
                             <div className='w-full'>
                               <div className='flex justify-between w-full'>
-                                <div>
+                                <div className='flex gap-3'>
                                   <div className="font-medium">{m.name || m.email} 
                                   </div>
-                                  <div className="text-xs text-gray-400 mt-1">{m.email}</div>
+                                  <span className="rounded bg-gray-100 px-4 py-[2px] text-[12px] dark:bg-[#202022]">
+                                    {m.roles[0]}
+                                  </span>
                                 </div>
-                                {(isOwner || (isAdmin && m.roles?.includes('owner'))) && (
+                                {(!isOwner || !(isAdmin && m.roles?.includes('owner'))) && (
                                   <div className="flex items-center gap-2 shrink-0">
                                     <button onClick={() => { setSelectedMember(m); setShowAddMember(true); }} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
                                       Edit
                                     </button>
-                                    {m.roles?.includes('owner') && (
+                                    {!m.roles?.includes('owner') && (
                                       <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
                                         Remove
                                       </button>
@@ -363,10 +365,11 @@ export default function OrganizationsPage() {
                                   </div>
                                   )}
                               </div>
+                              <div className="text-sm text-gray-400 mt-1">{m.email}</div>
                               {m.roles?.length ? (
                                 <div className="mt-2 flex flex-wrap gap-1">
-                                  {m.roles.map((role) => (
-                                    <span key={role} className="rounded bg-gray-100 px-4 py-[2px] text-[10px] dark:bg-[#202022]">
+                                  {m.roles.slice(1, m.roles.length).map((role) => (
+                                    <span key={role} className="rounded bg-gray-100 px-4 py-[2px] text-[12px] dark:bg-[#202022]">
                                       {role}
                                     </span>
                                   ))}
