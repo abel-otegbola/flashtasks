@@ -44,7 +44,7 @@ export default function Dropdown({ variant = "primary", className, disabled, lab
 
     return (
         <div className={`relative flex flex-col gap-[2px] ${className}`} ref={dropdownRef}>
-                { label ? <label htmlFor={name} className={`font-semibold xl:text-[14px] text-[13px] ${isOpen ? "text-primary" : ""}`}>{label}</label> : "" }
+                { label ? <label htmlFor={name} className={`font-semibold xl:text-[12px] text-[12px] ${isOpen ? "text-primary" : ""}`}>{label}</label> : "" }
 
             <div className={`flex items-center relative rounded-[6px] w-full bg-gray-500/[0.04] py-1 border duration-500 
                 ${error && !isOpen ?  "border-red-500 text-red-500 " : "border-gray-500/[0.2]"}

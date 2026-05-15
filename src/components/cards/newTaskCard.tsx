@@ -6,7 +6,6 @@ import { useState } from "react";
 import { CheckIcon, PenIcon, XIcon } from "@phosphor-icons/react";
 import Input from "../input/input";
 import Dropdown from "../dropdown/dropdown";
-import DueDateTimePicker from "../input/dueDateTimePicker";
 import Button from "../button/button";
 
 export default function NewTaskCard({ task, deleteTask, saveTask, index, editGeneratedTask }: { task: todo, deleteTask: (id: string) => void, saveTask: (task: todo) => void, index: number, editGeneratedTask: (task: todo) => void}) {
@@ -19,13 +18,14 @@ export default function NewTaskCard({ task, deleteTask, saveTask, index, editGen
             onSwipeRight={() => saveTask(task) }
         >
         <div className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark/[0.4]'}`}
-            
+           
         >
             <div 
                 key={task.$id}
                 role="button"
                 tabIndex={0}
                 className={`md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 flex-1`}
+                onClick={() => setIsEditting(true)} 
             >
                 {/* Mobile Layout */}
                 <div className="md:col-span-4 flex flex-col gap-1 md:order-none order-1">
@@ -65,17 +65,10 @@ export default function NewTaskCard({ task, deleteTask, saveTask, index, editGen
             </div>
         
             <div className="flex gap-2">
-                {isEditting ? (
-                    <button className="flex items-start md:items-center p-4 pl-0 md:col-span-1" onClick={() => setIsEditting(false)}>
-                        <CheckIcon size={20} className="text-gray-400" />
-                    </button>
-                )                
-                : (
-                    <button className="flex items-start md:items-center p-4 pl-0 md:col-span-1" onClick={() => setIsEditting(true)}>
-                        <PenIcon size={20} className="text-gray-400" />
-                    </button>
-                )}
-                <button className="flex items-start md:items-center p-4 pl-0 md:col-span-1" onClick={() => deleteTask(task.$id)}>
+                <button className="flex items-start md:items-center p-4 pl-0 md:col-span-1 cursor-pointer" onClick={() => saveTask(task)} title="Save task">
+                    <CheckIcon size={20} className="text-gray-400" />
+                </button>
+                <button className="flex items-start md:items-center p-4 pl-0 md:col-span-1 cursor-pointer" onClick={() => deleteTask(task.$id)} title="Delete task">
                     <TrashBinTrash size={20} className="text-gray-400" />
                 </button>
             </div>
@@ -85,7 +78,7 @@ export default function NewTaskCard({ task, deleteTask, saveTask, index, editGen
         {
             isEditting && (
                 <div className='fixed inset-0 flex items-center justify-center p-4 z-50'>
-                    <div className="bg-white dark:bg-dark flex flex-col justify-between sm:w-[400px] w-full max-[460px]:w-[80%] rounded-lg shadow-lg border border-gray-500/[0.2]">
+                    <div className="bg-white dark:bg-dark-bg flex flex-col justify-between sm:w-[400px] w-full max-[460px]:w-[80%] rounded-lg shadow-lg border border-gray-500/[0.2]">
                         <div className="sticky top-0 border-b border-gray-500/[0.2] z-[2] p-4 flex items-center justify-between">
                             <h2 className="px-2 opacity-[0.7] leading-4">Edit task</h2>
                             <button onClick={() => setIsEditting(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-lg transition-colors">
@@ -134,7 +127,7 @@ export default function NewTaskCard({ task, deleteTask, saveTask, index, editGen
                         </div>
         
                         <div className="p-4 flex justify-center items-center gap-4">
-                            <Button variant="secondary" size="small" onClick={() => setIsEditting(false)}>Discard</Button>
+                            <Button variant="secondary" size="small" onClick={() => setIsEditting(false)}>Cancel</Button>
                             <Button onClick={() => setIsEditting(false)} size="small">Continue</Button>
                         </div>
                     </div> 

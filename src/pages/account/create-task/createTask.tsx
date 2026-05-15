@@ -47,11 +47,9 @@ function CreateTask() {
   } = useRealtimeTranscription({
     apiKey: import.meta.env.VITE_GROQ_API_KEY,
 
-    // Fast live browser transcription
     onInterimTranscript: (text) => {
       setInterimText(text);
       setStatus("Listening...");
-      setFinalText((prev) => prev); // Trigger re-render to show interim
     },
 
     // Final accurate Groq transcript
@@ -99,7 +97,7 @@ function CreateTask() {
 
   const handleGenerateTasks = async () => {
     setStatus("processing");
-    const textToProcess = finalText.trim();
+    const textToProcess = displayText.trim();
     if (!textToProcess) {
       setTaskError("Please enter or speak some text first.");
       return;
@@ -312,7 +310,7 @@ function CreateTask() {
 
           <div className="flex flex-col gap-3 border border-gray-500/[0.1] rounded-lg p-4 bg-bg-gray-100/[0.2] dark:bg-dark-bg">
             <div className="flex flex-col gap-2">
-              <div className="hidden md:grid grid-cols-12 gap-4 px-4 pr-14 py-2 text-xs font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]">
+              <div className="hidden md:grid grid-cols-12 gap-4 px-4 pr-24 py-2 text-xs font-medium text-gray-500 uppercase border-b border-gray-500/[0.2]">
                 <div className="col-span-4">Task</div>
                 <div className="col-span-2">Category</div>
                 <div className="col-span-2">Status</div>

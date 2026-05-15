@@ -29,14 +29,13 @@ Return a JSON array. Each element must follow the schema exactly.
 Field rules:
 - title        : clean imperative phrase, ≤80 chars. Strip spoken prefixes like
                  "I need to", "remind me to", "don't forget to".
-- description  : one sentence expanding context. Must differ from title.
+- description  : Start with one sentence expanding context. Must differ from title.and provide list of best possible subtasks, if any. Subtasks should be actionable and show efficient timeline.
 - originalText : verbatim fragment this task came from.
 - dateISO      : ISO 8601 string if a date/time is explicitly mentioned, else null.
                  Resolve relative phrases from today = ${todayISO}.
 - timeText     : human-readable date phrase ("tomorrow", "next Monday"), else null.
 - people       : proper names of people involved (empty array if none).
-- tags         : up to 3 tags from this set only:
-                 work | finance | health | personal | learning | design | dev | comms | agency
+- tags         : up to 3 tags derived from context (empty array if none).
 - priority     : "high" if urgent/asap/deadline/today, "low" if whenever/eventually,
                  else "medium".
 - confidence   : 0–1 float. How confident you are this is a real actionable task.
