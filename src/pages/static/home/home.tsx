@@ -160,11 +160,18 @@ function Home() {
 
           <div className="flex-1 flex items-end lg:w-[35%] h-full justify-center">
             <Animate preset="fadeIn" duration={2} delay={0.6}>
-              <div className='rounded-t-lg lg:w-[500px]  w-full h-auto flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.7] md:p-3 p-1'>
-                <video autoPlay loop muted playsInline className="w-full h-full md:rounded-[10px] rounded-[8px] border border-gray-500/[0.07]">
-                  <source src={`/voice-to-tasks-${theme === 'dark' ? 'dark' : 'light'}.mp4`} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+              <div className='relative rounded-t-lg lg:w-[300px]  w-full h-auto flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.7] md:p-3 p-1'>
+                <img src="/woman.png" alt="Woman" width={300} height={350} className="w-full h-full object-cover z-2 rounded-lg" />
+                <div className='absolute -top-8 left-8 w-full h-full bg-primary rounded-lg'></div>
+                <div className='absolute bottom-8 -left-8 w-52 p-4 flex gap-2 bg-gray-100 dark:bg-dark rounded-lg z-3 shadow-lg border border-gray-500/[0.2]'>
+                  <div className='"border-border-gray-100 dark:border-gray-700 bg-white dark:bg-dark-bg/50" p-2 rounded-full outline outline-primary outline-offset-2'>
+                  <Microphone size={20} className='text-primary' />
+                  </div>
+                  <div>
+                    <p className='text-[9px] font-semibold'>Convert your voicenotes to tasks</p>
+                    <p className='text-[9px] italic'>Listening...</p>
+                  </div>
+                </div>
               </div>
             </Animate>
 
