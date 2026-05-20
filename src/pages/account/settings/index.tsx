@@ -36,7 +36,7 @@ export default function SettingsPage() {
   const [previewUrl, setPreviewUrl] = useState('');
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoLoading, setPhotoLoading] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('General');
+  const [selectedTab, setSelectedTab] = useState('Profile');
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('accentColor') || '#45b44b');
   const [compactMode, setCompactMode] = useState(() => localStorage.getItem('compactMode') === 'true');
   const [timezone, setTimezone] = useState(() => getStoredTimezone());
@@ -122,7 +122,7 @@ export default function SettingsPage() {
 
       <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1'>
         {
-          ["General", "Profile", "Notifications", "Appearance" ].map((tab) => (
+          ["Profile", "Notifications", "Appearance" ].map((tab) => (
               <button key={tab} onClick={() => setSelectedTab(tab)} className={`py-2 px-1 text-sm capitalize rounded-tl rounded-tr ${tab === selectedTab ? 'border-b border-primary text-primary' : 'text-gray-500'}`}>
                 {tab}
               </button>
@@ -131,82 +131,6 @@ export default function SettingsPage() {
         }
         </div>
       <div className="mt-6">
-          {selectedTab === "General" && (
-            <div className="max-w-2xl mx-auto grid gap-6">
-              <div className="border border-gray-500/[0.2] rounded-xl p-6">
-                <div className="mb-4">
-                  <h3 className="text-lg font-medium">General</h3>
-                  <p className="text-sm text-gray-500">Keep only essential app preferences.</p>
-                </div>
-
-                <div className="grid gap-5">
-                  <div>
-                    <label className="text-sm text-gray-600 block mb-2">Timezone</label>
-                    <select
-                      value={timezone}
-                      onChange={(event) => setTimezone(event.target.value)}
-                      className="w-full rounded-lg border border-gray-500/[0.2] bg-white dark:bg-dark-bg px-3 py-2 text-sm outline-none focus:border-primary"
-                    >
-                      {getTimezoneOptions().map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-gray-600 block mb-2">Default landing page</label>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      {DEFAULT_LANDING_PAGE_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setDefaultLandingPage(option.value)}
-                          className={`rounded-lg border px-4 py-3 text-left transition-colors ${defaultLandingPage === option.value ? 'border-primary bg-primary/5 text-primary' : 'border-gray-500/[0.2] hover:border-gray-400'}`}
-                        >
-                          <div className="font-medium">{option.label}</div>
-                          <div className="text-xs text-gray-500">Opens {option.label.toLowerCase()} first</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-500/[0.2] p-4">
-                    <div>
-                      <label className="text-sm text-gray-600 block mb-1">Confirm before deleting tasks</label>
-                      <p className="text-xs text-gray-400">Turn this off to delete tasks immediately from swipe actions and task menus.</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmBeforeDelete((current) => !current)}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${confirmBeforeDelete ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
-                      aria-pressed={confirmBeforeDelete}
-                    >
-                      <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${confirmBeforeDelete ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-500/[0.2] p-4">
-                    <div>
-                      <label className="text-sm text-gray-600 block mb-1">Logout</label>
-                      <p className="text-xs text-gray-400">End your current session on this device.</p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={async () => {
-                        await logOut();
-                        navigate('/auth/waitlist');
-                      }}
-                    >
-                      Logout
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         {
           selectedTab === "Profile" && 
           <div className="max-w-2xl mx-auto py-10">

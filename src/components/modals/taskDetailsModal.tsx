@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { todo } from "../../interface/todo";
 import { PenNewSquare, Play } from "@solar-icons/react";
 import { useTasks } from "../../context/tasksContext";
@@ -8,33 +8,40 @@ import { TrashIcon, XIcon } from "@phosphor-icons/react";
 import Confirmationmessage from "./confirmation";
 import EditTaskModal from "./editTaskModal";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
-import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 import { formatDateTime } from "../../helpers/dateTime";
 import GetAvatar from "../../customHooks/useGetAvatar";
-import { canEditTask } from "../../helpers/taskPermissions";
-import { useUser } from "../../context/authContext";
 import Button from "../button/button";
 import FocusMode from "../focusMode/focusMode";
+import { useUser } from "../../context/authContext";
+import toast from "react-hot-toast";
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: todo;
+  permissions?: string[]
 }
 
-export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsModalProps) {
+export default function TaskDetailsModal({ isOpen, onClose, task, permissions }: TaskDetailsModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const { deleteTask, updateTask, loading } = useTasks();
   const { organizations } = useOrganizations();
+  const { user } = useUser();
   const modalRef = useOutsideClick(onClose, false);
-  const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
   const [isFocusMode, setIsFocusMode] = useState(false);
 
   // determine user's role in the task's organization (if any)
   const taskOrg = organizations?.find(o => o.$id === (task as any).organizationId);
-  const canEdit = true
+  const ownTask = task.userEmail === user?.email;
+  const assignedTask = Array.isArray(task?.assignees) && task.assignees.includes(user?.email);
+  const canEdit = !task.organizationId || ((permissions && (permissions.includes("edit_task") || permissions.includes("edit_all_tasks"))) && (ownTask || assignedTask));
+  const canDelete = !task.organizationId || ((permissions && (permissions.includes("delete_task") || permissions.includes("edit_all_tasks"))) && (ownTask || assignedTask));
+  const canComplete = !task.organizationId || ((permissions && permissions.includes("complete_task")) && (ownTask || assignedTask));
 
+  useEffect(() => {
+    console.log(permissions)
+  }, [permissions])
   if (!isOpen) return null;
 
   const handleDelete = async () => {
@@ -73,7 +80,13 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsEditing(!isEditing)}
+              onClick={() => {
+                if (!canEdit) {
+                  toast.error('You do not have permission to edit this task');
+                  return;
+                }
+                setIsEditing(!isEditing);
+              }}
               disabled={!canEdit}
               className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
               title={isEditing ? "Cancel Edit" : "Edit Task"}
@@ -82,6 +95,10 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
             </button>
             <button
               onClick={() => {
+                if (!canDelete) {
+                  toast.error('You do not have permission to delete this task');
+                  return;
+                }
                 setShowDeleteConfirmation(true);
               }}
               className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
@@ -230,9 +247,21 @@ export default function TaskDetailsModal({ isOpen, onClose, task }: TaskDetailsM
           }
           {
             task.status !== "completed" ? 
-              <Button size="small" onClick={() => updateTask(task.$id, { status: "completed" })}>Complete task</Button>
+              <Button size="small" onClick={() => {
+                if (!canComplete) {
+                  toast.error('You do not have permission to complete this task');
+                  return;
+                }
+                updateTask(task.$id, { status: "completed" });
+              }}>Complete task</Button>
               :
-              <Button size="small" onClick={() => updateTask(task.$id, { status: "pending" })}>Restart task</Button>
+              <Button size="small" onClick={() => {
+                if (!canComplete) {
+                  toast.error('You do not have permission to restart this task');
+                  return;
+                }
+                updateTask(task.$id, { status: "pending" });
+              }}>Restart task</Button>
           }
           </div>
         {/* Footer */}

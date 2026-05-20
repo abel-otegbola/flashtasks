@@ -9,7 +9,7 @@ import AddMemberModal from '../../../components/modals/addMemberModal';
 import { PencilSimpleLineIcon, PlusIcon } from '@phosphor-icons/react';
 import { OrganizationSkeletonLoader } from '../../../components/skeletons';
 import Confirmationmessage from '../../../components/modals/confirmation';
-import { Organization } from '../../../interface/organization';
+import { Organization, OWNER_PERMISSIONS } from '../../../interface/organization';
 import { useTasks } from '../../../context/tasksContext';
 import TaskListView from '../../../components/cards/taskListView';
 import { todo } from '../../../interface/todo';
@@ -41,7 +41,7 @@ export default function OrganizationsPage() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
   const { user } = useUser()
-  const permissions = invitedMembers?.find(m => m.email === user?.email)?.roles || [];
+  const permissions = invitedMembers?.find(m => m.email === user?.email)?.roles[0] === "owner" ? OWNER_PERMISSIONS : invitedMembers?.find(m => m.email === user?.email)?.roles || [];
 
   useEffect(() => {
       getOrganizationTasks(selectedOrg?.$id || "");
@@ -99,19 +99,6 @@ export default function OrganizationsPage() {
   const handleRemoveMember = async (memberId: string) => {
     if (!currentOrg) return;
     await removeMemberFromOrg(currentOrg.$id, memberId);
-  };
-
-  const handleSaveSettings = async () => {
-    if (!currentOrg) return;
-
-    const nextName = settingsName.trim();
-    const nextSlug = settingsSlug.trim() || nextName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-
-    await updateOrganization(currentOrg.$id, {
-      name: nextName,
-      slug: nextSlug,
-      description: settingsDescription.trim(),
-    });
   };
 
   const handleCopyOrganizationId = async () => {
@@ -192,14 +179,18 @@ export default function OrganizationsPage() {
                               task={task}
                               openTaskDetails={openTaskDetails}
                               index={index}
+                              permissions={permissions}
                           />
                         ))}
                       </div>
                     )}
-                    <Button onClick={() => setShowCreateTask(true)} size="small">
-                      <PlusIcon />
-                      Create New Task
-                    </Button>
+                    {
+                      permissions.includes("create_task") &&
+                      <Button onClick={() => setShowCreateTask(true)} size="small">
+                        <PlusIcon />
+                        Create New Task
+                      </Button>
+                    }
                     {showCreateTask && (
                       <CreateTaskModal
                         isOpen={showCreateTask}
@@ -484,6 +475,7 @@ export default function OrganizationsPage() {
                       isOpen={detailsOpen}
                       onClose={() => { setDetailsOpen(false); setSelectedTask(null);}}
                       task={selectedTask}
+                      permissions={permissions}
                   />
               )}
   </div>

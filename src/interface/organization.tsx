@@ -13,18 +13,16 @@ export const OWNER_PERMISSIONS = [
 
 export const ADMIN_PERMISSIONS = [
   'create_task',
-  'edit_task',
+  'edit_tasks',
   'delete_task',
   'assign_task',
-  'complete_task',
+  'complete_tasks',
   'view_task',
   'manage_teams',
 ];
 
 export const MEMBER_PERMISSIONS = [
   'create_task',
-  'edit_task',
-  'complete_task',
   'view_task',
   'edit_assigned_task',
 ];

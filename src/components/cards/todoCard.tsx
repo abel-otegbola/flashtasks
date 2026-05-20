@@ -29,6 +29,10 @@ type TodoCardProps = todo & {
 };
 
 function TodoCard(task: TodoCardProps) {
+  const { user } = useUser();
+  const ownTask = task.userEmail === user?.email;
+  const assignedTask = Array.isArray(task?.assignees) && task.assignees.includes(user?.email);
+  const permissions = task.organizationId ? task.permissions : undefined;
   const { title, description, comments, category, status } = task;
   const [openMenu, setOpenMenu] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -94,24 +98,25 @@ function TodoCard(task: TodoCardProps) {
       <SwipeDeleteItem
         className={`relative flex flex-col overflow-hidden transition-all cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
         onSwipeLeft={() => {
-          if (!canEdit) {
-            toast.error('You do not have permission to delete this task');
-            return;
+          if (task.organizationId) {
+            if (!((permissions && (permissions.includes("delete_task") || permissions.includes("edit_all_tasks"))) && (ownTask || assignedTask))) {
+              toast.error('You do not have permission to delete this task');
+              return;
+            }
           }
-
           if (confirmBeforeDelete) {
             setShowDeleteConfirmation(true);
             return;
           }
-
           void deleteTask(task.$id);
         }}
         onSwipeRight={() => {
-          if (!canEdit) {
-            toast.error('You do not have permission to update this task');
-            return;
+          if (task.organizationId) {
+            if (!((permissions && (permissions.includes("complete_all_task") || permissions.includes("edit_all_task"))) && (ownTask || assignedTask))) {
+              toast.error('You do not have permission to update this task');
+              return;
+            }
           }
-
           return updateTask(task.$id, { status: status === 'completed' ? 'pending' : 'completed' });
         }}
         onLongPress={() => setShowFocusMode(true)}

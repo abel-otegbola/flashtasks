@@ -9,6 +9,7 @@ import { PlayIcon } from "@phosphor-icons/react";
 import FocusMode from "../focusMode/focusMode";
 import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 import toast from 'react-hot-toast';
+import { useUser } from "../../context/authContext";
 
 type Props = {
     task: todo;
@@ -18,17 +19,20 @@ type Props = {
     onDragStart?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
     onDragEnd?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
     onDrop?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
+    permissions?: string[];
 };
 
-export default function TaskListView({ task, openTaskDetails, index, draggable = false, onDragStart, onDragEnd, onDrop }: Props) {
+export default function TaskListView({ task, openTaskDetails, index, draggable = false, onDragStart, onDragEnd, onDrop, permissions }: Props) {
     const { updateTask, deleteTask } = useTasks();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const [startPomodoro, setStartPomodoro] = useState<todo | null>(null);
     const confirmBeforeDelete = shouldConfirmBeforeDeletingTasks();
     const compactMode = localStorage.getItem('compactMode') === 'true';
+    const { user } = useUser();
 
-  const canEdit = true; // allow editing if it's a personal task (no organization)
+    const ownTask = task.userEmail === user?.email;
+    const assignedTask = Array.isArray(task?.assignees) && task.assignees.includes(user?.email);
 
   return (
     <>
@@ -43,22 +47,35 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
     )}
     <SwipeDeleteItem 
         onSwipeLeft={() => {
-            if (!canEdit) {
-                toast.error('You do not have permission to delete this task');
-                return;
+            // Only apply permissions if task is in an organization
+            if (task.organizationId) {
+                if (
+                    !(
+                        (permissions && (permissions.includes("delete_task") || permissions.includes("edit_all_tasks"))) &&
+                        (ownTask || assignedTask)
+                    )
+                ) {
+                    toast.error('You do not have permission to delete this task');
+                    return;
+                }
             }
-
             if (confirmBeforeDelete) {
                 setShowDeleteConfirm(true);
                 return;
             }
-
             void deleteTask(task.$id);
         }} 
         onSwipeRight={() => {
-            if (!canEdit) {
-                toast.error('You do not have permission to update this task');
-                return;
+            if (task.organizationId) {
+                if (
+                    !(
+                        (permissions && (permissions.includes("complete_all_task") || permissions.includes("edit_all_task"))) &&
+                        (ownTask || assignedTask)
+                    )
+                ) {
+                    toast.error('You do not have permission to update this task');
+                    return;
+                }
             }
             return updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' });
         }}
@@ -90,7 +107,15 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
             <TaskCheckbox
                 ariaLabel="completed"
                 checked={task.status === 'completed'}
-                onCheckedChange={() => updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' })}
+                onCheckedChange={() => {
+                    if (task.organizationId) {
+                        if (!((permissions && permissions.includes("complete_task")) && (ownTask || assignedTask))) {
+                            toast.error('You do not have permission to complete this task');
+                            return;
+                        }
+                    }
+                    updateTask(task.$id, { status: task.status === 'completed' ? 'pending' : 'completed' });
+                }}
             />
         </div>
         <div 
