@@ -16,6 +16,7 @@ import Kanban from "../../../components/views/kanban";
 import Calendar from "../../../components/views/calendar";
 import ResponsivePagination from "react-responsive-pagination";
 import "react-responsive-pagination/themes/minimal-light-dark.css";
+import { OWNER_PERMISSIONS } from "../../../interface/organization";
 
 
 type ViewMode = 'kanban' | 'list' | 'grid' | 'calendar';
@@ -49,6 +50,8 @@ function Tasks() {
     const [currentListPage, setCurrentListPage] = useState(1);
     const { user } = useUser();
     const compactMode = localStorage.getItem('compactMode') === 'true';
+    
+    const permissions = OWNER_PERMISSIONS || [];
 
     useEffect(() => {
     if (user) {
@@ -270,6 +273,7 @@ function Tasks() {
                                     onDragEnd={() => {
                                         setDraggedTaskId(null);
                                     }}
+                                    permissions={permissions}
                                 />
                             ))}
 
@@ -325,6 +329,7 @@ function Tasks() {
                 isOpen={detailsOpen}
                 onClose={closeTaskDetails}
                 task={selectedTask}
+                permissions={permissions}
             />
         )}
         </>

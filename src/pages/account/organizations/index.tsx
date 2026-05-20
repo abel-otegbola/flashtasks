@@ -21,7 +21,7 @@ import { useUser } from '../../../context/authContext';
 
 export default function OrganizationsPage() {
   const orgCtx = useOrganizations();
-  const { organizations, currentOrg, invitedMembers, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, updateOrganization, deleteOrganization, getAllInvitedMembers, loading } = orgCtx;
+  const { organizations, currentOrg, invitedMembers, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, deleteOrganization, getAllInvitedMembers, loading } = orgCtx;
   const { tasks, getOrganizationTasks } = useTasks(); 
   const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);

@@ -25,27 +25,38 @@ interface TaskDetailsModalProps {
 export default function TaskDetailsModal({ isOpen, onClose, task, permissions }: TaskDetailsModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const { deleteTask, updateTask, loading } = useTasks();
+  const { tasks, deleteTask, updateTask, loading } = useTasks();
   const { organizations } = useOrganizations();
   const { user } = useUser();
   const modalRef = useOutsideClick(onClose, false);
   const [isFocusMode, setIsFocusMode] = useState(false);
 
+  const activeTask = tasks.find((currentTask) => currentTask.$id === task.$id) ?? task;
+
   // determine user's role in the task's organization (if any)
-  const taskOrg = organizations?.find(o => o.$id === (task as any).organizationId);
-  const ownTask = task.userEmail === user?.email;
-  const assignedTask = Array.isArray(task?.assignees) && task.assignees.includes(user?.email);
-  const canEdit = !task.organizationId || ((permissions && (permissions.includes("edit_task") || permissions.includes("edit_all_tasks"))) && (ownTask || assignedTask));
-  const canDelete = !task.organizationId || ((permissions && (permissions.includes("delete_task") || permissions.includes("edit_all_tasks"))) && (ownTask || assignedTask));
-  const canComplete = !task.organizationId || ((permissions && permissions.includes("complete_task")) && (ownTask || assignedTask));
+  const taskOrg = organizations?.find(o => o.$id === (activeTask as any).organizationId);
+  const ownTask = activeTask.userEmail === user?.email;
+  const assignedTask = Array.isArray(activeTask?.assignees) && activeTask.assignees.includes(user?.email);
+  const canEdit = !activeTask.organizationId || ((permissions && (permissions.includes("edit_task") || permissions.includes("edit_all_tasks"))) && (ownTask || assignedTask));
+  const canDelete = !activeTask.organizationId || ((permissions && (permissions.includes("delete_task") || permissions.includes("edit_all_tasks"))) && (ownTask || assignedTask));
+  const canComplete = !activeTask.organizationId || ((permissions && permissions.includes("complete_task")) && (ownTask || assignedTask));
 
   useEffect(() => {
-    console.log(permissions)
+    console.log(permissions, task)
   }, [permissions])
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditing(false);
+      setShowDeleteConfirmation(false);
+      setIsFocusMode(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleDelete = async () => {
-    await deleteTask(task.$id);
+    await deleteTask(activeTask.$id);
     setShowDeleteConfirmation(false);
     onClose();
   };
@@ -76,7 +87,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="px-2 opacity-[0.7] leading-4 text-sm">Created on {formatDateTime(task.$createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}</h2>
+            <h2 className="px-2 opacity-[0.7] leading-4 text-sm">Created on {formatDateTime(activeTask.$createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -116,7 +127,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
         <div className="p-6 space-y-6">
           {/* Title */}
           <div className="">
-            <h3 className="font-medium text-sm">{task.title}</h3>
+            <h3 className="font-medium text-sm">{activeTask.title}</h3>
           </div>
 
           {/* Task Details Grid */}
@@ -128,7 +139,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                   Category
                 </label>
                 <span className="col-span-2 inline-block py-1 rounded-lg text-sm">
-                  {task.category}
+                  {activeTask.category}
                 </span>
               </div>                  
 
@@ -137,8 +148,8 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                 <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
                   Status
                 </label>
-                <span className={`col-span-2 inline-block px-3 py-1 rounded-lg text-sm w-fit font-medium ${getStatusColor(task.status)}`}>
-                  {task.status}
+                <span className={`col-span-2 inline-block px-3 py-1 rounded-lg text-sm w-fit font-medium ${getStatusColor(activeTask.status)}`}>
+                  {activeTask.status}
                 </span>
               </div>
 
@@ -147,8 +158,8 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                 <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
                   Priority
                 </label>
-                <span className={`col-span-2 inline-block px-3 py-1 rounded-lg w-fit text-sm font-medium ${getPriorityColor(task.priority)}`}>
-                  {task.priority || 'medium'}
+                <span className={`col-span-2 inline-block px-3 py-1 rounded-lg w-fit text-sm font-medium ${getPriorityColor(activeTask.priority)}`}>
+                  {activeTask.priority || 'medium'}
                 </span>
               </div>
 
@@ -158,7 +169,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                   Due Date
                 </label>
                 <p className="col-span-2 text-gray-700 dark:text-gray-300">
-                  {task.dueDate ? formatDateTime(task.dueDate, { year: 'numeric', month: 'long', day: 'numeric' }) : 'No due date'}
+                  {activeTask.dueDate ? formatDateTime(activeTask.dueDate, { year: 'numeric', month: 'long', day: 'numeric' }) : 'No due date'}
                 </p>
               </div>
             </div>
@@ -170,7 +181,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
             <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
               Description
             </label>
-            <p className="whitespace-pre-wrap text-[12px]">{task.description || 'No description provided'}</p>
+            <p className="whitespace-pre-wrap text-[12px]">{activeTask.description || 'No description provided'}</p>
           </div>
 
           {/* Organization / Team Display */}
@@ -194,7 +205,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
           }
 
           {/* Assignees Section */}
-          {task?.assignees &&task?.assignees?.length > 0 && (
+          {activeTask?.assignees && activeTask?.assignees?.length > 0 && (
           <div className="flex flex-col gap-2">
             <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
               Assignees
@@ -204,7 +215,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
             <div className="space-y-2 ">
               {/* Main Assignee */}
               {
-                task.assignees.map((assigneeEmail) => (
+                activeTask.assignees.map((assigneeEmail) => (
                   <div key={assigneeEmail} className="flex items-center gap-3">
                     <GetAvatar email={assigneeEmail} className="w-12 h-12" />
                     <div className="flex-1">
@@ -215,7 +226,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                 ))
               }
 
-              {!task.assignees && (!task.invites || task.invites.length === 0) && (
+              {!activeTask.assignees && (!activeTask.invites || activeTask.invites.length === 0) && (
                 <p className="text-gray-500 dark:text-gray-400 text-sm italic">No assignees yet</p>
               )}
             </div>
@@ -224,12 +235,12 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
 
           {/* Comments Count */}
           {
-            task.comments !== "0" && (
+            activeTask.comments !== "0" && (
               <div className="flex flex-col gap-2">
                 <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
                   Comments
                 </label>
-                <p className="">{task.comments} comments</p>
+                <p className="">{activeTask.comments} comments</p>
               </div>
             )
           }
@@ -239,20 +250,20 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
           <div className="sticky bottom-0 bg-white dark:bg-dark-bg overflow-x-auto flex flex-wrap justify-center gap-4 p-4 border-t border-gray-500/[0.1] ">
             <Button size="small" variant="secondary" onClick={() => setIsFocusMode(true)}><Play /> Start focus mode</Button>
           {
-            task.status === "in progress" || task.status === "pending" ? (
-            <Button size="small" variant="secondary" onClick={() => updateTask(task.$id, { status: "suspended" })}>Suspend task</Button>
+            activeTask.status === "in progress" || activeTask.status === "pending" ? (
+            <Button size="small" variant="secondary" onClick={() => updateTask(activeTask.$id, { status: "suspended" })}>Suspend task</Button>
             ) : (
-              <Button size="small" variant="secondary" onClick={() => updateTask(task.$id, { status: "in progress" })}>Resume task</Button>
+              <Button size="small" variant="secondary" onClick={() => updateTask(activeTask.$id, { status: "in progress" })}>Resume task</Button>
             )
           }
           {
-            task.status !== "completed" ? 
+            activeTask.status !== "completed" ? 
               <Button size="small" onClick={() => {
                 if (!canComplete) {
                   toast.error('You do not have permission to complete this task');
                   return;
                 }
-                updateTask(task.$id, { status: "completed" });
+                updateTask(activeTask.$id, { status: "completed" });
               }}>Complete task</Button>
               :
               <Button size="small" onClick={() => {
@@ -260,14 +271,14 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                   toast.error('You do not have permission to restart this task');
                   return;
                 }
-                updateTask(task.$id, { status: "pending" });
+                updateTask(activeTask.$id, { status: "pending" });
               }}>Restart task</Button>
           }
           </div>
         {/* Footer */}
         {isEditing && (
           <EditTaskModal 
-            task={task}
+            task={activeTask}
             isOpen={isEditing}
             onClose={() => setIsEditing(false)}
           />
@@ -287,7 +298,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
 
       {isFocusMode && (
         <FocusMode 
-          task={task}
+          task={activeTask}
           setOpen={(value) => setIsFocusMode(value)}
         />
       )}
