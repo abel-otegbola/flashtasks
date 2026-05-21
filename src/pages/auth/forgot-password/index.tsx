@@ -1,29 +1,29 @@
 import { Formik } from "formik";
 import { useContext } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Button from "../../../components/button/button";
 import LoadingIcon from "../../../assets/icons/loading";
 import { AuthContext } from "../../../context/authContext";
 import { loginSchema } from "../../../schema/auth";
 import Input from "../../../components/input/input";
 import LogoIcon from "../../../assets/icons/logo";
-import { Letter, Lock } from "@solar-icons/react";
+import { Letter } from "@solar-icons/react";
 import BlurReveal from "../../../components/animations/blurReveal";
 
 export default function ForgotPassword() {
-  const { signIn, loading } = useContext(AuthContext);
+  const { forgotPassword, loading } = useContext(AuthContext);
 
   return (
       <div className="flex md:w-[60%] h-auto w-full max-w-lg mx-auto items-center justify-center">
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%] md:py-[5%] py-[80px]">
             <div className="flex flex-col items-center gap-4">
-              <div className=" p-4 rounded-lg border border-gray-500/[0.2] w-fit">
-                <LogoIcon className="w-[14px]"  />
+              <div className=" px-4 py-2 rounded-lg border border-gray-500/[0.2] w-fit">
+                <LogoIcon className="w-[14px] h-[28px]"  />
               </div>
               
               <BlurReveal preset="slide-left">
-                <h1 className="font-semibold text-[32px] text-dark-500 font-Elsie">Forgot Password</h1>
+                <h1 className="font-semibold text-[32px] text-dark-500">Forgot Password</h1>
               </BlurReveal>
               <BlurReveal preset="slide-left">
                 <p className="text-gray-500 text-center">Enter your email address below to recover your password</p>
@@ -34,7 +34,7 @@ export default function ForgotPassword() {
               enableReinitialize={true}
               validationSchema={loginSchema}
               onSubmit={(values, { setSubmitting }) => {
-                // signIn(values.email, values.password, callbackURL || "/account/dashboard");
+                forgotPassword(values.email);
                 setSubmitting(false);
               }}
             >
@@ -51,20 +51,14 @@ export default function ForgotPassword() {
                     leftIcon={<Letter />}
                   />
                   <Button type="submit" className="w-full py-[12px]">
-                    {isSubmitting || loading ? <LoadingIcon color="white" className="animate-spin w-[20px]" /> : "Login"}
+                    {isSubmitting || loading ? <LoadingIcon color="white" className="animate-spin w-[20px]" /> : "Continue"}
                   </Button>
                 </form>
 
               )}
             </Formik>
-
-            <Link to="/auth/signup" className="text-center mt-4 text-[14px]">
-              <BlurReveal preset="slide-left">
-                Don't have an account? <span className="text-primary">Register</span>
-              </BlurReveal>
-            </Link>
             
-            <Link to="/" className="text-center mt-4 text-[12px] underline">
+            <Link to="/" className="text-center mt-4 text-[12px] opacity-70">
               Back to Home
             </Link>
 

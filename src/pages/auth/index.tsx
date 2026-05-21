@@ -5,6 +5,9 @@ import SignupPage from "./signup";
 import LogoIcon from "../../assets/icons/logo";
 import Slider from "../../components/slider/slider";
 import { useEffect, useState } from "react";
+import ForgotPassword from "./forgot-password";
+import VerifyEmailPage from "./verify-email";
+import ResetPasswordPage from "./reset-password";
 
 function AuthPages() {
   const [activeSlider, setActiveSlider] = useState(0);
@@ -55,7 +58,10 @@ const slides = [
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignupPage/>} />
+          <Route path="/forgot-password" element={<ForgotPassword/>} />
           <Route path="/signup/success" element={<SuccessPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
 
     </div>

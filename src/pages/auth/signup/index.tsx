@@ -21,12 +21,12 @@ export default function SignupPage() {
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%]">
             <div className="flex flex-col items-center gap-4">
-              <div className="p-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] w-fit">
-                <LogoIcon className="w-[14px]"  />
+              <div className="px-4 py-2 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] w-fit">
+                <LogoIcon className="w-[14px] h-[28px]"  />
               </div>
 
               <BlurReveal preset="slide-left">
-                <h1 className="font-semibold text-[32px] text-dark-500 font-Elsie">Create Account</h1>
+                <h1 className="font-semibold text-[32px] text-dark-500">Create Account</h1>
               </BlurReveal>
               <BlurReveal preset="slide-left">
                 <p className="opacity-70 text-center">Enter your details to create an account</p>

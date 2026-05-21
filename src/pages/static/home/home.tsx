@@ -21,8 +21,8 @@ function Home() {
       <header className="flex flex-col justify-center items-center w-full bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.4] py-20">
         
         <div className="flex flex-col text-center items-center justify-center gap-4 px-6">
-          <div className=" p-4 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] animate-bounce">
-            <LogoIcon className="w-[14px]"  />
+          <div className=" px-4 py-2 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] animate-bounce">
+            <LogoIcon className="w-[14px] h-[28px]"  />
           </div>
           <div className="relative flex flex-col text-[48px] max-[400px]:text-[40px] font-semibold md:leading-[60px] leading-[56px] max-[400px]:leading-[50px]">
             

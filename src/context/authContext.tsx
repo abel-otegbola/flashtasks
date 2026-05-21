@@ -20,6 +20,10 @@ type values = {
     updateAvatar: (file: File) => Promise<string>;
     updateProfile: (values: { name: string; photoUrl?: string }) => Promise<void>;
     changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+    updateEmailVerification: (userId: string, secret: string) => Promise<void>;
+    emailVerification: () => Promise<void>;
+    forgotPassword: (email: string) => Promise<void>;
+    updatePassword: (password: string, userId: string, secret: string) => Promise<void>;
 }
 
 export const AuthContext = createContext({} as values);
@@ -146,7 +150,8 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                         rowId: ID.unique(),
                         data: { email, name, photoUrl: `https://api.dicebear.com/9.x/avataaars/svg?seed=${name}` },
                     });
-                    signIn(email, password, callbackURL || "/account/dashboard")
+                    emailVerification();
+                    signIn(email, password, "/auth/signup/success")
                 })
                 .catch(error => {
                     setLoading(true)
@@ -162,8 +167,52 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
         });
     }
 
-    // verify email and forgot password flow
-    
+    const emailVerification = async () => {
+        try {
+            await account.createVerification(`https://flashtasks.com/auth/verify-email`);
+            setPopup({ type: "success", msg: "Email verification link has been sent to your email" })
+        } catch (error) {
+            console.error('Failed to create email verification', error);
+        }
+    };
+
+    const updateEmailVerification = async (userId: string, secret: string) => {
+        try {
+            await account.updateVerification({ userId, secret })
+            .then(async () => {
+                setPopup({ type: "success", msg: "Email verified successfully" })
+                setUser({...user, emailVerification: true });
+                router("/account/dashboard");
+            });
+        } catch (error) {
+            console.error('Failed to update email verification', error);
+        }
+    };
+
+    const forgotPassword = async (email: string) => {
+        try {
+            await account.createRecovery(email, `https://flashtasks.com/auth/reset-password`)
+            .then(() => {
+                setPopup({ type: "success", msg: "Password recovery link has been sent to your email" })
+            });
+        } catch (error) {
+            console.error('Failed to create password recovery', error);
+            setPopup({ type: "error", msg: (error as any)?.message || 'Failed to send password recovery email' });
+        }
+    };
+
+    const updatePassword = async (password: string, userId: string, secret: string) => {
+        try {
+            await account.updateRecovery({password, userId, secret}).then(() => {
+                setPopup({ type: "success", msg: "Password updated successfully" })
+                router("/auth/login");
+            });
+        } catch (error) {
+            console.error('Failed to update password', error);
+            setPopup({ type: "error", msg: (error as any)?.message || 'Failed to update password' });
+        }
+    };
+
     const getPhotoUrl = async (email: string) => {
         try {
             const response = await tablesDB.listRows({
@@ -325,7 +374,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
     }, [popup])
 
     return (
-        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut, acceptTeamInvite, getPhotoUrl, updateAvatar, updateProfile, changePassword }}>
+        <AuthContext.Provider value={{ user, popup, loading, setPopup, signIn, signUp, logOut, acceptTeamInvite, getPhotoUrl, updateAvatar, updateProfile, changePassword, updateEmailVerification, emailVerification, forgotPassword, updatePassword }}>
             <Toaster containerClassName="p-8" />
             {children}
         </AuthContext.Provider>

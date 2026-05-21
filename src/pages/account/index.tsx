@@ -46,7 +46,7 @@ function AccountPages() {
                 }
                 </Formik>
                 <Link to="/">
-                    <LogoIcon className="md:hidden w-[12px] ml-2"/>
+                    <LogoIcon className="md:hidden w-[12px] h-[24px] ml-2"/>
                 </Link>
 
                 <div className="flex gap-6 max-[360px]:gap-2 items-center">
@@ -57,7 +57,7 @@ function AccountPages() {
                         <span className="absolute top-1 right-3 p-[2px] w-[2px] h-[2px] rounded-lg bg-red-500"></span>
                     </button>
                     <Link to="/account" className="outline outline-offset-2 outline-primary/[0.2] rounded-full">
-                    <GetAvatar email={user?.email || ""} className="w-12 h-12" />
+                    <GetAvatar email={user?.email || ""} className="w-10 h-10" />
                     </Link>
                 </div>
             </div>
