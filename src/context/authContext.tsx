@@ -169,10 +169,12 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
 
     const emailVerification = async () => {
         try {
-            await account.createVerification(`https://flashtasks.com/auth/verify-email`);
+            await account.createVerification(`https://flashtasks.app/auth/verify-email`);
             setPopup({ type: "success", msg: "Email verification link has been sent to your email" })
+            setLoading(false);
         } catch (error) {
             console.error('Failed to create email verification', error);
+            setLoading(false);
         }
     };
 
@@ -182,22 +184,26 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
             .then(async () => {
                 setPopup({ type: "success", msg: "Email verified successfully" })
                 setUser({...user, emailVerification: true });
+                setLoading(false);
                 router("/account/dashboard");
             });
         } catch (error) {
             console.error('Failed to update email verification', error);
+            setLoading(false);
         }
     };
 
     const forgotPassword = async (email: string) => {
         try {
-            await account.createRecovery(email, `https://flashtasks.com/auth/reset-password`)
+            await account.createRecovery(email, `https://flashtasks.app/auth/reset-password`)
             .then(() => {
                 setPopup({ type: "success", msg: "Password recovery link has been sent to your email" })
+                setLoading(false);
             });
         } catch (error) {
             console.error('Failed to create password recovery', error);
             setPopup({ type: "error", msg: (error as any)?.message || 'Failed to send password recovery email' });
+            setLoading(false);
         }
     };
 

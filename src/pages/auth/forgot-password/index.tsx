@@ -17,7 +17,7 @@ export default function ForgotPassword() {
       <div className="flex md:w-[60%] h-auto w-full max-w-lg mx-auto items-center justify-center">
         <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
           <div className="flex flex-col justify-center gap-6 md:p-[5%] md:py-[5%] py-[80px]">
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center text-center gap-4">
               <div className=" px-4 py-2 rounded-lg border border-gray-500/[0.2] w-fit">
                 <LogoIcon className="w-[14px] h-[28px]"  />
               </div>
@@ -32,10 +32,8 @@ export default function ForgotPassword() {
             <Formik
               initialValues={{ email: "" }}
               enableReinitialize={true}
-              validationSchema={loginSchema}
               onSubmit={(values, { setSubmitting }) => {
                 forgotPassword(values.email);
-                setSubmitting(false);
               }}
             >
               {({ values, errors, touched, handleChange, handleSubmit, isSubmitting }) => (
