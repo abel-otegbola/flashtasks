@@ -1,9 +1,9 @@
 export const OWNER_PERMISSIONS = [
   'create_task',
-  'edit_task',
+  'edit_tasks',
   'delete_task',
   'assign_task',
-  'complete_task',
+  'complete_tasks',
   'view_task',
   'manage_org',
   'manage_teams',
@@ -25,6 +25,7 @@ export const MEMBER_PERMISSIONS = [
   'create_task',
   'view_task',
   'edit_assigned_task',
+  'complete_tasks'
 ];
 
 export interface OrgInvite {

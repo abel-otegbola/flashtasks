@@ -41,6 +41,7 @@ export default function OrganizationsPage() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
   const { user } = useUser()
+  const [confirmRemoveMember, setConfirmRemoveMember] = useState<string | boolean>(false);
   const permissions = invitedMembers?.find(m => m.email === user?.email)?.roles[0] === "owner" ? OWNER_PERMISSIONS : invitedMembers?.find(m => m.email === user?.email)?.roles || [];
 
   useEffect(() => {
@@ -389,10 +390,21 @@ export default function OrganizationsPage() {
                                     Edit
                                   </button>
                                   {!m.roles?.includes('owner') && (
-                                    <button onClick={() => handleRemoveMember(m.$id)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
+                                    <button onClick={() => setConfirmRemoveMember(true)} className="text-xs px-3 py-1 rounded border border-red-500/30 text-red-600">
                                       Remove
                                     </button>
                                   )}
+                                  {
+                                    confirmRemoveMember && (
+                                      <Confirmationmessage
+                                        title={`Remove ${m.name || m.email} from organization?`}
+                                        text="This will revoke their access to all organization resources."
+                                        buttonText="Remove"
+                                        setOpen={setConfirmRemoveMember}
+                                        onConfirm={() => handleRemoveMember(m.$id)}
+                                       />
+                                     )
+                                  }
                                 </div>
                                 )}
                             </div>

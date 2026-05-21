@@ -51,7 +51,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
             if (task.organizationId) {
                 if (
                     !(
-                        (permissions && (permissions.includes("delete_task") || permissions.includes("edit_all_tasks"))) &&
+                        (permissions && (permissions.includes("delete_task") || permissions.includes("edit_tasks"))) &&
                         (ownTask || assignedTask)
                     )
                 ) {
@@ -69,7 +69,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
             if (task.organizationId) {
                 if (
                     !(
-                        (permissions && (permissions.includes("complete_all_task") || permissions.includes("edit_all_task"))) &&
+                        (permissions && (permissions.includes("complete_tasks") || permissions.includes("edit_tasks"))) &&
                         (ownTask || assignedTask)
                     )
                 ) {
@@ -109,7 +109,7 @@ export default function TaskListView({ task, openTaskDetails, index, draggable =
                 checked={task.status === 'completed'}
                 onCheckedChange={() => {
                     if (task.organizationId) {
-                        if (!((permissions && permissions.includes("complete_task")) && (ownTask || assignedTask))) {
+                        if (!((permissions && permissions.includes("complete_tasks")) || (ownTask || assignedTask))) {
                             toast.error('You do not have permission to complete this task');
                             return;
                         }

@@ -12,10 +12,8 @@ import GetAvatar from '../../../customHooks/useGetAvatar';
 import { Camera } from '@solar-icons/react';
 import {
   APP_PREFERENCE_KEYS,
-  DEFAULT_LANDING_PAGE_OPTIONS,
   getDefaultLandingPage,
   getStoredTimezone,
-  getTimezoneOptions,
   setStoredPreference,
   shouldConfirmBeforeDeletingTasks,
 } from '../../../helpers/appPreferences';
@@ -184,8 +182,8 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="secondary" onClick={() => { /* reset via formik - reload page to original */ window.location.reload(); }}>Reset</Button>
-                    <Button type="submit" disabled={isSubmitting || photoLoading || loading}>{isSubmitting || photoLoading || loading ? 'Saving...' : 'Save changes'}</Button>
+                    <Button type="button" size='small' variant="secondary" onClick={() => { /* reset via formik - reload page to original */ window.location.reload(); }}>Reset</Button>
+                    <Button type="submit" size='small' disabled={isSubmitting || photoLoading || loading}>{isSubmitting || photoLoading || loading ? 'Saving...' : 'Save changes'}</Button>
                   </div>
                 </Form>
               )}
@@ -247,7 +245,7 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="flex justify-end">
-                      <Button type="submit" disabled={isSubmitting || loading}>{isSubmitting || loading ? 'Updating...' : 'Update password'}</Button>
+                      <Button type="submit" size="small" disabled={isSubmitting || loading}>{isSubmitting || loading ? 'Updating...' : 'Update password'}</Button>
                     </div>
                   </Form>
                 )}
@@ -285,7 +283,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="border border-gray-500/[0.2] rounded-xl p-6 flex items-center justify-between gap-4">
-              <div>
+              <div className='w-[75%]'>
                 <label className="text-sm text-gray-600 block mb-1">Compact mode</label>
                 <p className="text-xs text-gray-400">Reduce overall spacing and typography size across the app.</p>
               </div>

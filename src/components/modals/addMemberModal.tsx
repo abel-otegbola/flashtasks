@@ -75,7 +75,7 @@ export default function AddMemberModal({ isOpen, onClose, member, currentUserPer
     }
     const invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'> = {
       email: nextEmail,
-      roles: [...roles, ...permissions],
+      roles: [roles[0], ...permissions],
     };
     if (editingMember) {
       await updateTeamMember(currentOrg.$id, initialMember.$id, invite.roles[0] === "owner" ? ["owner"] : invite.roles);
@@ -138,7 +138,6 @@ export default function AddMemberModal({ isOpen, onClose, member, currentUserPer
               <TagInput
                 tags={permissions}
                 onChange={(tags) => setPermissions(tags)}
-                disabled
               /></>
                 )
               }

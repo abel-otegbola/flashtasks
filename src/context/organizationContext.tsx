@@ -116,8 +116,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         try {
           await teams.updateName({ teamId: orgId, name: data.name })
           .then(res => {
-            setOrganizations(prev => prev.map(o => o.$id === res.$id ? res : o));
-            if (currentOrg?.$id === orgId) setCurrentOrg(res);
+            loadOrganizations();
             toast.success('Organization updated');
             return res;
           })
@@ -244,7 +243,8 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const removeMemberFromOrg = async (orgId: string, memberId: string) => {
     setLoading(true);
     try {
-      
+      await teams.deleteMembership({ teamId: orgId, membershipId: memberId });
+      getAllInvitedMembers(orgId);
       toast.success('Member removed');
       return true;
     } catch (err) {
