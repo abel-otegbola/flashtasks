@@ -7,22 +7,25 @@ import { Formik } from 'formik'
 import Input from '../../../components/input/input'
 import { Lock } from '@solar-icons/react'
 import Button from '../../../components/button/button'
+import LoadingIcon from '../../../assets/icons/loading'
 
 function ResetPasswordPage() {
     const [URLSearchParama,] = useSearchParams()
     const secret = URLSearchParama.get("secret") || ""
     const userId = URLSearchParama.get("userId") || ""  
-    const { updatePassword } = useContext(AuthContext)
+    const { updatePassword, loading } = useContext(AuthContext)
 
     return (
         
         <div className="flex md:w-[55%] h-screen w-full items-center justify-center">
-            <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
-                <div className="flex flex-col justify-center gap-6 md:p-[5%]">
-                    <LogoIcon />
+        <div className="sm:w-[400px] md:mx-0 mx-auto w-full p-6">
+          <div className="flex flex-col justify-center gap-6 md:p-[5%] md:py-[5%] py-[80px]">
+                    <div className=" px-4 py-2 rounded-lg border border-gray-500/[0.2] w-fit mx-auto">
+                        <LogoIcon className="w-[14px] h-[28px]"  />
+                    </div>
                     
-                    <BlurReveal preset="slide-right">
-                        <h1 className='md:text-[32px] text-[20px] font-semibold leading-[120%]'>Reset Password</h1>
+                    <BlurReveal preset="slide-left">
+                        <h1 className="font-semibold text-center text-[32px] text-dark-500">Reset Password</h1>
                     </BlurReveal>
 
                     <Formik 
@@ -31,7 +34,7 @@ function ResetPasswordPage() {
                             updatePassword(values.password, userId, secret);
                         }}
                     >
-                        {({ values, handleChange, handleSubmit }) => (
+                        {({ values, handleChange, handleSubmit, isSubmitting }) => (
                             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                                 <Input
                                     name="password"
@@ -42,7 +45,9 @@ function ResetPasswordPage() {
                                     label="New password"
                                     leftIcon={<Lock weight="Outline" />}
                                 />
-                                <Button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Reset Password</Button>
+                                <Button type="submit" className="w-full py-[12px]">
+                                {isSubmitting || loading ? <LoadingIcon color="white" className="animate-spin w-[20px]" /> : "Submit"}
+                                </Button>
                             </form>
                         )}
                     </Formik>
