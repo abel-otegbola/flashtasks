@@ -90,8 +90,8 @@ export default function AddMemberModal({ isOpen, onClose, member, currentUserPer
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs px-4">
-      <div ref={modalRef} className="w-full sm:w-2xl w-full max-h-[85vh] overflow-y-auto rounded-lg border border-gray-500/[0.2] bg-white shadow-xl dark:bg-dark-bg">
-        <div className="sticky top-0 z-[2] flex items-center justify-between border-b border-gray-500/[0.1] bg-white p-4 dark:bg-dark-bg">
+      <div ref={modalRef} className="w-full sm:w-2xl w-full max-h-[85vh] overflow-y-auto rounded-lg border border-gray-500/[0.2] bg-white shadow-xl dark:bg-dark">
+        <div className="sticky top-0 z-[2] flex items-center justify-between border-b border-gray-500/[0.1] bg-white p-4 dark:bg-dark">
           <h2 className="px-2 leading-4 opacity-[0.7]">{editingMember ? 'Edit member' : 'Invite member'}</h2>
           <button onClick={onClose} className="rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-dark-bg">
             <XIcon size={16} />
@@ -147,7 +147,7 @@ export default function AddMemberModal({ isOpen, onClose, member, currentUserPer
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
         </div>
 
-        <div className="sticky bottom-0 flex items-center justify-center gap-3 border-t border-gray-500/[0.2] bg-white p-6 py-4 dark:bg-dark-bg">
+        <div className="sticky bottom-0 flex items-center justify-center gap-3 border-t border-gray-500/[0.2] bg-white p-6 py-4 dark:bg-dark">
           <Button variant="secondary" size="small" onClick={onClose}>Close</Button>
           <Button onClick={handleSubmit} size="small" disabled={loading}>{loading ? 'Saving...' : editingMember ? 'Save changes' : 'Send invite'}</Button>
         </div>

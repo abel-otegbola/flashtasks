@@ -14,13 +14,7 @@ import Button from "../button/button";
 import FocusMode from "../focusMode/focusMode";
 import { useUser } from "../../context/authContext";
 import toast from "react-hot-toast";
-
-type CommentEntry = {
-  author: string;
-  email?: string;
-  message: string;
-  createdAt?: string;
-};
+import { parseComments } from "../../helpers/parseComments";
 
 type SubtaskEntry = {
   author: string;
@@ -28,46 +22,6 @@ type SubtaskEntry = {
   title: string;
   completed: boolean;
   createdAt?: string;
-};
-
-const parseComments = (comments: string): CommentEntry[] => {
-  if (!comments || comments === "0") return [];
-
-  try {
-    const parsed = JSON.parse(comments) as unknown;
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed
-      .filter((entry): entry is CommentEntry => Boolean(entry && typeof entry === 'object'))
-      .map((entry) => ({
-        author: String((entry as CommentEntry).author || 'Unknown'),
-        email: (entry as CommentEntry).email ? String((entry as CommentEntry).email) : undefined,
-        message: String((entry as CommentEntry).message || ''),
-        createdAt: (entry as CommentEntry).createdAt ? String((entry as CommentEntry).createdAt) : undefined,
-      }))
-      .filter((entry) => entry.message.length > 0);
-  } catch {
-    return comments
-      .split("\n")
-      .map((entry) => entry.trim())
-      .filter(Boolean)
-      .map((entry) => {
-        const [authorPart, createdAtPart, ...messageParts] = entry.split("|");
-
-        if (messageParts.length > 0) {
-          return {
-            author: authorPart || "Unknown",
-            createdAt: createdAtPart,
-            message: messageParts.join("|").trim(),
-          };
-        }
-
-        return {
-          author: "Legacy",
-          message: entry,
-        };
-      });
-  }
 };
 
 const parseSubtasks = (subtasks: string): SubtaskEntry[] => {
@@ -130,10 +84,6 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
   const canEdit = !activeTask.organizationId || ((permissions && (permissions.includes("edit_tasks") || permissions.includes("edit_tasks"))) && (ownTask || assignedTask));
   const canDelete = !activeTask.organizationId || ((permissions && (permissions.includes("delete_tasks") || permissions.includes("edit_tasks"))) && (ownTask || assignedTask));
   const canComplete = !activeTask.organizationId || ((permissions && permissions.includes("complete_tasks")) || (ownTask || assignedTask));
-
-  useEffect(() => {
-    console.log((permissions && permissions.includes("complete_tasks")))
-  }, [permissions])
 
   useEffect(() => {
     if (!isOpen) {
@@ -300,9 +250,9 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white dark:bg-dark-bg shadow-xl w-[94%] overflow-y-auto max-w-2xl max-h-[80vh] border border-gray-500/[0.1] rounded-lg overflow-hidden">
+      <div ref={modalRef} className="bg-white dark:bg-dark shadow-xl w-[94%] overflow-y-auto max-w-2xl max-h-[80vh] border border-gray-500/[0.1] rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-dark-bg border-b border-gray-500/[0.1] p-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white dark:bg-dark border-b border-gray-500/[0.1] p-4 flex items-center justify-between z-2">
           <div className="flex items-center gap-2">
             <h2 className="px-2 opacity-[0.7] leading-4 text-sm">Created on {formatDateTime(activeTask.$createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}</h2>
           </div>
@@ -316,7 +266,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                 setIsEditing(!isEditing);
               }}
               disabled={!canEdit}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-dark rounded-lg transition-colors"
               title={isEditing ? "Cancel Edit" : "Edit Task"}
             >
               <PenNewSquare size={16} />
@@ -334,7 +284,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
             >
               <TrashIcon size={16} />
             </button>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-lg transition-colors">
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-dark rounded-lg transition-colors">
               <XIcon size={16} />
             </button>
           </div>
@@ -490,7 +440,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                             value={editingCommentText}
                             onChange={(event) => setEditingCommentText(event.target.value)}
                             rows={3}
-                            className="w-full resize-none rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark-bg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                            className="w-full resize-none rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                           />
                           <div className="flex justify-end gap-2">
                             <Button size="small" variant="secondary" onClick={handleCancelEditComment}>Cancel</Button>
@@ -520,7 +470,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                     onChange={(event) => setCommentText(event.target.value)}
                     rows={3}
                     placeholder="Write a comment..."
-                    className="w-full resize-none rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark-bg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full resize-none rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                   />
                   <div className="flex justify-end">
                     <Button size="small" onClick={handleAddComment}>Add comment</Button>
@@ -558,7 +508,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
                     onChange={(event) => setSubtaskText(event.target.value)}
                     rows={3}
                     placeholder="Add a subtask..."
-                    className="w-full resize-none rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark-bg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full resize-none rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                   />
                   <div className="flex justify-end">
                     <Button size="small" onClick={handleAddSubtask}>Add subtask</Button>
@@ -570,7 +520,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
 
         </div>
 
-          <div className="sticky bottom-0 bg-white dark:bg-dark-bg overflow-x-auto flex flex-wrap justify-center gap-4 p-4 border-t border-gray-500/[0.1] ">
+          <div className="sticky bottom-0 bg-white dark:bg-dark overflow-x-auto flex flex-wrap justify-center gap-4 p-4 border-t border-gray-500/[0.1] ">
             <Button size="small" variant="secondary" onClick={() => setIsFocusMode(true)}><Play /> Start focus mode</Button>
           {
             activeTask.status === "in progress" || activeTask.status === "pending" ? (

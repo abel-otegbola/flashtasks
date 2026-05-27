@@ -17,6 +17,7 @@ import { PlayIcon } from "@phosphor-icons/react";
 import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 import { useUser } from '../../context/authContext';
 import toast from 'react-hot-toast';
+import { parseComments } from "../../helpers/parseComments";
 
 type TodoCardProps = todo & {
   draggable?: boolean;
@@ -285,7 +286,7 @@ function TodoCard(task: TodoCardProps) {
             </div>
             <p className="text-[12px] flex gap-1 items-center text-gray-500">
               <ChatLine size={12} color="currentColor" />
-              {comments}
+              {parseComments(comments).length}
             </p>
           </div>
           )
