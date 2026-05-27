@@ -29,14 +29,7 @@ flowchart LR
 
 Create these collections in the Hermes Appwrite database.
 
-### `integrations`
-
-- `provider` string
-- `name` string
-- `description` string
-- `active` boolean
-- `createdAt` datetime
-- `updatedAt` datetime
+Provider metadata like names, descriptions, and active state can live in frontend config or seed data instead of a dedicated Appwrite collection.
 
 ### `connected_accounts`
 
@@ -44,6 +37,7 @@ Create these collections in the Hermes Appwrite database.
 - `organizationId` string
 - `workspaceId` string
 - `userId` string
+- `userEmail` string
 - `accountId` string
 - `externalAccountId` string
 - `externalWorkspaceId` string
@@ -62,6 +56,7 @@ Create these collections in the Hermes Appwrite database.
 - `organizationId` string
 - `workspaceId` string
 - `userId` string
+- `userEmail` string
 - `name` string
 - `trigger` string
 - `conditions` string
@@ -73,6 +68,8 @@ Create these collections in the Hermes Appwrite database.
 ### `followup_jobs`
 
 - `organizationId` string
+- `userId` string
+- `userEmail` string
 - `threadKey` string
 - `provider` string
 - `jobType` string
@@ -87,6 +84,8 @@ Create these collections in the Hermes Appwrite database.
 ### `scheduled_tasks`
 
 - `organizationId` string
+- `userId` string
+- `userEmail` string
 - `followupJobId` string
 - `taskId` string
 - `status` string
@@ -101,6 +100,8 @@ Create these collections in the Hermes Appwrite database.
 - `provider` string
 - `workspaceId` string
 - `accountId` string
+- `userId` string
+- `userEmail` string
 - `threadKey` string
 - `subject` string
 - `lastInboundAt` datetime
@@ -114,6 +115,8 @@ Create these collections in the Hermes Appwrite database.
 
 - `organizationId` string
 - `provider` string
+- `userId` string
+- `userEmail` string
 - `entityType` string
 - `entityId` string
 - `message` string

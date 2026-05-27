@@ -15,6 +15,7 @@ export const connectSlack = async (tenant: HermesTenant) => {
     },
     body: JSON.stringify({
       userId: tenant.userId,
+      userEmail: tenant.userEmail,
       organizationId: tenant.organizationId,
       workspaceId: tenant.workspaceId,
       accountId: tenant.accountId,
@@ -39,6 +40,7 @@ export const connectEmail = async (tenant: HermesTenant) => {
     },
     body: JSON.stringify({
       userId: tenant.userId,
+      userEmail: tenant.userEmail,
       organizationId: tenant.organizationId,
       workspaceId: tenant.workspaceId,
       accountId: tenant.accountId,

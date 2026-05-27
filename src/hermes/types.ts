@@ -4,6 +4,7 @@ export type HermesTenant = {
   organizationId: string;
   workspaceId?: string;
   userId?: string;
+  userEmail?: string;
   accountId?: string;
 };
 
@@ -15,6 +16,7 @@ export interface ConnectedAccount {
   organizationId: string;
   workspaceId?: string;
   userId?: string;
+  userEmail?: string;
   accountId: string;
   externalAccountId: string;
   externalWorkspaceId?: string;
@@ -41,6 +43,7 @@ export interface AutomationRule {
   organizationId: string;
   workspaceId?: string;
   userId?: string;
+  userEmail?: string;
   name: string;
   trigger: string;
   conditions: string;
@@ -56,6 +59,8 @@ export interface ConversationThread {
   provider: HermesProvider;
   workspaceId?: string;
   accountId?: string;
+  userId?: string;
+  userEmail?: string;
   threadKey: string;
   subject?: string;
   lastInboundAt?: string;
@@ -69,6 +74,8 @@ export interface ConversationThread {
 export interface FollowupJob {
   $id?: string;
   organizationId: string;
+  userId?: string;
+  userEmail?: string;
   threadKey: string;
   provider: HermesProvider;
   jobType: 'schedule_reminder' | 'draft_followup' | 'send_followup' | 'create_task' | 'update_task_status';
@@ -84,6 +91,8 @@ export interface FollowupJob {
 export interface ScheduledTask {
   $id?: string;
   organizationId: string;
+  userId?: string;
+  userEmail?: string;
   followupJobId?: string;
   taskId?: string;
   status: 'scheduled' | 'sent' | 'drafted' | 'failed';
@@ -97,6 +106,8 @@ export interface ActivityLog {
   $id?: string;
   organizationId: string;
   provider: HermesProvider;
+  userId?: string;
+  userEmail?: string;
   entityType: 'event' | 'action' | 'job' | 'task';
   entityId: string;
   message: string;

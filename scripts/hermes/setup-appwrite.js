@@ -8,18 +8,6 @@ const databaseId = process.env.APPWRITE_DATABASE_ID || process.env.HERMES_DATABA
 
 const collections = [
   {
-    id: process.env.HERMES_INTEGRATIONS_COLLECTION_ID || 'integrations',
-    name: 'integrations',
-    attributes: [
-      ['provider', 'string', { size: 20, required: true }],
-      ['name', 'string', { size: 255, required: true }],
-      ['description', 'string', { size: 1000, required: false }],
-      ['active', 'boolean', { required: true, default: true }],
-      ['createdAt', 'datetime', { required: true }],
-      ['updatedAt', 'datetime', { required: true }],
-    ],
-  },
-  {
     id: process.env.HERMES_CONNECTED_ACCOUNTS_COLLECTION_ID || 'connected_accounts',
     name: 'connected_accounts',
     attributes: [
@@ -27,6 +15,7 @@ const collections = [
       ['organizationId', 'string', { size: 255, required: true }],
       ['workspaceId', 'string', { size: 255, required: false }],
       ['userId', 'string', { size: 255, required: false }],
+      ['userEmail', 'string', { size: 255, required: false }],
       ['accountId', 'string', { size: 255, required: true }],
       ['externalAccountId', 'string', { size: 255, required: true }],
       ['externalWorkspaceId', 'string', { size: 255, required: false }],
@@ -48,6 +37,7 @@ const collections = [
       ['organizationId', 'string', { size: 255, required: true }],
       ['workspaceId', 'string', { size: 255, required: false }],
       ['userId', 'string', { size: 255, required: false }],
+      ['userEmail', 'string', { size: 255, required: false }],
       ['name', 'string', { size: 255, required: true }],
       ['trigger', 'string', { size: 5000, required: true }],
       ['conditions', 'string', { size: 5000, required: true }],
@@ -62,6 +52,8 @@ const collections = [
     name: 'followup_jobs',
     attributes: [
       ['organizationId', 'string', { size: 255, required: true }],
+      ['userId', 'string', { size: 255, required: false }],
+      ['userEmail', 'string', { size: 255, required: false }],
       ['threadKey', 'string', { size: 255, required: true }],
       ['provider', 'string', { size: 20, required: true }],
       ['jobType', 'string', { size: 40, required: true }],
@@ -79,6 +71,8 @@ const collections = [
     name: 'scheduled_tasks',
     attributes: [
       ['organizationId', 'string', { size: 255, required: true }],
+      ['userId', 'string', { size: 255, required: false }],
+      ['userEmail', 'string', { size: 255, required: false }],
       ['followupJobId', 'string', { size: 255, required: false }],
       ['taskId', 'string', { size: 255, required: false }],
       ['status', 'string', { size: 20, required: true }],
@@ -96,6 +90,8 @@ const collections = [
       ['provider', 'string', { size: 20, required: true }],
       ['workspaceId', 'string', { size: 255, required: false }],
       ['accountId', 'string', { size: 255, required: false }],
+      ['userId', 'string', { size: 255, required: false }],
+      ['userEmail', 'string', { size: 255, required: false }],
       ['threadKey', 'string', { size: 255, required: true }],
       ['subject', 'string', { size: 1000, required: false }],
       ['lastInboundAt', 'datetime', { required: false }],
@@ -112,6 +108,8 @@ const collections = [
     attributes: [
       ['organizationId', 'string', { size: 255, required: true }],
       ['provider', 'string', { size: 20, required: true }],
+      ['userId', 'string', { size: 255, required: false }],
+      ['userEmail', 'string', { size: 255, required: false }],
       ['entityType', 'string', { size: 20, required: true }],
       ['entityId', 'string', { size: 255, required: true }],
       ['message', 'string', { size: 1000, required: true }],
