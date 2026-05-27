@@ -4,14 +4,16 @@ import { useUser } from '../../../context/authContext'
 import Button from "../../../components/button/button"
 import LogoIcon from "../../../assets/icons/logo"
 import BlurReveal from '../../../components/animations/blurReveal';
-import { CalendarIcon, GridFourIcon, GridNineIcon, LightningIcon, UsersIcon } from '@phosphor-icons/react';
-import { ArrowRightUp, Microphone } from '@solar-icons/react';
+import { CalendarIcon, GridFourIcon, GridNineIcon, LightningIcon, PlayIcon, UsersIcon } from '@phosphor-icons/react';
+import { ArrowRightUp, MenuDots, Microphone } from '@solar-icons/react';
 import FaqSection from '../../../components/faqs/faqs';
 import Animate from '../../../components/animations/animate';
 const TodoCard = lazy(() => import('../../../components/cards/todoCard'));
 import { todo } from '../../../interface/todo';
 const TaskListView = lazy(() => import('../../../components/cards/taskListView'));
 import HeroArrowIcon from '../../../assets/icons/heroArrow';
+import TaskCheckbox from '../../../components/ui/taskCheckbox'
+import { formatDeliveredTime } from '../../../helpers/messageTime'
 
 function Home() {
   const { user } = useUser();
@@ -216,7 +218,59 @@ function Home() {
                     { $id:"2", title: "Update documentation", description: "Update user guide and API documentation with latest v2.0 changes", category: "Doc", priority: "low", status: "completed", userId: "", userEmail: "test@gmail.com", comments: "", $createdAt: "2026-04-28T14:00:00Z", dueDate: "2026-05-10T17:00:00Z" },
                   ] as todo[]).map((task: todo,index: number) => (
                     <Suspense key={task.$id} fallback={<div className="h-12 w-full bg-gray-200 animate-pulse rounded" />}>
-                      <TaskListView task={task} openTaskDetails={() => {}} index={index} />
+                       <div className={`flex md:items-center items-start border border-gray-500/[0.1] rounded-lg hover:shadow-sm transition-shadow cursor-pointer ${index % 2 !== 0 ? 'bg-white dark:bg-dark-bg' : 'bg-white dark:bg-dark-bg/[0.6]'}`}>
+                              <div className="flex items-start md:items-center p-4 pr-0 md:col-span-1">
+                                  <TaskCheckbox
+                                      ariaLabel="completed"
+                                      checked={task.status === 'completed'}
+                                      onCheckedChange={() => {}}
+                                  />
+                              </div>
+                              <div 
+                                  key={task.$id}
+                                  role="button"
+                                  tabIndex={0}
+                                  className={`md:grid md:grid-cols-12 flex flex-col gap-4 px-4 py-3 flex-1`}
+                              >
+                                  {/* Mobile Layout */}
+                                  <div className={`md:col-span-5 flex flex-col justify-center gap-1 md:order-none order-1`}>
+                                      <h3 className={`font-semibold text-sm ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
+                                          {task.title}
+                                      </h3>
+                                      <p className="text-xs text-gray-400 line-clamp-2 md:line-clamp-1">{task.description}</p>
+                                  </div>
+                                  <div className="md:col-span-2 md:flex hidden items-center md:justify-start text-nowrap">
+                                      <span className={`text-xs px-2 py-1 rounded-full ${
+                                          task.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                          task.status === 'in progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                          task.status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                          task.status === 'pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                                          'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                      }`}>
+                                          {task.status}
+                                      </span>
+                                  </div>
+                                  <div className="md:col-span-2 flex items-center md:justify-start md:order-none order-0">
+                                      <span className={`text-xs px-2 py-1 rounded-full ${
+                                          task.priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                          task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                          'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                      }`}>
+                                          {task.priority || 'medium'}
+                                      </span>
+                                  </div>
+                                  <div className={`md:col-span-3 flex items-center gap-6 justify-end text-xs text-gray-500 dark:text-gray-400 md:order-none order-1`}>
+                                      {task.dueDate ? formatDeliveredTime(task.dueDate, undefined, 'future') : null}
+                                      <button
+                                          className=""
+                                          aria-label="Start Pomodoro for task"
+                                          title="Focus mode"
+                                      >
+                                          <PlayIcon size={18} className="text-gray-400" />
+                                      </button>
+                                  </div>
+                              </div>
+                            </div>
                     </Suspense>
                   ))  
               }
@@ -227,11 +281,52 @@ function Home() {
             <div className='flex sm:flex-row flex-col gap-2 bg-gray-100 dark:bg-dark/[0.4] p-4'>
               {
                   ([
-                    { $id:"3", title: "Prepare Q3 roadmap", description: "Create and present quarterly product roadmap to stakeholders", category: "Planning", priority: "high", status: "completed", userId: "", userEmail: "test@gmail.com", comments: "", $createdAt: "2026-04-20T11:00:00Z", dueDate: "2026-05-08T17:00:00Z", assignees: ["daniel@gmail.com", "product@company.com"] },
-                    { $id:"4", title: "Team sync meeting", description: "Weekly sync to discuss progress, blockers, and next week's priorities", category: "Meetings", priority: "medium", status: "pending", userId: "", userEmail: "rapheal@gmail.com", comments: "", $createdAt: "2026-05-05T09:00:00Z", dueDate: "2026-05-12T10:00:00Z", assignees: ["mcheal@gmail.com", "team2@company.com"] },
-                  ] as todo[]).map((task: todo) => (
+                    { $id:"3", title: "Prepare Q3 roadmap", description: "Create and present quarterly product roadmap to stakeholders", category: "Planning", priority: "high", status: "completed", userId: "", comments: "", $createdAt: "2026-04-20T11:00:00Z", dueDate: "2026-05-08T17:00:00Z", images: ["/pic1.jpg", "/pic2.jpg", "/pic3.jpg"] },
+                    { $id:"4", title: "Team sync meeting", description: "Weekly sync to discuss progress, blockers, and next week's priorities", category: "Meetings", priority: "medium", status: "pending", userId: "", comments: "", $createdAt: "2026-05-05T09:00:00Z", dueDate: "2026-05-12T10:00:00Z", images: ["/pic3.jpg", "/pic4.jpg"] },
+                  ]).map((task) => (
                     <Suspense key={task.$id} fallback={<div className="h-20 w-full bg-gray-200 animate-pulse rounded" />}>
-                      <TodoCard {...task} />
+                      <div
+                        className={`border border-yellow-400/30 bg-yellow-400/[0.1]-t-3 border rounded-[10px] bg-white dark:bg-dark-bg hover:shadow-md `}
+                      >
+                        <div className="flex flex-col gap-3 p-4">
+                          <div className="flex justify-between gap-4 items-start">
+                            <div className="flex items-center gap-2">
+                              <TaskCheckbox
+                                  checked={status === 'completed'}
+                                  onCheckedChange={(checked) => {}}
+                                  ariaLabel={`Mark as completed`}
+                                />
+                                <p
+                                  className={`p-1 px-3 font-medium rounded-full text-[10px] bg-yellow-400/[0.1] text-yellow-500 w-fit`}
+                                >
+                                  {task.category}
+                                </p>
+                            </div>
+                            <button
+                              className="rotate-[90deg] text-gray-500 hover:text-gray-700"
+                            >
+                              <MenuDots size={16} color="currentColor" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="px-4 pb-4 flex flex-col gap-2">
+                          <h2 className="font-semibold text-[12px]">{task.title}</h2>
+                          <p className="text-[10px] text-gray-400 line-clamp-2">{task.description}</p>
+                          <p className="text-xs">Due: {task.dueDate ? formatDeliveredTime(task.dueDate, undefined, 'future') : 'No date'}</p>
+                        </div>
+                        <div className="flex justify-between gap-4 flex-wrap p-2 px-6 border-t border-gray-100 dark:border-gray-500/[0.2]">
+                          <div className="flex">
+                            {
+                              task.images.slice(0, 3).map((image, index) => (
+                                <span key={index} className="w-8 h-8 -ml-2 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold">
+                                  <img src={image} alt={`User ${index + 1}`} className="w-full h-full object-cover rounded-full" />
+                                </span>
+                              ))
+                            }
+                          </div>
+                          
+                        </div>
+                      </div>
                     </Suspense>
                   ))  
               }

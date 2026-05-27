@@ -21,7 +21,7 @@ import { useUser } from '../../../context/authContext';
 
 export default function OrganizationsPage() {
   const orgCtx = useOrganizations();
-  const { organizations, currentOrg, invitedMembers, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, deleteOrganization, getAllInvitedMembers, loading } = orgCtx;
+  const { organizations, currentOrg, invitedMembers, loadOrganizations, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, deleteOrganization, getAllInvitedMembers, loading } = orgCtx;
   const { tasks, getOrganizationTasks } = useTasks(); 
   const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -44,6 +44,10 @@ export default function OrganizationsPage() {
   const [confirmRemoveMember, setConfirmRemoveMember] = useState<string | boolean>(false);
   const permissions = invitedMembers?.find(m => m.email === user?.email)?.roles[0] === "owner" ? OWNER_PERMISSIONS : invitedMembers?.find(m => m.email === user?.email)?.roles || [];
 
+  useEffect(() => {
+    loadOrganizations()
+  }, [])
+  
   useEffect(() => {
       getOrganizationTasks(selectedOrg?.$id || "");
       if (selectedOrg) {

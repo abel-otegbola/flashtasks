@@ -16,7 +16,6 @@ import GetAvatar from "../../customHooks/useGetAvatar";
 import { PlayIcon } from "@phosphor-icons/react";
 import { shouldConfirmBeforeDeletingTasks } from "../../helpers/appPreferences";
 import { useUser } from '../../context/authContext';
-import { canEditTask } from '../../helpers/taskPermissions';
 import toast from 'react-hot-toast';
 
 type TodoCardProps = todo & {
@@ -26,13 +25,13 @@ type TodoCardProps = todo & {
   onDragOver?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
   onDragEnter?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
   onDrop?: (task: todo, event: DragEvent<HTMLDivElement>) => void;
+  permissions?: string[];
 };
 
 function TodoCard(task: TodoCardProps) {
   const { user } = useUser();
   const ownTask = task.userEmail === user?.email;
   const assignedTask = Array.isArray(task?.assignees) && task.assignees.includes(user?.email);
-  const permissions = task.organizationId ? task.permissions : undefined;
   const { title, description, comments, category, status } = task;
   const [openMenu, setOpenMenu] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -99,7 +98,7 @@ function TodoCard(task: TodoCardProps) {
         className={`relative flex flex-col overflow-hidden transition-all cursor-pointer ${isDragging ? 'opacity-50 scale-[0.98]' : ''}`}
         onSwipeLeft={() => {
           if (task.organizationId) {
-            if (!((permissions && (permissions.includes("delete_task") || permissions.includes("edit_all_tasks"))) && (ownTask || assignedTask))) {
+            if (!((task.permissions && (task.permissions.includes("delete_task") || task.permissions.includes("edit_all_tasks"))) && (ownTask || assignedTask))) {
               toast.error('You do not have permission to delete this task');
               return;
             }
@@ -112,7 +111,7 @@ function TodoCard(task: TodoCardProps) {
         }}
         onSwipeRight={() => {
           if (task.organizationId) {
-            if (!((permissions && (permissions.includes("complete_all_task") || permissions.includes("edit_all_task"))) && (ownTask || assignedTask))) {
+            if (!((task.permissions && (task.permissions.includes("complete_all_task") || task.permissions.includes("edit_all_task"))) && (ownTask || assignedTask))) {
               toast.error('You do not have permission to update this task');
               return;
             }
@@ -261,11 +260,11 @@ function TodoCard(task: TodoCardProps) {
                 try {
                   const org = (useOrganizations().organizations || []).find(o => o.$id === (task as any).organizationId);
                   if (org) {
-                    const team = (org.teams || []).find((t: any) => t.$id === (task as any).teamId);
+                    // const team = ;
                     return (
                       <>
                         <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-[#202020]">{org.name}</span>
-                        {team && <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-[#202020]">{team.name}</span>}
+                        {/* {team && <span className="text-[11px] px-4 py-1 rounded-full bg-gray-100 dark:bg-[#202020]">{team.name}</span>} */}
                       </>
                     )
                   }

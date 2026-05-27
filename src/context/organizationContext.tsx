@@ -11,6 +11,7 @@ type OrganizationContextValues = {
   currentOrg?: Organization | null;
   invitedMembers: OrgInvite[];
   loading: boolean;
+  loadOrganizations: () => void;
   createOrganization: (payload: CreateOrganizationPayload) => void;
   selectOrganization: (orgId: string) => void;
   addTeam: (payload: CreateTeamPayload) => Promise<Team>;
@@ -63,20 +64,6 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       toast.error("Failed to load organizations");
     }
   };
-
-  // load organizations for current user on mount or when user changes
-  useEffect(() => {
-    loadOrganizations();
-  }, [user]);
-
-  useEffect(() => {
-    const refreshOrganizations = () => {
-      loadOrganizations();
-    };
-
-    window.addEventListener('organizations:changed', refreshOrganizations);
-    return () => window.removeEventListener('organizations:changed', refreshOrganizations);
-  }, [user]);
 
   const createOrganization = async (payload: CreateOrganizationPayload) => {
     setLoading(true);
@@ -283,6 +270,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         currentOrg, 
         invitedMembers,
         loading, 
+        loadOrganizations,
         createOrganization, 
         selectOrganization, 
         addTeam, 
