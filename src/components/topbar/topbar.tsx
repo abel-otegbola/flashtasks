@@ -19,13 +19,18 @@ function Topbar() {
         if (user && (user as any).name) {
         const initial = ((user as any).name || (user as any).email || 'U')[0].toUpperCase();
         return (
-            <Link to={"/account/dashboard"} className="flex gap-2 items-center">
-                <GetAvatar email={initial} className="w-10 h-10" />
-                <div>
-                    <span className="md:hidden block font-semibold">{(user as any).name || (user as any).email}</span>
-                    <span className="block md:hidden text-sm">Dashboard</span>
-                </div>
-            </Link>
+            <div className="flex md:flex-row flex-col gap-2 md:items-center items-stretch w-full md:w-auto">
+                <Button size="small" variant="secondary" href="/account/integrations" className="md:w-fit w-full">
+                    Integrations
+                </Button>
+                <Link to={"/account/dashboard"} className="flex gap-2 items-center md:justify-start justify-center">
+                    <GetAvatar email={initial} className="w-10 h-10" />
+                    <div>
+                        <span className="md:hidden block font-semibold">{(user as any).name || (user as any).email}</span>
+                        <span className="block md:hidden text-sm">Dashboard</span>
+                    </div>
+                </Link>
+            </div>
         );
         }
 

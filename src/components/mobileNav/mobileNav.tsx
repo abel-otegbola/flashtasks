@@ -19,12 +19,13 @@ export default function MobileNav() {
         { id: 1, label: "Home", to: "/account/dashboard", icon: <Home /> },
         { id: 2, label: "tasks", to: "/account/tasks", icon: <Server /> },
         { id: 3, label: "New", to: "/account/tasks/new", icon: <PlusIcon /> },
+        { id: 6, label: "Integrations", to: "/account/integrations", icon: <Server /> },
         { id: 4, label: "Organizations", to: "/account/organizations", icon: <UsersGroupTwoRounded /> },
         { id: 5, label: "Settings", to: !user ? "/login" : "/account/settings", icon: <Settings /> },
     ]
 
     return (
-         <nav className="grid grid-cols-5 py-4 bg-white dark:bg-dark-bg fixed bottom-0 left-0 w-full border-t border-gray-500/[0.1] items-center gap-0 z-[40]">
+         <nav className="grid grid-cols-6 py-4 bg-white dark:bg-dark-bg fixed bottom-0 left-0 w-full border-t border-gray-500/[0.1] items-center gap-0 z-[40]">
             {
                 navTabs.map((tab: navTab) => (
                     <Link key={tab.id}

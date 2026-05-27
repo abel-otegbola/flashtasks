@@ -17,6 +17,7 @@ import Notifications from "./notifications";
 import GetAvatar from "../../customHooks/useGetAvatar";
 import { resolveAccountLandingPath } from "../../helpers/appPreferences";
 import MobileNav from "../../components/mobileNav/mobileNav";
+import IntegrationsPage from "./integrations";
 
 function AccountPages() {
     const { user } = useUser();
@@ -67,6 +68,7 @@ function AccountPages() {
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/organizations" element={<Organizations />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/integrations" element={<IntegrationsPage />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/tasks/new" element={<CreateTask />} />

@@ -42,10 +42,11 @@ function Sidebar() {
     
     const otherLinks: Link[] = [
         { id: 0, label: "Pricing", icon: <DollarMinimalistic size={16} />, link: "/account/pricing" },
-        { id: 1, label: "Notifications", icon: <Bell size={16} />, link: "/account/notifications" },
-        { id: 2, label: "Settings", icon: <Settings size={16} />, link: "/account/settings" },
+        { id: 1, label: "Integrations", icon: <Server size={16} />, link: "/account/integrations" },
+        { id: 2, label: "Notifications", icon: <Bell size={16} />, link: "/account/notifications" },
+        { id: 3, label: "Settings", icon: <Settings size={16} />, link: "/account/settings" },
         // Logout is handled specially to run the logout effect
-        { id: 3, label: "Logout", icon: <Logout size={16} />, link: "#" },
+        { id: 4, label: "Logout", icon: <Logout size={16} />, link: "#" },
     ]
     const modalRef = useOutsideClick(handleSidebarDismiss, false)
 
