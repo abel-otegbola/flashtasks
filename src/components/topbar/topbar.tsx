@@ -70,7 +70,7 @@ function Topbar() {
         <>
         <div className={`flex justify-between items-center w-full md:px-[6%] px-4 py-3 z-[3] sticky top-0 bg-white dark:bg-dark-bg backdrop-blur-sm transition-shadow duration-300 ${scrolled ? 'border-b border-gray-500/[0.1]' : ''}`}>
             <Link to={"/"} className="md:w-[30%] text-start flex gap-2 items-center">
-                <LogoIcon className="w-[14px] h-[28px] h-[28px]"  />
+                <LogoIcon className="w-[14px] h-[28px]"  />
                 <BlurReveal preset="slide-right" duration={3}><h3 className="text-xl font-semibold">Flashtasks</h3></BlurReveal>
             </Link>
             
@@ -79,7 +79,7 @@ function Topbar() {
                 ${open ? "translate-y-[0px] w-full" : "lg:translate-y-[0] -translate-y-[120%] lg:w-auto w-0"} duration-500
             `}>
                 <Link to={"/"} className="md:hidden px-4 mx-6 rounded-lg border border-gray-500/[0.2] w-fit mb-4">
-                    <LogoIcon className="w-[12px]" />
+                    <LogoIcon className="w-[12px] h-[28px]" />
                 </Link>
                 {
                     [

@@ -42,8 +42,8 @@ function Dashboard() {
   };
 
   return (
-    <div className="flex md:flex-row flex-col w-full mx-auto gap-4">
-      <div className="flex flex-1 flex-col  h-full mb-4 gap-4">
+    <div className="flex md:flex-row flex-col w-full mx-auto gap-4 md:p-0 px-4 mb-4">
+      <div className="flex flex-1 flex-col  h-full gap-4">
         <div className="flex flex-col gap-4 gap-4 p-4 md:p-6 bg-white dark:bg-dark-bg border border-gray-500/[0.1] rounded-[10px]">
           <div>
             <h1 className="font-semibold text-2xl">Welcome back, {user.name}</h1>
