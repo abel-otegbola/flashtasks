@@ -1,11 +1,8 @@
-import { Link } from "react-router-dom"
 import { useEffect, useState } from "react";
 import { useTasks } from "../../../context/tasksContext";
 import { useUser } from "../../../context/authContext";
-import Calendar from "react-calendar";
-import { AddCircle, ArrowLeft, ArrowRight, CalendarDate } from "@solar-icons/react";
-import TasksList from "../../../components/ui/tasksList";
 import TasksPerDay from "../../../components/charts/TasksPerDay";
+import TaskStatusPie from "../../../components/charts/TaskStatusPie";
 import { todo } from "../../../interface/todo";
 import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
 import Button from "../../../components/button/button";
@@ -19,13 +16,12 @@ function Dashboard() {
   const { user } = useUser();
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<[string, string]>(["Thu Sep 18 2025 00:00:00 GMT+0100 (West Africa Standard Time)", "Fri Sep 19 2025 23:59:59 GMT+0100 (West Africa Standard Time)"]);
 
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'completed').length;
   const pending = tasks.filter(t => t.status === 'pending').length;
 
-  const recent = tasks.slice(0, 5);
+  const recent = tasks.slice(0, 6);
 
   useEffect(() => {
     getTasks(user?.email || "");
@@ -46,8 +42,8 @@ function Dashboard() {
   };
 
   return (
-    <div className="xl:w-5xl w-full mx-auto gap-4 mb-4 px-4">
-      <div className="flex flex-1 flex-col  h-full mb-4">
+    <div className="flex md:flex-row flex-col w-full mx-auto gap-4">
+      <div className="flex flex-1 flex-col  h-full mb-4 gap-4">
         <div className="flex flex-col gap-4 gap-4 p-4 md:p-6 bg-white dark:bg-dark-bg border border-gray-500/[0.1] rounded-[10px]">
           <div>
             <h1 className="font-semibold text-2xl">Welcome back, {user.name}</h1>
@@ -108,37 +104,16 @@ function Dashboard() {
           )}
         </div>
         
-        {/* Tasks per day chart */}
-        {/* <div>
-          <TasksPerDay days={14} />
-        </div> */}
       </div>
 
-      {/* <div className="p-4 w-full border border-primary/[0.12] bg-white dark:bg-dark-bg rounded-[10px]">
-        <div className="flex py-2 justify-between items-center gap-2">
-            <p className="font-semibold 2xl:text-[20px] text-[16px]">Calendar</p>
-            <div className="p-[6px] rounded-[5px] bg-[#A2A1A81A] hover:bg-gray-500/[0.06]">
-                <CalendarDate color="currentColor" size={20} />
-            </div>
+      <div className="flex flex-col gap-4 md:w-[35%] w-full">
+        <div className="p-4 border border-primary/[0.12] bg-white dark:bg-dark-bg rounded-[10px]">
+          <TasksPerDay tasks={tasks} />
         </div>
-        <Calendar
-            defaultValue={dateRange}
-            selectRange={true}
-            onChange={(value) => {
-                if (Array.isArray(value) && value[0] && value[1]) {
-                    setDateRange([
-                        value[0].toString(),
-                        value[1].toString()
-                    ]);
-                }
-            }}
-            nextLabel={<ArrowRight color="#fff" size={20} />}
-            prevLabel={<ArrowLeft color="#fff" size={20} />}
-        />
-        <div className="flex flex-col gap-6 py-2">
-            <TasksList tasks={tasks} />
+        <div className="p-4 border border-primary/[0.12] bg-white dark:bg-dark-bg rounded-[10px] h-[360px]">
+          <TaskStatusPie tasks={tasks} />
         </div>
-      </div> */}
+      </div>
     </div>
   )
 }
