@@ -16,6 +16,7 @@ export interface todo {
   priority?: 'low' | 'medium' | 'high';
   recurring?: boolean;
   dueDate?: string;
+  subtasks?: string;
   $createdAt: string;
   $updatedAt?: string;
 }

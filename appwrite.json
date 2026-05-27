@@ -203,6 +203,15 @@
                     "encrypt": false
                 },
                 {
+                    "key": "subtasks",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 5000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
                     "key": "priority",
                     "type": "string",
                     "required": false,
