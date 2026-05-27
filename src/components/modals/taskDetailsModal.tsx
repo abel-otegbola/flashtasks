@@ -4,7 +4,7 @@ import { todo } from "../../interface/todo";
 import { PenNewSquare, Play } from "@solar-icons/react";
 import { useTasks } from "../../context/tasksContext";
 import { useOrganizations } from '../../context/organizationContext';
-import { TrashIcon, XIcon } from "@phosphor-icons/react";
+import { PencilLineIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import Confirmationmessage from "./confirmation";
 import EditTaskModal from "./editTaskModal";
 import { useOutsideClick } from "../../customHooks/useOutsideClick";
@@ -14,6 +14,53 @@ import Button from "../button/button";
 import FocusMode from "../focusMode/focusMode";
 import { useUser } from "../../context/authContext";
 import toast from "react-hot-toast";
+
+type CommentEntry = {
+  author: string;
+  email?: string;
+  message: string;
+  createdAt?: string;
+};
+
+const parseComments = (comments: string): CommentEntry[] => {
+  if (!comments || comments === "0") return [];
+
+  try {
+    const parsed = JSON.parse(comments) as unknown;
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .filter((entry): entry is CommentEntry => Boolean(entry && typeof entry === 'object'))
+      .map((entry) => ({
+        author: String((entry as CommentEntry).author || 'Unknown'),
+        email: (entry as CommentEntry).email ? String((entry as CommentEntry).email) : undefined,
+        message: String((entry as CommentEntry).message || ''),
+        createdAt: (entry as CommentEntry).createdAt ? String((entry as CommentEntry).createdAt) : undefined,
+      }))
+      .filter((entry) => entry.message.length > 0);
+  } catch {
+    return comments
+      .split("\n")
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+      .map((entry) => {
+        const [authorPart, createdAtPart, ...messageParts] = entry.split("|");
+
+        if (messageParts.length > 0) {
+          return {
+            author: authorPart || "Unknown",
+            createdAt: createdAtPart,
+            message: messageParts.join("|").trim(),
+          };
+        }
+
+        return {
+          author: "Legacy",
+          message: entry,
+        };
+      });
+  }
+};
 
 interface TaskDetailsModalProps {
   isOpen: boolean;
@@ -25,6 +72,9 @@ interface TaskDetailsModalProps {
 export default function TaskDetailsModal({ isOpen, onClose, task, permissions }: TaskDetailsModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
   const { tasks, deleteTask, updateTask, loading } = useTasks();
   const { organizations } = useOrganizations();
   const { user } = useUser();
@@ -50,6 +100,9 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
       setIsEditing(false);
       setShowDeleteConfirmation(false);
       setIsFocusMode(false);
+      setCommentText("");
+      setEditingCommentIndex(null);
+      setEditingCommentText("");
     }
   }, [isOpen]);
 
@@ -78,6 +131,78 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
       case 'pending': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
       case 'upcoming': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
       default: return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
+    }
+  };
+
+  const comments = parseComments(activeTask.comments);
+
+  const handleAddComment = async () => {
+    const trimmedComment = commentText.trim();
+
+    if (!trimmedComment) {
+      toast.error('Write a comment first');
+      return;
+    }
+
+    const author = String(user?.name || user?.email || 'Unknown user');
+    const email = String(user?.email || '');
+    const nextComments = JSON.stringify([
+      ...comments,
+      {
+        author,
+        email,
+        message: trimmedComment,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+
+    const updatedTask = await updateTask(activeTask.$id, { comments: nextComments });
+    if (updatedTask) {
+      setCommentText("");
+      toast.success('Comment added');
+    }
+  };
+
+  const handleStartEditComment = (index: number) => {
+    setEditingCommentIndex(index);
+    setEditingCommentText(comments[index]?.message || '');
+  };
+
+  const handleCancelEditComment = () => {
+    setEditingCommentIndex(null);
+    setEditingCommentText("");
+  };
+
+  const handleSaveCommentEdit = async () => {
+    if (editingCommentIndex === null) return;
+
+    const trimmedComment = editingCommentText.trim();
+    if (!trimmedComment) {
+      toast.error('Write a comment first');
+      return;
+    }
+
+    const nextComments = comments.map((comment, index) => (
+      index === editingCommentIndex
+        ? { ...comment, message: trimmedComment }
+        : comment
+    ));
+
+    const updatedTask = await updateTask(activeTask.$id, { comments: JSON.stringify(nextComments) });
+    if (updatedTask) {
+      handleCancelEditComment();
+      toast.success('Comment updated');
+    }
+  };
+
+  const handleDeleteComment = async (index: number) => {
+    const nextComments = comments.filter((_, commentIndex) => commentIndex !== index);
+    const updatedTask = await updateTask(activeTask.$id, { comments: JSON.stringify(nextComments) });
+    if (updatedTask) {
+      if (editingCommentIndex === index) {
+        handleCancelEditComment();
+      }
+      toast.success('Comment deleted');
     }
   };
 
@@ -233,17 +358,68 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
           </div>
           )}
 
-          {/* Comments Count */}
-          {
-            activeTask.comments !== "0" && (
-              <div className="flex flex-col gap-2">
-                <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
-                  Comments
-                </label>
-                <p className="">{activeTask.comments} comments</p>
+          {/* Comments */}
+          <div className="flex flex-col gap-3">
+            <label className="text-xs opacity-75 uppercase py-1 flex items-center gap-2">
+              Comments ({comments.length})
+            </label>
+
+            <div className="max-h-64 overflow-y-auto pr-1 bg-background rounded-lg border border-gray-500/[0.1] py-3 ">
+              {comments.length > 0 ? comments.map((comment, index) => (
+                <div key={`${comment.author}-${comment.createdAt || index}-${index}`} className={`p-3 rounded-lg`}>
+                  <div className={`flex items-center gap-2 ${comment.email === user?.email ? 'justify-end' : ''}`}>
+                    <GetAvatar email={comment.email || comment.author} className="w-8 h-8" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{comment.author}</span>
+                      {comment.email ? <span className="text-[10px] text-gray-500">{comment.email}</span> : null}
+                      {comment.createdAt ? (
+                        <span className="text-[9px] text-gray-500">{formatDateTime(comment.createdAt, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                  {editingCommentIndex === index ? (
+                    <div className="mt-3 space-y-2">
+                      <textarea
+                        value={editingCommentText}
+                        onChange={(event) => setEditingCommentText(event.target.value)}
+                        rows={3}
+                        className="w-full resize-none rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark-bg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button size="small" variant="secondary" onClick={handleCancelEditComment}>Cancel</Button>
+                        <Button size="small" onClick={handleSaveCommentEdit}>Save</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className={`mt-3 text-sm whitespace-pre-wrap p-2 w-[75%] ${comment.email === user?.email ? 'ml-auto bg-blue-100 dark:bg-blue-900/30 text-right rounded-l-lg' : 'bg-gray-100 dark:bg-gray-800 rounded-r-lg'} `}>{comment.message}</p>
+                      {comment.email === user?.email ? (
+                        <div className="mt-3 flex justify-end gap-2">
+                          <Button size="small" variant="secondary" className="px-0" onClick={() => handleStartEditComment(index)}><PencilLineIcon /></Button>
+                          <Button size="small" variant="secondary" className="px-0" onClick={() => handleDeleteComment(index)}><TrashIcon /></Button>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                </div>
+              )) : (
+                <p className="text-sm text-gray-500">No comments yet. Start the conversation below.</p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <textarea
+                value={commentText}
+                onChange={(event) => setCommentText(event.target.value)}
+                rows={3}
+                placeholder="Write a comment..."
+                className="w-full resize-none rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark-bg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <div className="flex justify-end">
+                <Button size="small" onClick={handleAddComment}>Add comment</Button>
               </div>
-            )
-          }
+            </div>
+          </div>
 
         </div>
 

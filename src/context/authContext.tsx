@@ -226,7 +226,7 @@ const AuthProvider = ({ children }: { children: ReactNode}) => {
                 tableId: import.meta.env.VITE_APPWRITE_USERS_TABLE_ID || 'users',
             });
 
-            const row = response.rows.find((doc: any) => doc.email?.toLowerCase?.() === email.toLowerCase());
+            const row = response.rows.find((doc: any) => (doc.email?.toLowerCase?.() === email.toLowerCase() || doc.name?.toLowerCase?.() === email.toLowerCase()));
             return row?.photoUrl || null;
         } catch (error) {
             console.error('Failed to load photo url', error);

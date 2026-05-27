@@ -198,7 +198,7 @@
                     "type": "string",
                     "required": false,
                     "array": false,
-                    "size": 20,
+                    "size": 5000,
                     "default": null,
                     "encrypt": false
                 },

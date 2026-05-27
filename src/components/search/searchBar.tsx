@@ -32,13 +32,13 @@ export default function SearchBar({ onResults, placeholder = "Search tasks..." }
       />
 
       {
-        tasks.length > 0 && query && (
+        tasks?.length > 0 && query && (
         <div className="absolute top-[90%] left-0 mt-2 px-2 pb-2 w-full max-h-2xl sm:w-2xl w-full overflow-auto z-20 bg-white dark:bg-dark-bg border border-gray-200 dark:border-gray-500/[0.2] rounded-lg shadow-lg">
           {
               <div>
                 <p className="p-2">Tasks</p>
                 <div className="p-2 rounded-lg bg-gray-100/[0.4] dark:bg-dark">
-                  {tasks.filter(t => t.title.toLowerCase().includes(query.toLowerCase()) || t.description?.toLowerCase().includes(query.toLowerCase()) || t.category.toLowerCase().includes(query.toLowerCase())).slice(0, 5).map((t) => (
+                  {tasks?.filter(t => t.title.toLowerCase().includes(query.toLowerCase()) || t.description?.toLowerCase().includes(query.toLowerCase()) || t.category.toLowerCase().includes(query.toLowerCase())).slice(0, 5).map((t) => (
                     <button
                       key={t.$id}
                       onClick={async () => setSelectedTask(t)}
