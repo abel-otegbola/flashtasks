@@ -7,8 +7,17 @@ type SlackConnectResponse = {
 
 type EmailConnectResponse = SlackConnectResponse;
 
+const getBackendBaseUrl = () => {
+  const configuredBaseUrl = import.meta.env.VITE_BACKEND_URL || 'https://flashtasks.app';
+  return configuredBaseUrl.replace(/\/$/, '');
+};
+
+const getSlackRedirectUri = () => `${getBackendBaseUrl()}/api/hermes/integrations/slack/callback`;
+
+const getGoogleRedirectUri = () => `${getBackendBaseUrl()}/api/hermes/integrations/email/callback`;
+
 export const connectSlack = async (tenant: HermesTenant) => {
-  const response = await fetch('/api/hermes/integrations/slack/connect', {
+  const response = await fetch(`${getBackendBaseUrl()}/api/hermes/integrations/slack/connect`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -19,7 +28,7 @@ export const connectSlack = async (tenant: HermesTenant) => {
       organizationId: tenant.organizationId,
       workspaceId: tenant.workspaceId,
       accountId: tenant.accountId,
-      redirectUri: `${window.location.origin}/account/settings`,
+      redirectUri: getSlackRedirectUri(),
       returnTo: '/account/settings?tab=integrations',
     }),
   });
@@ -33,7 +42,7 @@ export const connectSlack = async (tenant: HermesTenant) => {
 };
 
 export const connectEmail = async (tenant: HermesTenant) => {
-  const response = await fetch('/api/hermes/integrations/email/connect', {
+  const response = await fetch(`${getBackendBaseUrl()}/api/hermes/integrations/email/connect`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -44,7 +53,7 @@ export const connectEmail = async (tenant: HermesTenant) => {
       organizationId: tenant.organizationId,
       workspaceId: tenant.workspaceId,
       accountId: tenant.accountId,
-      redirectUri: `${window.location.origin}/account/settings`,
+      redirectUri: getGoogleRedirectUri(),
       returnTo: '/account/settings?tab=integrations',
     }),
   });
