@@ -24,7 +24,7 @@ export default function MobileNav() {
     ]
 
     return (
-         <nav className="grid grid-cols-6 py-4 bg-white dark:bg-dark-bg fixed bottom-0 left-0 w-full border-t border-gray-500/[0.1] items-center gap-0 z-[40]">
+         <nav className="grid grid-cols-5 py-4 bg-white dark:bg-dark-bg fixed bottom-0 left-0 w-full border-t border-gray-500/[0.1] items-center gap-0 z-[40]">
             {
                 navTabs.map((tab: navTab) => (
                     <Link key={tab.id}
