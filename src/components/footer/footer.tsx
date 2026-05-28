@@ -1,8 +1,13 @@
 import { Link } from "react-router-dom"
-import LogoIcon from "../../assets/icons/logo"
-
 
 function Footer() {
+  const resources = [
+    { label: "Help center", to: "/help-center" },
+    { label: "What's new", to: "/help-center#whats-new" },
+    { label: "FAQs", to: "/faqs" },
+    { label: "Blog", to: "/blog" },
+  ];
+
   return (
     <div className="py-12 flex flex-col gap-6 justify-center items-center md:px-[6%] pt-10 p-6">
 
@@ -11,7 +16,7 @@ function Footer() {
           <h3 className="font-semibold mb-2 text-lg">Products</h3>
           {
             ["Features", "Integrations", "Pricing", "For teams"].map(item => (
-              <Link to={item} key={item} className="text-gray-500 hover:text-primary cursor-pointer">
+              <Link to={"/" + item} key={item} className="text-gray-500 hover:text-primary cursor-pointer">
                 {item}
               </Link>
             ))
@@ -21,9 +26,9 @@ function Footer() {
         <div className="flex flex-col gap-4">
           <h3 className="font-semibold mb-2 text-lg">Resources</h3>
           {
-            ["Help center", "What's new", "FAQs", "Blog"].map(item => (
-              <Link to={item} key={item} className="text-gray-500 hover:text-primary cursor-pointer">
-                {item}
+            resources.map(item => (
+              <Link to={item.to} key={item.label} className="text-gray-500 hover:text-primary cursor-pointer">
+                {item.label}
               </Link>
             ))
           }
@@ -32,9 +37,14 @@ function Footer() {
         <div className="flex flex-col gap-4">
           <h3 className="font-semibold mb-2 text-lg">Company</h3>
           {
-            ["About us", "Careers", "Forums", "Announcements"].map(item => (
-              <Link to={item} key={item} className="text-gray-500 hover:text-primary cursor-pointer">
-                {item}
+            [
+              { label: "About us", to: "/about-us" },
+              { label: "Careers", to: "/careers" },
+              { label: "Forums", to: "/forum" },
+              { label: "Announcements", to: "/announcements" },
+            ].map(item => (
+              <Link to={item.to} key={item.label} className="text-gray-500 hover:text-primary cursor-pointer">
+                {item.label}
               </Link>
             ))
           }

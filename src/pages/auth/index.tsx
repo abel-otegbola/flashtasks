@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./login";
 import SuccessPage from "./success";
 import SignupPage from "./signup";
-import LogoIcon from "../../assets/icons/logo";
 import Slider from "../../components/slider/slider";
 import { useEffect, useState } from "react";
 import ForgotPassword from "./forgot-password";
@@ -37,7 +36,7 @@ const slides = [
   return (
     <div className="min-h-[400px] flex justify-between">
 
-      <div className="relative bg-[url('/hero-bg3.png')] bg-cover bg-center md:w-[45%] h-[96vh] rounded-[12px] m-4 sticky top-0 md:block hidden">
+      <div className="relative bg-[url('/hero-bg.png')] bg-cover bg-center md:w-[45%] h-[96vh] rounded-[12px] m-4 sticky top-0 md:block hidden">
         <div className="flex flex-col gap-6 p-[10%] h-full justify-end w-full rounded-[12px]">
 
           <div className="flex flex-col gap-6 w-full">
@@ -62,6 +61,7 @@ const slides = [
           <Route path="/signup/success" element={<SuccessPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
 
     </div>

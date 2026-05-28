@@ -20,7 +20,10 @@ function Home() {
   const theme = useTheme();
   return (
     <main className="w-full dark:bg-dark-bg dark:text-gray-100 pb-20">
-      <header className="flex flex-col justify-center items-center w-full bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.4] py-20">
+      <header className="relative flex flex-col justify-center items-center w-full bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.4] py-20">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(69,180,75,0.16),_transparent_42%),linear-gradient(180deg,_rgba(246,246,246,0.65),_rgba(246,246,246,0.25))] dark:bg-[radial-gradient(circle_at_top,_rgba(69,180,75,0.18),_transparent_42%),linear-gradient(180deg,_rgba(28,28,32,0.95),_rgba(28,28,32,0.75))]" />
+      <div className="absolute left-[-8rem] top-[-6rem] h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+      <div className="absolute bottom-[-8rem] right-[-6rem] h-72 w-72 rounded-full bg-black/5 blur-3xl dark:bg-white/10" />
         
         <div className="flex flex-col text-center items-center justify-center gap-4 px-6">
           <div className=" px-4 py-2 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] animate-bounce">

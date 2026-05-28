@@ -72,6 +72,7 @@ function AccountPages() {
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/tasks/new" element={<CreateTask />} />
+                <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
             
             
