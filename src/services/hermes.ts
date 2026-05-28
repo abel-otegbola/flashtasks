@@ -8,7 +8,7 @@ type SlackConnectResponse = {
 type EmailConnectResponse = SlackConnectResponse;
 
 const getBackendBaseUrl = () => {
-  const configuredBaseUrl = 'https://flashtasks.app';
+  const configuredBaseUrl = 'https://www.flashtasks.app';
   return configuredBaseUrl.replace(/\/$/, '');
 };
 
