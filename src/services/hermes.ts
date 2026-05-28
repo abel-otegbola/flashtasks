@@ -8,7 +8,7 @@ type SlackConnectResponse = {
 type EmailConnectResponse = SlackConnectResponse;
 
 const getBackendBaseUrl = () => {
-  const configuredBaseUrl = import.meta.env.VITE_BACKEND_URL || 'https://flashtasks.app';
+  const configuredBaseUrl = window.location.origin;
   return configuredBaseUrl.replace(/\/$/, '');
 };
 
