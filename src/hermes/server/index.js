@@ -419,7 +419,7 @@ const connectEmail = async (req, res, url, body) => {
   if (!allowMethods(req, res, ['POST'])) return;
 
   const tenant = resolveTenant(req, body);
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.GMAIL_CLIENT_ID;
+  const clientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || process.env.GMAIL_CLIENT_ID;
   const redirectUri = body.redirectUri || process.env.GOOGLE_REDIRECT_URI || process.env.GMAIL_REDIRECT_URI;
 
   if (!clientId || !redirectUri) {
@@ -539,8 +539,8 @@ const callbackEmail = async (req, res, url, body) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID || process.env.GMAIL_CLIENT_ID || '',
-      client_secret: process.env.GOOGLE_CLIENT_SECRET || process.env.GMAIL_CLIENT_SECRET || '',
+      client_id: process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || process.env.GMAIL_CLIENT_ID || '',
+      client_secret: process.env.VITE_GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || process.env.GMAIL_CLIENT_SECRET || '',
       code,
       grant_type: 'authorization_code',
       redirect_uri: redirectUri || '',
