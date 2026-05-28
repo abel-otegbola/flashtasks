@@ -1,7 +1,7 @@
 export type HermesProvider = 'slack' | 'gmail';
 
 export type HermesTenant = {
-  organizationId: string;
+  organizationId?: string;
   workspaceId?: string;
   userId?: string;
   userEmail?: string;
@@ -12,8 +12,10 @@ export type HermesIntegrationStatus = 'connected' | 'disconnected' | 'error';
 
 export interface ConnectedAccount {
   $id?: string;
+  $createdAt?: string;
+  $updatedAt?: string;
   provider: HermesProvider;
-  organizationId: string;
+  organizationId?: string;
   workspaceId?: string;
   userId?: string;
   userEmail?: string;
@@ -28,7 +30,6 @@ export interface ConnectedAccount {
   status: HermesIntegrationStatus;
   metadata?: string;
   connectedAt: string;
-  updatedAt: string;
 }
 
 export interface IntegrationModuleManifest {
@@ -38,24 +39,13 @@ export interface IntegrationModuleManifest {
   supportsWebhooks: boolean;
 }
 
-export interface AutomationRule {
-  $id?: string;
-  organizationId: string;
-  workspaceId?: string;
-  userId?: string;
-  userEmail?: string;
-  name: string;
-  trigger: string;
-  conditions: string;
-  actions: string;
-  enabled: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type TaskScheduleStatus = 'unscheduled' | 'scheduled' | 'drafted' | 'sent' | 'failed';
 
 export interface ConversationThread {
   $id?: string;
-  organizationId: string;
+  $createdAt?: string;
+  $updatedAt?: string;
+  organizationId?: string;
   provider: HermesProvider;
   workspaceId?: string;
   accountId?: string;
@@ -67,44 +57,28 @@ export interface ConversationThread {
   lastOutboundAt?: string;
   status: 'open' | 'pending' | 'stalled' | 'closed';
   taskId?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface FollowupJob {
+export interface TaskSchedule {
   $id?: string;
-  organizationId: string;
-  userId?: string;
-  userEmail?: string;
-  threadKey: string;
+  $createdAt?: string;
+  $updatedAt?: string;
+  organizationId?: string;
   provider: HermesProvider;
-  jobType: 'schedule_reminder' | 'draft_followup' | 'send_followup' | 'create_task' | 'update_task_status';
-  status: 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled';
-  priority: 'low' | 'normal' | 'high';
-  payload: Record<string, unknown>;
-  runAt: string;
-  lastError?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ScheduledTask {
-  $id?: string;
-  organizationId: string;
   userId?: string;
   userEmail?: string;
-  followupJobId?: string;
   taskId?: string;
-  status: 'scheduled' | 'sent' | 'drafted' | 'failed';
-  dueAt: string;
+  status: TaskScheduleStatus;
+  scheduledAt: string;
+  scheduleSource?: 'hermes' | 'user' | 'integration';
   payload: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface ActivityLog {
   $id?: string;
-  organizationId: string;
+  $createdAt?: string;
+  $updatedAt?: string;
+  organizationId?: string;
   provider: HermesProvider;
   userId?: string;
   userEmail?: string;
@@ -113,13 +87,12 @@ export interface ActivityLog {
   message: string;
   severity: 'info' | 'warning' | 'error';
   payload: Record<string, unknown>;
-  createdAt: string;
 }
 
 export interface HermesEvent {
   provider: HermesProvider;
   eventType: string;
-  organizationId: string;
+  organizationId?: string;
   workspaceId?: string;
   accountId?: string;
   conversationId?: string;
@@ -131,7 +104,7 @@ export interface HermesEvent {
 }
 
 export interface HermesAction {
-  type: 'draft_followup' | 'send_followup' | 'create_task' | 'schedule_reminder' | 'update_task_status';
+  type: 'schedule_task' | 'update_task_status' | 'send_message';
   payload: Record<string, unknown>;
   dueAt?: string;
 }

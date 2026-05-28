@@ -264,7 +264,6 @@ export const buildIntegrationRecord = ({ provider, tenant, account, tokens, meta
   status: 'connected',
   metadata: JSON.stringify(metadata),
   connectedAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
 });
 
 const deriveKey = () => {
@@ -356,8 +355,6 @@ export const buildSlackThreadRecord = (tenant, event) => ({
   lastInboundAt: event.direction === 'inbound' ? event.occurredAt : '',
   lastOutboundAt: event.direction === 'outbound' ? event.occurredAt : '',
   status: event.direction === 'inbound' ? 'pending' : 'open',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
 });
 
 export const buildSlackActivityRecord = (tenant, event, message, severity = 'info') => ({
@@ -370,108 +367,7 @@ export const buildSlackActivityRecord = (tenant, event, message, severity = 'inf
   message,
   severity,
   payload: JSON.stringify(event),
-  createdAt: new Date().toISOString(),
 });
-
-export const buildSlackFollowupJob = (tenant, event, actionType, runAt, payload = {}) => ({
-  organizationId: tenant.organizationId || '',
-  userId: tenant.userId || '',
-  userEmail: tenant.userEmail || event.actorEmail || '',
-  threadKey: event.conversationId,
-  provider: normalizeProvider('slack'),
-  jobType: actionType,
-  status: 'queued',
-  priority: actionType === 'draft_followup' ? 'high' : 'normal',
-  payload: JSON.stringify({ ...payload, conversationId: event.conversationId, workspaceId: event.workspaceId }),
-  runAt,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-});
-
-export const defaultFollowupPolicy = {
-  replyWindowHours: 24,
-  reminderIntervalsHours: [24, 48, 72],
-  stallWindowHours: 48,
-};
-
-const hoursBetween = (earlier, later) => {
-  const start = new Date(earlier).getTime();
-  const end = new Date(later).getTime();
-  if (Number.isNaN(start) || Number.isNaN(end)) return 0;
-  return Math.max(0, (end - start) / (1000 * 60 * 60));
-};
-
-export const normalizeEvent = (event) => ({
-  provider: String(event.provider || '').toLowerCase(),
-  eventType: String(event.eventType || event.type || ''),
-  organizationId: event.organizationId || '',
-  workspaceId: event.workspaceId || '',
-  accountId: event.accountId || '',
-  conversationId: event.conversationId || event.threadId || '',
-  messageId: event.messageId || '',
-  direction: event.direction || 'inbound',
-  actorEmail: event.actorEmail || '',
-  occurredAt: event.occurredAt || new Date().toISOString(),
-  payload: event.payload || {},
-});
-
-export const evaluateFollowupRules = ({ thread, event, policy = defaultFollowupPolicy }) => {
-  const normalizedEvent = normalizeEvent(event);
-  const lastInboundAt = thread?.lastInboundAt || normalizedEvent.occurredAt;
-  const lastOutboundAt = thread?.lastOutboundAt || '';
-  const actions = [];
-
-  const hoursSinceInbound = hoursBetween(lastInboundAt, new Date().toISOString());
-  const hoursSinceOutbound = lastOutboundAt ? hoursBetween(lastOutboundAt, new Date().toISOString()) : Infinity;
-
-  if (normalizedEvent.direction === 'inbound') {
-    actions.push({
-      type: 'schedule_reminder',
-      dueAt: new Date(Date.now() + policy.replyWindowHours * 60 * 60 * 1000).toISOString(),
-      payload: {
-        conversationId: normalizedEvent.conversationId,
-        accountId: normalizedEvent.accountId,
-      },
-    });
-  }
-
-  if (hoursSinceInbound >= policy.stallWindowHours && hoursSinceOutbound >= policy.replyWindowHours) {
-    actions.push({
-      type: 'draft_followup',
-      payload: {
-        conversationId: normalizedEvent.conversationId,
-        reason: 'stalled_conversation',
-      },
-    });
-    actions.push({
-      type: 'update_task_status',
-      payload: {
-        conversationId: normalizedEvent.conversationId,
-        status: 'pending',
-      },
-    });
-  }
-
-  return {
-    event: normalizedEvent,
-    actions,
-    followupNeeded: actions.some((action) => action.type === 'draft_followup' || action.type === 'schedule_reminder'),
-  };
-};
-
-export const runAutomation = (context) => {
-  const decision = evaluateFollowupRules(context);
-  return {
-    ...decision,
-    queuedJobs: decision.actions.map((action, index) => ({
-      jobType: action.type,
-      status: 'queued',
-      priority: index === 0 ? 'high' : 'normal',
-      payload: action.payload,
-      runAt: action.dueAt || new Date().toISOString(),
-    })),
-  };
-};
 
 const getRequestBody = async (req, url) => {
   if (req.method === 'POST' || req.method === 'DELETE' || req.method === 'PUT' || req.method === 'PATCH') {
@@ -823,131 +719,6 @@ const integrationsDisconnect = async (req, res, body) => {
   });
 };
 
-const eventsIngest = async (req, res, body) => {
-  if (!allowMethods(req, res, ['POST'])) return;
-
-  const tenant = resolveTenant(req, body);
-  const payload = body.payload || body.event || {};
-
-  const result = runAutomation({
-    event: {
-      ...body,
-      ...payload,
-      organizationId: tenant.organizationId,
-      workspaceId: tenant.workspaceId,
-      userId: tenant.userId,
-      userEmail: tenant.userEmail,
-    },
-    thread: body.thread || null,
-  });
-
-  return sendJson(res, 200, {
-    received: true,
-    tenant,
-    result,
-  });
-};
-
-const eventsList = async (req, res, body) => {
-  if (!allowMethods(req, res, ['GET', 'POST'])) return;
-
-  const tenant = resolveTenant(req, body);
-  const collectionId = process.env.HERMES_ACTIVITY_LOGS_COLLECTION_ID || '';
-
-  if (!isHermesConfigured() || !collectionId) {
-    return sendJson(res, 200, { events: [], configured: false });
-  }
-
-  const queries = [];
-  if (tenant.organizationId) queries.push(`equal("organizationId", ["${tenant.organizationId}"])`);
-  if (tenant.workspaceId) queries.push(`equal("workspaceId", ["${tenant.workspaceId}"])`);
-  if (tenant.userId) queries.push(`equal("userId", ["${tenant.userId}"])`);
-  if (!tenant.userId && tenant.userEmail) queries.push(`equal("userEmail", ["${tenant.userEmail}"])`);
-
-  const response = await listDocuments(collectionId, queries);
-
-  return sendJson(res, 200, {
-    events: response.documents || [],
-    configured: true,
-  });
-};
-
-const automationCreate = async (req, res, body) => {
-  if (!allowMethods(req, res, ['POST'])) return;
-
-  const tenant = resolveTenant(req, body);
-  const collectionId = process.env.HERMES_AUTOMATION_RULES_COLLECTION_ID || '';
-
-  if (!body.name || !body.trigger) {
-    return sendError(res, 400, 'Missing automation name or trigger');
-  }
-
-  const record = {
-    organizationId: tenant.organizationId || '',
-    workspaceId: tenant.workspaceId || '',
-    userId: tenant.userId || '',
-    userEmail: tenant.userEmail || '',
-    name: body.name,
-    trigger: JSON.stringify(body.trigger),
-    conditions: JSON.stringify(body.conditions || []),
-    actions: JSON.stringify(body.actions || []),
-    enabled: body.enabled !== false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  const documentId = buildDocumentId('rule', tenant, body.name);
-
-  if (isHermesConfigured() && collectionId) {
-    await createDocument(collectionId, documentId, record);
-  }
-
-  return sendJson(res, 200, {
-    created: true,
-    automation: {
-      id: documentId,
-      ...record,
-    },
-    stored: Boolean(isHermesConfigured() && collectionId),
-  });
-};
-
-const automationExecute = async (req, res, body) => {
-  if (!allowMethods(req, res, ['POST'])) return;
-
-  const result = runAutomation({
-    event: body.event || body,
-    thread: body.thread || null,
-    policy: body.policy || undefined,
-  });
-
-  return sendJson(res, 200, {
-    executed: true,
-    result,
-  });
-};
-
-const followupsQueue = async (req, res) => {
-  if (!allowMethods(req, res, ['GET'])) return;
-
-  const collectionId = process.env.HERMES_FOLLOWUP_JOBS_COLLECTION_ID || '';
-
-  if (!isHermesConfigured() || !collectionId) {
-    return sendJson(res, 200, { jobs: [], configured: false });
-  }
-
-  const now = new Date().toISOString();
-  const response = await listDocuments(collectionId, [
-    'equal("status", ["queued"])',
-    `lessThanEqual("runAt", "${now}")`,
-  ]);
-
-  return sendJson(res, 200, {
-    jobs: response.documents || [],
-    configured: true,
-  });
-};
-
 const slackWebhook = async (req, res, bodyText) => {
   if (!allowMethods(req, res, ['POST'])) return;
 
@@ -987,7 +758,6 @@ const slackWebhook = async (req, res, bodyText) => {
 
   const collectionThreadsId = process.env.HERMES_CONVERSATION_THREADS_COLLECTION_ID || '';
   const collectionLogsId = process.env.HERMES_ACTIVITY_LOGS_COLLECTION_ID || '';
-  const collectionJobsId = process.env.HERMES_FOLLOWUP_JOBS_COLLECTION_ID || '';
 
   if (isHermesConfigured()) {
     if (collectionThreadsId) {
@@ -997,7 +767,6 @@ const slackWebhook = async (req, res, bodyText) => {
       await createDocument(collectionThreadsId, threadDocumentId, threadRecord).catch(async () => {
         await updateDocument(collectionThreadsId, threadDocumentId, {
           ...threadRecord,
-          updatedAt: new Date().toISOString(),
         });
       });
     }
@@ -1008,25 +777,6 @@ const slackWebhook = async (req, res, bodyText) => {
         makeDocumentId(`${event.messageId || event.conversationId}_${Date.now()}`),
         buildSlackActivityRecord(tenant, event, `Slack ${event.direction} event captured`)
       ).catch(() => {});
-    }
-
-    const evaluation = evaluateFollowupRules({
-      event,
-      thread: {
-        lastInboundAt: event.direction === 'inbound' ? event.occurredAt : '',
-        lastOutboundAt: event.direction === 'outbound' ? event.occurredAt : '',
-      },
-      policy: defaultFollowupPolicy,
-    });
-
-    if (collectionJobsId && evaluation.actions.length > 0) {
-      for (const action of evaluation.actions) {
-        await createDocument(
-          collectionJobsId,
-          makeDocumentId(`${action.type}_${event.conversationId}_${Date.now()}`),
-          buildSlackFollowupJob(tenant, event, action.type, action.dueAt || new Date().toISOString(), action.payload)
-        ).catch(() => {});
-      }
     }
   }
 
@@ -1067,11 +817,6 @@ const handleRoute = async (req, res, url, body, rawBody) => {
         '/api/hermes/integrations/slack/send',
         '/api/hermes/integrations/list',
         '/api/hermes/integrations/disconnect',
-        '/api/hermes/events/ingest',
-        '/api/hermes/events/list',
-        '/api/hermes/automation/create',
-        '/api/hermes/automation/execute',
-        '/api/hermes/followups/queue',
         '/api/hermes/webhooks/slack',
         '/api/hermes/webhooks/gmail',
       ],
@@ -1089,20 +834,6 @@ const handleRoute = async (req, res, url, body, rawBody) => {
     if (provider === 'list' || (provider === undefined && action === undefined)) return integrationsList(req, res, body);
     if (provider === 'disconnect' || provider === undefined && action === 'disconnect') return integrationsDisconnect(req, res, body);
     if (provider === 'list') return integrationsList(req, res, body);
-  }
-
-  if (section === 'events') {
-    if (provider === 'ingest' || segments[1] === 'ingest') return eventsIngest(req, res, body);
-    if (provider === 'list' || segments[1] === 'list') return eventsList(req, res, body);
-  }
-
-  if (section === 'automation') {
-    if (provider === 'create' || segments[1] === 'create') return automationCreate(req, res, body);
-    if (provider === 'execute' || segments[1] === 'execute') return automationExecute(req, res, body);
-  }
-
-  if (section === 'followups' && (provider === 'queue' || segments[1] === 'queue')) {
-    return followupsQueue(req, res);
   }
 
   if (section === 'webhooks') {

@@ -16,6 +16,10 @@ export interface todo {
   priority?: 'low' | 'medium' | 'high';
   recurring?: boolean;
   dueDate?: string;
+  scheduledAt?: string;
+  scheduleStatus?: 'unscheduled' | 'scheduled' | 'drafted' | 'sent' | 'failed';
+  scheduleSource?: 'hermes' | 'user' | 'integration';
+  schedulePayload?: string;
   subtasks?: string;
   $createdAt: string;
   $updatedAt?: string;

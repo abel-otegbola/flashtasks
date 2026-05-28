@@ -1,6 +1,6 @@
 # Hermes
 
-Hermes is the execution layer for proactive follow-up automation in FlashTasks. It is not a chatbot. The MVP focuses on deterministic workflows for Slack and Gmail, with shared automation primitives that can later power WhatsApp, SMS, or marketplace workflows.
+Hermes is the execution layer for lightweight message integration in FlashTasks. It is not a chatbot. The MVP focuses on Slack and Gmail connection flows plus simple task scheduling metadata.
 
 ## Architecture
 
@@ -20,10 +20,7 @@ flowchart LR
 - `api/hermes/integrations/core`: OAuth state, provider normalization, reusable integration record helpers
 - `api/hermes/integrations/slack`: Slack-specific OAuth and callback handlers
 - `api/hermes/integrations/email`: Gmail OAuth and callback handlers
-- `api/hermes/automation`: deterministic rule evaluation and execution
-- `api/hermes/events`: event ingestion entrypoint
-- `api/hermes/followups`: queue and pending job inspection
-- `src/hermes`: TypeScript interfaces for the automation domain
+- `src/hermes`: TypeScript interfaces for the Hermes domain
 
 ## Appwrite Schema
 
@@ -33,8 +30,10 @@ Provider metadata like names, descriptions, and active state can live in fronten
 
 ### `connected_accounts`
 
+`organizationId` is optional. Leave it blank for individual users.
+
 - `provider` string
-- `organizationId` string
+- `organizationId` string, optional
 - `workspaceId` string
 - `userId` string
 - `userEmail` string
@@ -49,54 +48,10 @@ Provider metadata like names, descriptions, and active state can live in fronten
 - `status` string
 - `metadata` string
 - `connectedAt` datetime
-- `updatedAt` datetime
-
-### `automation_rules`
-
-- `organizationId` string
-- `workspaceId` string
-- `userId` string
-- `userEmail` string
-- `name` string
-- `trigger` string
-- `conditions` string
-- `actions` string
-- `enabled` boolean
-- `createdAt` datetime
-- `updatedAt` datetime
-
-### `followup_jobs`
-
-- `organizationId` string
-- `userId` string
-- `userEmail` string
-- `threadKey` string
-- `provider` string
-- `jobType` string
-- `status` string
-- `priority` string
-- `payload` string
-- `runAt` datetime
-- `lastError` string
-- `createdAt` datetime
-- `updatedAt` datetime
-
-### `scheduled_tasks`
-
-- `organizationId` string
-- `userId` string
-- `userEmail` string
-- `followupJobId` string
-- `taskId` string
-- `status` string
-- `dueAt` datetime
-- `payload` string
-- `createdAt` datetime
-- `updatedAt` datetime
 
 ### `conversation_threads`
 
-- `organizationId` string
+- `organizationId` string, optional
 - `provider` string
 - `workspaceId` string
 - `accountId` string
@@ -108,12 +63,10 @@ Provider metadata like names, descriptions, and active state can live in fronten
 - `lastOutboundAt` datetime
 - `status` string
 - `taskId` string
-- `createdAt` datetime
-- `updatedAt` datetime
 
 ### `activity_logs`
 
-- `organizationId` string
+- `organizationId` string, optional
 - `provider` string
 - `userId` string
 - `userEmail` string
@@ -122,7 +75,18 @@ Provider metadata like names, descriptions, and active state can live in fronten
 - `message` string
 - `severity` string
 - `payload` string
-- `createdAt` datetime
+
+Appwrite provides `$createdAt` and `$updatedAt` automatically on these documents.
+
+### `tasks` collection fields used by Hermes
+
+Hermes can use the existing FlashTasks tasks collection instead of a separate scheduled-tasks collection. The task document can carry these optional fields when Hermes needs to mark a task as scheduled:
+
+- `scheduledAt` datetime
+- `scheduleStatus` string
+- `scheduleSource` string
+- `schedulePayload` string
+- `scheduleUpdatedAt` datetime
 
 ## API Endpoints
 
@@ -130,10 +94,6 @@ Provider metadata like names, descriptions, and active state can live in fronten
 - `GET|POST /api/hermes/integrations/slack/callback`
 - `POST /api/hermes/integrations/email/connect`
 - `GET|POST /api/hermes/integrations/email/callback`
-- `POST /api/hermes/events/ingest`
-- `POST /api/hermes/automation/create`
-- `POST /api/hermes/automation/execute`
-- `GET /api/hermes/followups/queue`
 
 Recommended follow-up endpoints to add next:
 
@@ -165,14 +125,6 @@ Recommended follow-up endpoints to add next:
 4. Callback exchanges the code for access and refresh tokens.
 5. Profile metadata is fetched and stored with the connected account.
 
-## Deterministic Follow-Up Rules
-
-Start without AI. Use fixed rules:
-
-- unanswered inbound message after 24 hours => schedule reminder
-- stalled conversation after 48 hours => draft follow-up and mark task pending
-- message thread reopened => reset reminder timers
-
 ## Implementation Order
 
 1. Create Appwrite collections and indexes.
@@ -180,9 +132,8 @@ Start without AI. Use fixed rules:
 3. Add Gmail OAuth connection and callback.
 4. Persist connected accounts with encrypted tokens.
 5. Ingest events and normalize threads.
-6. Evaluate follow-up rules and enqueue jobs.
-7. Execute queued jobs and update FlashTasks task state.
-8. Add disconnect/list APIs and webhook handlers.
+6. Update the existing FlashTasks task document when Hermes needs to mark a task as scheduled or pending.
+7. Add disconnect/list APIs and webhook handlers.
 
 ## Env Vars
 
@@ -191,10 +142,9 @@ Start without AI. Use fixed rules:
 - `APPWRITE_API_KEY`
 - `APPWRITE_DATABASE_ID`
 - `HERMES_CONNECTED_ACCOUNTS_COLLECTION_ID`
-- `HERMES_AUTOMATION_RULES_COLLECTION_ID`
-- `HERMES_FOLLOWUP_JOBS_COLLECTION_ID`
 - `HERMES_TOKEN_ENCRYPTION_SECRET`
 - `HERMES_OAUTH_STATE_SECRET`
+- `HERMES_TASKS_COLLECTION_ID`
 - `SLACK_CLIENT_ID`
 - `SLACK_CLIENT_SECRET`
 - `SLACK_REDIRECT_URI`
