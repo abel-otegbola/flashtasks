@@ -81,8 +81,8 @@ export default function TaskDetailsModal({ isOpen, onClose, task, permissions }:
   const taskOrg = organizations?.find(o => o.$id === (activeTask as any).organizationId);
   const ownTask = activeTask.userEmail === user?.email;
   const assignedTask = Array.isArray(activeTask?.assignees) && activeTask.assignees.includes(user?.email);
-  const canEdit = !activeTask.organizationId || ((permissions && (permissions.includes("edit_tasks") || permissions.includes("edit_tasks"))) && (ownTask || assignedTask));
-  const canDelete = !activeTask.organizationId || ((permissions && (permissions.includes("delete_tasks") || permissions.includes("edit_tasks"))) && (ownTask || assignedTask));
+  const canEdit = !activeTask.organizationId || ((permissions && (permissions.includes("edit_tasks") || permissions.includes("edit_tasks"))) || (ownTask || assignedTask));
+  const canDelete = !activeTask.organizationId || ((permissions && (permissions.includes("delete_tasks") || permissions.includes("edit_tasks"))) || (ownTask || assignedTask));
   const canComplete = !activeTask.organizationId || ((permissions && permissions.includes("complete_tasks")) || (ownTask || assignedTask));
 
   useEffect(() => {

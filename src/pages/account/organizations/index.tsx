@@ -102,6 +102,7 @@ export default function OrganizationsPage() {
   };
 
   const handleRemoveMember = async (memberId: string) => {
+    console.log("Removing member with ID:", memberId);
     if (!currentOrg) return;
     await removeMemberFromOrg(currentOrg.$id, memberId);
   };
@@ -127,8 +128,8 @@ export default function OrganizationsPage() {
         <h1 className="text-2xl font-semibold">Organizations</h1>
         <Button onClick={() => setShowCreate(true)} size="small">Create Organization</Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 flex-1 mb-4 bg-white dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2] rounded-lg">
-        <div className="col-span-1 md:p-6 p-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 md:flex-1 mb-4 bg-white dark:bg-dark-bg border border-gray-500/[0.1] dark:border-gray-500/[0.2] rounded-lg">
+        <div className="md:col-span-1 md:p-6 p-4">
           <h3 className="mb-4 text-sm text-gray-400">Your organizations</h3>
           <div className="flex flex-col gap-2">
             {organizations.length === 0 && <div className="text-gray-500">No organizations yet</div>}
@@ -148,7 +149,7 @@ export default function OrganizationsPage() {
           </div>
         </div>
 
-        <div className="col-span-3 md:border-l border-gray-500/[0.1] dark:border-gray-500/[0.2] md:p-6 p-4">
+        <div className="md:col-span-3 md:border-l border-gray-500/[0.1] dark:border-gray-500/[0.2] md:p-6 p-4">
           {!currentOrg ? (
             <div className="text-gray-500">Select an organization to manage teams and members.</div>
           ) : (
@@ -405,7 +406,7 @@ export default function OrganizationsPage() {
                                         text="This will revoke their access to all organization resources."
                                         buttonText="Remove"
                                         setOpen={setConfirmRemoveMember}
-                                        onConfirm={() => handleRemoveMember(m.$id)}
+                                        onConfirm={() => {handleRemoveMember(m.$id); setConfirmRemoveMember(false);}}
                                        />
                                      )
                                   }

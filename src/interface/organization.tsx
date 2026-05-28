@@ -2,6 +2,7 @@ export const OWNER_PERMISSIONS = [
   'create_task',
   'edit_tasks',
   'delete_task',
+  'delete_tasks',
   'assign_task',
   'complete_tasks',
   'view_task',

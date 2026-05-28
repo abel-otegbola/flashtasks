@@ -24,7 +24,7 @@ export default function Confirmationmessage({ title, text, buttonText = "Delete"
                 </div>
                 <p className='p-4 text-center max-w-[250px] mx-auto text-[12px]'>{text}</p>
 
-                <div className="p-4 flex justify-center items-center gap-4">
+                <div className="p-4 flex justify-center items-center gap-4 z-5">
                     <Button variant="secondary" size="small" onClick={() => setOpen(false)}>Cancel</Button>
                     <Button onClick={onConfirm} size="small" disabled={loading}>
                         {loading ? 'Processing...' : buttonText}
