@@ -68,6 +68,7 @@ export const upsertDocument = async (collectionId, documentId, data) => {
   try {
     return await createDocument(collectionId, documentId, data);
   } catch (error) {
+    console.log(error)
     return updateDocument(collectionId, documentId, data);
   }
 };

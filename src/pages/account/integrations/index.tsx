@@ -1,107 +1,133 @@
 "use client";
-import { useMemo, useState } from "react";
-import Button from "../../../components/button/button";
-import { connectEmail, connectSlack } from "../../../services/hermes";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
+import IntegrationStatusCard from "../../../components/integrations/integrationStatusCard";
+import { startIntegration } from "../../../services/hermes";
 import { useUser } from "../../../context/authContext";
-import toast from "react-hot-toast";
+import { useOrganizations } from "../../../context/organizationContext";
+import {
+  createDefaultIntegrationConnectionStore,
+  readIntegrationConnectionStore,
+  type IntegrationConnectionStore,
+  updateIntegrationConnectionStore,
+} from "../../../helpers/hermesIntegrationState";
+import type { HermesProvider } from "../../../hermes/types";
 
 type PlatformCard = {
-  id: string;
+  id: HermesProvider;
   name: string;
   description: string;
-  status: 'available' | 'coming-soon';
 };
 
 export default function IntegrationsPage() {
   const { user } = useUser();
-  const [connecting, setConnecting] = useState<string | null>(null);
+  const { currentOrg } = useOrganizations();
+  const [connecting, setConnecting] = useState<HermesProvider | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [connectionStore, setConnectionStore] = useState<IntegrationConnectionStore>(createDefaultIntegrationConnectionStore());
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const resolvedCurrentUserId = currentUserId || (user as any)?.$id || (user as any)?.userId || "";
+  const resolvedWorkspaceId = workspaceId || currentOrg?.$id || null;
 
   const platforms = useMemo<PlatformCard[]>(() => ([
     {
       id: 'slack',
       name: 'Slack',
       description: 'Connect Slack to track conversations, detect follow-ups, and send reminders automatically.',
-      status: 'available',
     },
     {
       id: 'gmail',
       name: 'Gmail',
       description: 'Connect Gmail to monitor threads, schedule reminders, and draft follow-up replies.',
-      status: 'available',
-    },
-    {
-      id: 'whatsapp',
-      name: 'WhatsApp',
-      description: 'Planned next. Hermes will support follow-ups across more channels soon.',
-      status: 'coming-soon',
     },
   ]), []);
 
-  const startConnect = async (platformId: string) => {
-    if (!user) {
+  useEffect(() => {
+    setCurrentUserId((user as any)?.$id || (user as any)?.userId || "");
+  }, [user]);
+
+  useEffect(() => {
+    setConnectionStore(readIntegrationConnectionStore());
+  }, []);
+
+  useEffect(() => {
+    setWorkspaceId(currentOrg?.$id || null);
+  }, [currentOrg?.$id]);
+
+  const persistConnectionStore = (nextStore: IntegrationConnectionStore) => {
+    setConnectionStore(nextStore);
+  };
+
+  const startConnect = async (platformId: HermesProvider) => {
+    if (!resolvedCurrentUserId) {
       toast.error('Sign in to connect an integration');
+      setErrorMessage('Sign in to connect an integration');
       return;
     }
 
     setConnecting(platformId);
+    setErrorMessage(null);
+
+    const pendingStore = updateIntegrationConnectionStore(platformId, {
+      status: 'pending',
+      userId: resolvedCurrentUserId,
+      workspaceId: resolvedWorkspaceId,
+      error: null,
+    });
+    persistConnectionStore(pendingStore);
 
     try {
-      const tenant = {
-        userId: (user as any).$id || (user as any).userId || '',
-        organizationId: (user as any).organizationId || '',
-        workspaceId: (user as any).workspaceId || '',
-        accountId: (user as any).accountId || '',
-      };
+      const result = await startIntegration(platformId, {
+        userId: resolvedCurrentUserId,
+        workspaceId: resolvedWorkspaceId || "",
+      });
 
-      const result = platformId === 'slack'
-        ? await connectSlack(tenant)
-        : await connectEmail(tenant);
-
-      window.location.href = result.authorizationUrl;
+      window.location.assign(result.authUrl);
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to start connection');
+      const message = error?.message || 'Failed to start connection';
+      toast.error(message);
+      setErrorMessage(message);
+
+      const failedStore = updateIntegrationConnectionStore(platformId, {
+        status: 'failed',
+        userId: resolvedCurrentUserId,
+        workspaceId: resolvedWorkspaceId,
+        error: message,
+      });
+      persistConnectionStore(failedStore);
     } finally {
       setConnecting(null);
     }
   };
 
   return (
-    <div className="bg-white dark:bg-dark-bg p-4 md:m-0 mx-4 rounded-lg border border-gray-200 dark:border-gray-500/[0.2]">
-      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
+    <div className="rounded-[28px] border border-gray-200 bg-white p-4 shadow-[0_10px_50px_rgba(15,23,42,0.04)] dark:border-gray-500/[0.2] dark:bg-dark-bg md:m-0 mx-4">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Integrations</h1>
-          <p className="text-sm text-gray-500">Connect channels Hermes can monitor and act on.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">Hermes integration layer</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">Integrations</h1>
+          <p className="mt-2 max-w-2xl text-sm text-gray-500 dark:text-gray-300">Connect channels Hermes can monitor and act on. FlashTasks sends the user and optional workspace context to the backend before redirecting to the provider auth URL.</p>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {errorMessage ? (
+        <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-200">
+          {errorMessage}
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
         {platforms.map((platform) => (
-          <div key={platform.id} className="rounded-xl border border-gray-500/[0.1] p-5 bg-gray-50 dark:bg-dark-bg flex flex-col gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">{platform.name}</h2>
-              <p className="text-sm text-gray-500 mt-1">{platform.description}</p>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 mt-auto">
-              <span className={`text-xs px-2 py-1 rounded-full ${platform.status === 'available' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
-                {platform.status === 'available' ? 'Available' : 'Coming soon'}
-              </span>
-
-              {platform.status === 'available' ? (
-                <Button
-                  size="small"
-                  onClick={() => startConnect(platform.id)}
-                  disabled={connecting === platform.id}
-                >
-                  {connecting === platform.id ? 'Connecting...' : `Connect ${platform.name}`}
-                </Button>
-              ) : (
-                <Button size="small" variant="secondary" disabled>
-                  Soon
-                </Button>
-              )}
-            </div>
-          </div>
+          <IntegrationStatusCard
+            key={platform.id}
+            provider={platform.id}
+            title={platform.name}
+            description={platform.description}
+            status={connectionStore[platform.id] || createDefaultIntegrationConnectionStore()[platform.id]}
+            isConnecting={connecting === platform.id}
+            onConnect={() => startConnect(platform.id)}
+          />
         ))}
       </div>
     </div>
