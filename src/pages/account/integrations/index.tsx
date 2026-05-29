@@ -4,10 +4,9 @@ import { toast } from "react-hot-toast";
 import IntegrationStatusCard from "../../../components/integrations/integrationStatusCard";
 import { startIntegration } from "../../../services/hermes";
 import { useUser } from "../../../context/authContext";
-import { useOrganizations } from "../../../context/organizationContext";
+import { useTasks } from "../../../context/tasksContext";
 import {
   createDefaultIntegrationConnectionStore,
-  readIntegrationConnectionStore,
   type IntegrationConnectionStore,
   updateIntegrationConnectionStore,
 } from "../../../helpers/hermesIntegrationState";
@@ -21,14 +20,12 @@ type PlatformCard = {
 
 export default function IntegrationsPage() {
   const { user } = useUser();
-  const { currentOrg } = useOrganizations();
+  const { getIntegrations, loading } = useTasks();
   const [connecting, setConnecting] = useState<HermesProvider | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [connectionStore, setConnectionStore] = useState<IntegrationConnectionStore>(createDefaultIntegrationConnectionStore());
-  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const resolvedCurrentUserId = currentUserId || (user as any)?.$id || (user as any)?.userId || "";
-  const resolvedWorkspaceId = workspaceId || currentOrg?.$id || null;
 
   const platforms = useMemo<PlatformCard[]>(() => ([
     {
@@ -44,16 +41,19 @@ export default function IntegrationsPage() {
   ]), []);
 
   useEffect(() => {
-    setCurrentUserId((user as any)?.$id || (user as any)?.userId || "");
+    getIntegrations(user?.$id)
+    .then((store) => {
+      setConnectionStore(store);
+    })
+    .catch((error) => {
+      console.error('Failed to fetch integrations', error);
+      toast.error('Failed to fetch integrations');
+    });
   }, [user]);
 
   useEffect(() => {
-    setConnectionStore(readIntegrationConnectionStore());
-  }, []);
-
-  useEffect(() => {
-    setWorkspaceId(currentOrg?.$id || null);
-  }, [currentOrg?.$id]);
+    setCurrentUserId((user as any)?.$id || (user as any)?.userId || "");
+  }, [user]);
 
   const persistConnectionStore = (nextStore: IntegrationConnectionStore) => {
     setConnectionStore(nextStore);
@@ -72,7 +72,7 @@ export default function IntegrationsPage() {
     const pendingStore = updateIntegrationConnectionStore(platformId, {
       status: 'pending',
       userId: resolvedCurrentUserId,
-      workspaceId: resolvedWorkspaceId,
+      workspaceId: null,
       error: null,
     });
     persistConnectionStore(pendingStore);
@@ -80,7 +80,7 @@ export default function IntegrationsPage() {
     try {
       const result = await startIntegration(platformId, {
         userId: resolvedCurrentUserId,
-        workspaceId: resolvedWorkspaceId || "",
+        workspaceId: undefined,
       });
 
       window.location.assign(result.authUrl);
@@ -92,7 +92,7 @@ export default function IntegrationsPage() {
       const failedStore = updateIntegrationConnectionStore(platformId, {
         status: 'failed',
         userId: resolvedCurrentUserId,
-        workspaceId: resolvedWorkspaceId,
+        workspaceId: null,
         error: message,
       });
       persistConnectionStore(failedStore);

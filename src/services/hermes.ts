@@ -1,3 +1,5 @@
+import { Query } from 'appwrite';
+import { databases } from '../appwrite/appwrite';
 import type { HermesProvider, HermesTenant } from '../hermes/types';
 
 export type ApiBaseResponse = {
@@ -28,6 +30,20 @@ export type HermesRunResponse = ApiBaseResponse & {
 
 export type HermesRunsResponse = ApiBaseResponse & {
   runs: Array<Record<string, unknown>>;
+};
+
+export type ConnectedAccountRecord = Record<string, unknown> & {
+  provider?: HermesProvider;
+  status?: string;
+  connectedAt?: string;
+  updatedAt?: string;
+  $createdAt?: string;
+  $updatedAt?: string;
+};
+
+export type ConnectedIntegrationsResponse = ApiBaseResponse & {
+  connectedAccounts: ConnectedAccountRecord[];
+  configured?: boolean;
 };
 
 export type HermesRunRequest = {
@@ -113,6 +129,40 @@ export async function runHermesTask(payload: HermesRunRequest): Promise<HermesRu
 
 export async function listHermesRuns(): Promise<HermesRunsResponse> {
   return requestJson<HermesRunsResponse>('/hermes/runs', { method: 'GET' });
+}
+
+export async function listConnectedIntegrations(tenant: HermesTenant): Promise<ConnectedIntegrationsResponse> {
+  const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
+
+  if (!databaseId) {
+    throw new Error('Missing VITE_APPWRITE_DATABASE_ID environment variable');
+  }
+
+  const queries: string[] = [];
+
+  if (tenant.userId) {
+    queries.push(Query.equal('userId', tenant.userId));
+  }
+
+  if (tenant.workspaceId) {
+    queries.push(Query.equal('workspaceId', tenant.workspaceId));
+  }
+
+  if (!tenant.userId && tenant.userEmail) {
+    queries.push(Query.equal('userEmail', tenant.userEmail));
+  }
+
+  if (tenant.organizationId) {
+    queries.push(Query.equal('organizationId', tenant.organizationId));
+  }
+
+  const response = await databases.listDocuments(databaseId, 'integration', queries);
+
+  return {
+    ok: true,
+    connectedAccounts: (response.documents || []) as ConnectedAccountRecord[],
+    configured: true,
+  };
 }
 
 export async function getHealth(): Promise<ApiBaseResponse> {

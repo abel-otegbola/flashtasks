@@ -7,6 +7,22 @@ import toast from "react-hot-toast";
 import { indexTask } from '../services/indexer';
 import { useOrganizations } from './organizationContext';
 import { useUser } from './authContext';
+import {
+    createDefaultIntegrationConnectionStore,
+    type IntegrationConnectionStore,
+} from '../helpers/hermesIntegrationState';
+
+export type IntegrationRecord = {
+    $id: string;
+    provider?: 'slack' | 'gmail' | string;
+    userId?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresAt?: string;
+    $createdAt?: string;
+    $updatedAt?: string;
+    [key: string]: unknown;
+};
 
 type TasksContextValues = {
     tasks: todo[];
@@ -18,6 +34,7 @@ type TasksContextValues = {
     deleteTask: (taskId: string) => Promise<void>;
     getTasks: (userEmail: string) => Promise<void>;
     getOrganizationTasks: (orgId: string) => Promise<void>;
+    getIntegrations: (userId: string) => Promise<IntegrationConnectionStore>;
     getTaskById: (taskId: string) => todo | undefined;
     filterTasksByStatus: (status: todo['status']) => todo[];
     filterTasksByCategory: (category: string) => todo[];
@@ -34,6 +51,7 @@ export function useTasks() {
 // Appwrite configuration - Update these with your actual values
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'YOUR_DATABASE_ID';
 const TASKS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_TASKS_COLLECTION_ID || 'YOUR_TASKS_COLLECTION_ID';
+const INTEGRATIONS_COLLECTION_ID = 'integrations';
 
 const getTaskOrderIndex = (task: todo) => typeof task.orderIndex === 'number' ? task.orderIndex : Number.MAX_SAFE_INTEGER;
 
@@ -205,6 +223,67 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             setError(errorMessage);
             toast.error(errorMessage);
             console.error('Error fetching tasks:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getIntegrations = async (userId: string): Promise<IntegrationConnectionStore> => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const queries = [
+                Query.equal('userId', userId),
+                Query.limit(100),
+            ];
+
+            const response = await databases.listDocuments(
+                DATABASE_ID,
+                INTEGRATIONS_COLLECTION_ID,
+                queries,
+            );
+
+            const documents = (response.documents || []) as unknown as IntegrationRecord[];
+            const store = createDefaultIntegrationConnectionStore();
+
+            for (const document of documents) {
+                const provider = document.provider === 'gmail' || document.provider === 'slack' ? document.provider : null;
+
+                if (!provider) {
+                    continue;
+                }
+
+                const existing = store[provider];
+                const currentTime = new Date(String(document.$updatedAt || document.$createdAt || 0)).getTime();
+                const existingTime = new Date(String(existing.updatedAt || existing.lastConnectedAt || 0)).getTime();
+
+                if (existing.status === 'connected' && currentTime <= existingTime) {
+                    continue;
+                }
+
+                const connectedAt = String(document.$updatedAt || document.$createdAt || '');
+                const isConnected = Boolean(document.accessToken);
+
+                store[provider] = {
+                    provider,
+                    status: isConnected ? 'connected' : 'disconnected',
+                    lastConnectedAt: connectedAt || null,
+                    accountId: String(document.$id || '') || null,
+                    userId: String(document.userId || user?.$id || '') || null,
+                    workspaceId: null,
+                    error: null,
+                    updatedAt: String(document.$updatedAt || document.$createdAt || new Date().toISOString()),
+                };
+            }
+
+            return store;
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to fetch integrations';
+            setError(errorMessage);
+            toast.error(errorMessage);
+            console.error('Error fetching integrations:', err);
+            return createDefaultIntegrationConnectionStore();
         } finally {
             setLoading(false);
         }
@@ -496,6 +575,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         deleteTask,
         getTasks,
         getOrganizationTasks,
+        getIntegrations,
         getTaskById,
         filterTasksByStatus,
         filterTasksByCategory,

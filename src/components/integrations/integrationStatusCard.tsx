@@ -74,9 +74,15 @@ function IntegrationStatusCard({ provider, title, description, status, isConnect
 
       <div className="mt-auto flex items-center justify-between gap-3">
         <p className="text-sm text-slate-500 dark:text-slate-300">Provider: {provider}</p>
-        <Button size="small" onClick={onConnect} disabled={isConnecting}>
-          {isConnecting ? "Connecting..." : `Connect ${title}`}
-        </Button>
+        {
+            status.status === "connected" ? (
+                <Button size="small" variant="secondary" onClick={onConnect} disabled={isConnecting}>
+                    Disconnect
+                </Button>
+            ) : <Button size="small" onClick={onConnect} disabled={isConnecting}>
+                {isConnecting ? "Connecting..." : `Connect ${title}`}
+                </Button>
+        }
       </div>
     </section>
   );
