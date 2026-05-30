@@ -8,7 +8,7 @@ import { useTasks } from "../../../context/tasksContext";
 import {
   createDefaultIntegrationConnectionStore,
   type IntegrationConnectionStore,
-  updateIntegrationConnectionStore,
+  writeIntegrationConnectionStore,
 } from "../../../helpers/hermesIntegrationState";
 import type { HermesProvider } from "../../../hermes/types";
 
@@ -20,7 +20,7 @@ type PlatformCard = {
 
 export default function IntegrationsPage() {
   const { user } = useUser();
-  const { getIntegrations, loading } = useTasks();
+  const { getIntegrations } = useTasks();
   const [connecting, setConnecting] = useState<HermesProvider | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [connectionStore, setConnectionStore] = useState<IntegrationConnectionStore>(createDefaultIntegrationConnectionStore());
@@ -57,6 +57,25 @@ export default function IntegrationsPage() {
 
   const persistConnectionStore = (nextStore: IntegrationConnectionStore) => {
     setConnectionStore(nextStore);
+    writeIntegrationConnectionStore(nextStore);
+  };
+
+  const patchConnectionStore = (
+    provider: HermesProvider,
+    patch: Partial<IntegrationConnectionStore[HermesProvider]>
+  ) => {
+    const nextStore = {
+      ...connectionStore,
+      [provider]: {
+        ...connectionStore[provider],
+        ...patch,
+        provider,
+        updatedAt: new Date().toISOString(),
+      },
+    } as IntegrationConnectionStore;
+
+    persistConnectionStore(nextStore);
+    return nextStore;
   };
 
   const startConnect = async (platformId: HermesProvider) => {
@@ -69,13 +88,12 @@ export default function IntegrationsPage() {
     setConnecting(platformId);
     setErrorMessage(null);
 
-    const pendingStore = updateIntegrationConnectionStore(platformId, {
+    const pendingStore = patchConnectionStore(platformId, {
       status: 'pending',
       userId: resolvedCurrentUserId,
       workspaceId: null,
       error: null,
     });
-    persistConnectionStore(pendingStore);
 
     try {
       const result = await startIntegration(platformId, {
@@ -89,25 +107,26 @@ export default function IntegrationsPage() {
       toast.error(message);
       setErrorMessage(message);
 
-      const failedStore = updateIntegrationConnectionStore(platformId, {
+      const failedStore = patchConnectionStore(platformId, {
         status: 'failed',
         userId: resolvedCurrentUserId,
         workspaceId: null,
         error: message,
       });
-      persistConnectionStore(failedStore);
     } finally {
       setConnecting(null);
     }
   };
 
   return (
-    <div className="rounded-[28px] border border-gray-200 bg-white p-4 shadow-[0_10px_50px_rgba(15,23,42,0.04)] dark:border-gray-500/[0.2] dark:bg-dark-bg md:m-0 mx-4">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+    <div className="mx-4 rounded border border-gray-200 bg-white p-4 shadow-[0_10px_50px_rgba(15,23,42,0.04)] dark:border-gray-500/[0.2] dark:bg-dark-bg md:m-0">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">Hermes integration layer</p>
           <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">Integrations</h1>
-          <p className="mt-2 max-w-2xl text-sm text-gray-500 dark:text-gray-300">Connect channels Hermes can monitor and act on. FlashTasks sends the user and optional workspace context to the backend before redirecting to the provider auth URL.</p>
+          <p className="mt-2 max-w-2xl text-sm text-gray-500 dark:text-gray-300">
+            Connect channels Hermes can monitor and act on.
+          </p>
         </div>
       </div>
 
