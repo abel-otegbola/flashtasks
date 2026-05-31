@@ -6,33 +6,37 @@ import Input from '../../../components/input/input';
 import CreateOrganizationModal from '../../../components/modals/createOrganizationModal';
 import EditOrganizationModal from '../../../components/modals/editOrganizationModal';
 import AddMemberModal from '../../../components/modals/addMemberModal';
-import { PencilSimpleLineIcon, PlusIcon } from '@phosphor-icons/react';
+import AddTeamModal from '../../../components/modals/addTeamModal';
+import AddTeamMemberModal from '../../../components/modals/addTeamMemberModal';
+import { PencilSimpleLineIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { OrganizationSkeletonLoader } from '../../../components/skeletons';
 import Confirmationmessage from '../../../components/modals/confirmation';
-import { Organization, OWNER_PERMISSIONS } from '../../../interface/organization';
+import { Organization, OWNER_PERMISSIONS, Team } from '../../../interface/organization';
 import { useTasks } from '../../../context/tasksContext';
 import TaskListView from '../../../components/cards/taskListView';
 import { todo } from '../../../interface/todo';
 import TaskDetailsModal from '../../../components/modals/taskDetailsModal';
 import CreateTaskModal from '../../../components/modals/createTaskModal';
-import { formatDeliveredTime } from '../../../helpers/messageTime';
 import GetAvatar from '../../../customHooks/useGetAvatar';
 import { useUser } from '../../../context/authContext';
 
 export default function OrganizationsPage() {
   const orgCtx = useOrganizations();
-  const { organizations, currentOrg, invitedMembers, loadOrganizations, selectOrganization, addTeam, removeTeam, removeMemberFromOrg, deleteOrganization, getAllInvitedMembers, loading } = orgCtx;
+  const { organizations, currentOrg, teams, invitedMembers, loadOrganizations, loadTeams, selectOrganization, addTeam, updateTeam, removeTeam, removeMemberFromOrg, deleteOrganization, getAllInvitedMembers, loading } = orgCtx;
   const { tasks, getOrganizationTasks } = useTasks(); 
-  const [teamName, setTeamName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [showAddTeam, setShowAddTeam] = useState(false);
+  const [showAddTeamMembers, setShowAddTeamMembers] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(currentOrg || null);
   const [selectedTab, setSelectedTab] = useState("Tasks");
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
-  const [editingTeamName, setEditingTeamName] = useState('');
+  const [editingTeamTitle, setEditingTeamTitle] = useState('');
+  const [editingTeamDescription, setEditingTeamDescription] = useState('');
   const [editingTeamMembers, setEditingTeamMembers] = useState<string[]>([]);
   const [settingsName, setSettingsName] = useState('');
   const [settingsSlug, setSettingsSlug] = useState('');
@@ -47,13 +51,18 @@ export default function OrganizationsPage() {
   useEffect(() => {
     loadOrganizations()
   }, [])
+
+  useEffect(() => {
+    setSelectedOrg(currentOrg || null);
+  }, [currentOrg]);
   
   useEffect(() => {
-      getOrganizationTasks(selectedOrg?.$id || "");
-      if (selectedOrg) {
-        getAllInvitedMembers(selectedOrg?.$id || "");
-      }
-  }, [selectedOrg ]);
+      if (!selectedOrg?.$id) return;
+
+      getOrganizationTasks(selectedOrg.$id);
+      getAllInvitedMembers(selectedOrg.$id);
+      loadTeams(selectedOrg.$id);
+  }, [selectedOrg?.$id]);
 
   const initialLoading = loading && organizations.length === 0 && !currentOrg;
 
@@ -66,39 +75,29 @@ export default function OrganizationsPage() {
       setDetailsOpen(true);
   };
 
-  const openTeamEditor = (team: any) => {
+  const openTeamEditor = (team: Team) => {
     setEditingTeamId(team.$id);
-    setEditingTeamName(team.name || '');
+    setEditingTeamTitle(team.title || '');
+    setEditingTeamDescription(team.description || '');
     setEditingTeamMembers(team.members || []);
   };
 
   const closeTeamEditor = () => {
     setEditingTeamId(null);
-    setEditingTeamName('');
+    setEditingTeamTitle('');
+    setEditingTeamDescription('');
     setEditingTeamMembers([]);
   };
 
-  // const handleSaveTeam = async () => {
-  //   if (!currentOrg || !editingTeamId) return;
+  const handleSaveTeam = async () => {
+    if (!editingTeamId) return;
 
-  //   const nextTeams = (currentOrg.teams || []).map((team) => {
-  //     if (team.$id !== editingTeamId) return team;
-
-  //     return {
-  //       ...team,
-  //       name: editingTeamName.trim() || team.name,
-  //       members: editingTeamMembers,
-  //     };
-  //   });
-
-  //   await updateOrganization(currentOrg.$id, { teams: nextTeams });
-  //   closeTeamEditor();
-  // };
-
-  const handleAddTeam = async () => {
-    if (!teamName || !currentOrg) return;
-    await addTeam({ name: teamName });
-    setTeamName('');
+    await updateTeam(editingTeamId, {
+      title: editingTeamTitle.trim(),
+      description: editingTeamDescription.trim(),
+      members: editingTeamMembers,
+    });
+    closeTeamEditor();
   };
 
   const handleRemoveMember = async (memberId: string) => {
@@ -116,6 +115,16 @@ export default function OrganizationsPage() {
     if (!currentOrg) return;
     await deleteOrganization(currentOrg.$id);
     setShowDeleteConfirm(false);
+  };
+
+  const openAddTeamMembers = (team: Team) => {
+    setSelectedTeam(team);
+    setShowAddTeamMembers(true);
+  };
+
+  const getTeamMemberLabel = (memberId: string) => {
+    const member = invitedMembers.find((item) => item.$id === memberId || item.email === memberId || item.name === memberId);
+    return member?.name || member?.email || memberId;
   };
 
   if (initialLoading) {
@@ -158,7 +167,7 @@ export default function OrganizationsPage() {
               <div className='flex gap-4 justify-between flex-wrap mb-6'>
                 <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1 overflow-x-auto'>
                 {
-                  ["Tasks", "About", "members", "settings"].map((tab) => {
+                  ["Tasks", "About", "teams", "members", "settings"].map((tab) => {
                     if (tab === "settings" && !(isOwner || isAdmin)) return null;
                     else return (
                       <button key={tab} onClick={() => setSelectedTab(tab)} className={`py-2 px-1 text-sm capitalize rounded-tl rounded-tr ${tab === selectedTab ? 'border-b border-primary text-primary' : 'text-gray-500'}`}>
@@ -211,13 +220,9 @@ export default function OrganizationsPage() {
                 selectedTab === "About" && (
                   <div className="mb-4">
                     <h2 className="font-semibold text-lg mb-2">{currentOrg.name}</h2>
-                    {/* <p className="text-gray-500">{currentOrg.description}</p> */}
-                    
                     <div className="my-4">
-                      <p>{currentOrg.total || 0} members </p>
-                      {/* <p>{currentOrg.teams?.length || 0} teams</p> */}
+                      <p>{currentOrg.total || 0} members</p>
                     </div>
-                    
                     <div>
                       <Button variant='secondary' size="small" className='p-2 border border-gray-500/[0.1] rounded' onClick={() => { setSelectedOrg(currentOrg); setShowEdit(true); }}>
                         Edit Organization <PencilSimpleLineIcon size={14} />
@@ -228,71 +233,81 @@ export default function OrganizationsPage() {
               }
               {
                 selectedTab === "teams" && (
-                  <div className="mb-4">
-                    <div className="mb-4">
-                      <div className="flex justify-between items-center gap-2">
-                        <h4 className="font-semibold text-lg mb-2">Teams</h4>
-                        {/* <div className="flex items-center gap-2">
-                          <Input
-                            value={teamName}
-                            className="flex-1 py-[2px] bg-transparent"
-                            leftIcon={<GridFourIcon />}
-                            onKeyDown={(e) => (["Enter"].includes(e.key) ? handleAddTeam() : undefined)}
-                            onChange={(e: any) => setTeamName(e.target.value)}
-                            placeholder="Add team and press Enter"
-                          />
-                          <Button size="small" onClick={handleAddTeam} disabled={!teamName.trim()}>
-                            Add
-                          </Button>
-                        </div> */}
+                  <div className="mb-4 space-y-4">
+                    <div className="rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark/[0.4] p-4">
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
+                        <h4 className="font-semibold text-lg">Teams</h4>
+                        <span className="text-sm text-gray-500">{teams.length} team{teams.length === 1 ? '' : 's'}</span>
                       </div>
-                      <div className="flex flex-col gap-2 py-4">
-                        {/* {(currentOrg.teams || []).map((team) => (
-                          <div key={team.$id} className="p-3 border border-gray-500/[0.2] rounded">
+                      <Button size="small" onClick={() => setShowAddTeam(true)}>
+                        Add team
+                      </Button>
+                    </div>
+
+                    {teams.length === 0 ? (
+                      <div className="text-gray-500">No teams created for this organization yet.</div>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {teams.map((team) => (
+                          <div key={team.$id} className="rounded-lg border border-gray-500/[0.1] bg-white dark:bg-dark/[0.4] p-4">
                             {editingTeamId === team.$id ? (
                               <div className="flex flex-col gap-4">
-                                <div className="flex items-center gap-2 flex-wrap">
+                                <div className="grid gap-3 md:grid-cols-2">
                                   <Input
-                                    value={editingTeamName}
-                                    onChange={(e: any) => setEditingTeamName(e.target.value)}
-                                    placeholder="Team name"
-                                    className="flex-1 py-[2px] min-w-[220px]"
+                                    value={editingTeamTitle}
+                                    onChange={(e: any) => setEditingTeamTitle(e.target.value)}
+                                    placeholder="Team title"
                                   />
-                                  <Button size="small" onClick={handleSaveTeam} disabled={!editingTeamName.trim()}>
+                                  <Input
+                                    value={editingTeamDescription}
+                                    onChange={(e: any) => setEditingTeamDescription(e.target.value)}
+                                    placeholder="Team description"
+                                  />
+                                </div>
+
+                                <div>
+                                  <h5 className="text-xs uppercase tracking-wide text-gray-500 mb-2">Members</h5>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    {(invitedMembers || []).map((member) => {
+                                      const checked = editingTeamMembers.includes(member.$id);
+                                      return (
+                                        <label key={member.$id} className="flex items-center gap-3 p-2 rounded border border-gray-500/[0.1] cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={(event) => {
+                                              setEditingTeamMembers((previous) => event.target.checked
+                                                ? [...previous, member.$id]
+                                                : previous.filter((id) => id !== member.$id));
+                                            }}
+                                          />
+                                          <div className="min-w-0">
+                                            <div className="text-sm font-medium truncate">{member.name || member.email}</div>
+                                            <div className="text-xs text-gray-500 truncate">{member.email}</div>
+                                          </div>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Button size="small" onClick={handleSaveTeam} disabled={!editingTeamTitle.trim()}>
                                     Save
                                   </Button>
                                   <Button size="small" variant="secondary" onClick={closeTeamEditor}>
                                     Cancel
                                   </Button>
                                 </div>
-
-                                <div>
-                                  <h5 className="text-xs uppercase tracking-wide text-gray-500 mb-2">Team Members</h5>
-                                  {
-                                  organizationMembers.length === 0 ? (
-                                    <div className="text-sm text-gray-500">No members available yet.</div>
-                                  ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                      {organizationMembers.map((member) => (
-                                          <label key={member.$id} className="flex items-center gap-3 p-2 rounded border border-gray-500/[0.1] cursor-pointer">
-                                            
-                                            <div className="min-w-0">
-                                              <div className="text-sm font-medium truncate">{member.name || member.email}</div>
-                                              <div className="text-xs text-gray-500 truncate">{member.email}</div>
-                                            </div>
-                                          </label>
-                                      ))
-                                      }
-                                    </div>
-                                    )}
-                                </div>
                               </div>
                             ) : (
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="font-medium">{team.name}</div>
-                                  <div className="text-xs text-gray-500 mt-1">
+                                  <div className="font-medium">{team.title}</div>
+                                  {team.description ? <div className="text-sm text-gray-500 mt-1">{team.description}</div> : null}
+                                  <div className="text-xs text-gray-500 mt-2">
                                     {(team.members || []).length} member{(team.members || []).length === 1 ? '' : 's'}
+                                    {' '}• {(Array.isArray(team.activities) ? team.activities.length : 0)} activities
                                   </div>
                                   {(team.members || []).length > 0 && (
                                     <div className="flex flex-wrap gap-2 mt-3">
@@ -304,9 +319,11 @@ export default function OrganizationsPage() {
                                     </div>
                                   )}
                                 </div>
-                                {
-                                  isOwner || isAdmin ? (
+                                {(isOwner || isAdmin) ? (
                                   <div className="flex gap-2 shrink-0">
+                                    <button onClick={() => openAddTeamMembers(team)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
+                                      Add members
+                                    </button>
                                     <button onClick={() => openTeamEditor(team)} className="text-xs px-3 py-1 rounded border border-gray-500/[0.2]">
                                       Edit
                                     </button>
@@ -314,14 +331,13 @@ export default function OrganizationsPage() {
                                       <TrashIcon color="red" size={16} />
                                     </button>
                                   </div>
-                                  ) : null
-                                }
+                                ) : null}
                               </div>
                             )}
                           </div>
-                        ))}*/}
-                      </div> 
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )
               }
@@ -476,6 +492,15 @@ export default function OrganizationsPage() {
         />
       )}
     <CreateOrganizationModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
+    <AddTeamModal isOpen={showAddTeam} onClose={() => setShowAddTeam(false)} />
+    <AddTeamMemberModal
+      isOpen={showAddTeamMembers}
+      team={selectedTeam}
+      onClose={() => {
+        setShowAddTeamMembers(false);
+        setSelectedTeam(null);
+      }}
+    />
     <EditOrganizationModal isOpen={showEdit} onClose={() => setShowEdit(false)} org={selectedOrg} />
     <AddMemberModal
       isOpen={showAddMember}

@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_APPWRITE_ENDPOINT: string
   readonly VITE_APPWRITE_DATABASE_ID: string
   readonly VITE_APPWRITE_TASKS_COLLECTION_ID: string
+  readonly VITE_APPWRITE_TEAMS_COLLECTION_ID: string
   readonly VITE_GOOGLE_CLIENT_ID: string
   readonly VITE_GOOGLE_CLIENT_SECRET: string
   readonly VITE_DODO_PUBLIC_KEY: string

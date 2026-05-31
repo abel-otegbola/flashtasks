@@ -51,10 +51,19 @@ export interface OrgMember {
   roles?: string[];
 }
 
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 export interface Team {
   $id: string;
-  name: string;
-  members?: string[]; // list of member $ids
+  title: string;
+  description?: string;
+  userId: string;
+  orgId: string;
+  userEmail: string;
+  activities: JsonValue;
+  members: string[];
+  $createdAt?: string;
+  $updatedAt?: string;
 }
 
 export interface Organization {
@@ -73,6 +82,11 @@ export interface CreateOrganizationPayload {
 }
 
 export interface CreateTeamPayload {
-  name: string;
+  title: string;
+  description?: string;
   members?: string[];
+  activities?: JsonValue;
+  orgId?: string;
+  userId?: string;
+  userEmail?: string;
 }

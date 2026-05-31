@@ -1,24 +1,27 @@
 'use client'
-import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { createContext, useContext, ReactNode, useState } from 'react';
 import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, Organization, OrgInvite, OrgMember, Team, CreateOrganizationPayload, CreateTeamPayload } from '../interface/organization';
-import { teams } from '../appwrite/appwrite';
-import { ID } from 'appwrite';
+import { databases, teams as appwriteTeams } from '../appwrite/appwrite';
+import { ID, Query } from 'appwrite';
 import toast from 'react-hot-toast';
 import { useUser } from './authContext';
 
 type OrganizationContextValues = {
   organizations: Organization[];
   currentOrg?: Organization | null;
+  teams: Team[];
   invitedMembers: OrgInvite[];
   loading: boolean;
   loadOrganizations: () => void;
   createOrganization: (payload: CreateOrganizationPayload) => void;
   selectOrganization: (orgId: string) => void;
+  loadTeams: (orgId: string) => Promise<Team[]>;
   addTeam: (payload: CreateTeamPayload) => Promise<Team>;
   removeTeam: (orgId: string, teamId: string) => Promise<boolean>;
   getAllInvitedMembers: (orgId: string) => void;
   createOrgInvite: (orgId: string, invite: Omit<OrgInvite, '$id' | 'status' | 'orgId' | 'orgName' | 'createdAt' | 'acceptedAt' | 'inviterEmail'>) => void;
   updateOrganization: (orgId: string, data: Partial<any>) => void;
+  updateTeam: (teamId: string, data: Partial<Team>) => Promise<Team | null>;
   deleteOrganization: (orgId: string) => Promise<boolean>;
   removeMemberFromOrg: (orgId: string, memberId: string) => Promise<boolean>;
   updateTeamMember: (orgId: string, memberId: string, roles: string[]) => Promise<boolean>;
@@ -34,30 +37,70 @@ export function useOrganizations() {
 export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [invitedMembers, setInvitedMembers] = useState<OrgInvite[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
 
   const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
-  const ORG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_ORGANIZATIONS_COLLECTION_ID || 'organizations';
+  const TEAM_COLLECTION_ID = import.meta.env.VITE_APPWRITE_TEAMS_COLLECTION_ID || 'teams';
+
+  const serializeJson = (value: unknown) => {
+    if (typeof value === 'string') return value;
+    return JSON.stringify(value ?? null);
+  };
+
+  const deserializeJson = (value: unknown) => {
+    if (value == null) return null;
+    if (typeof value !== 'string') return value;
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  };
+
+  const normalizeTeam = (team: any): Team => ({
+    $id: team.$id,
+    title: team.title || team.name || '',
+    description: team.description || '',
+    userId: team.userId || '',
+    orgId: team.orgId || '',
+    userEmail: team.userEmail || '',
+    activities: deserializeJson(team.activities) ?? [],
+    members: Array.isArray(team.members)
+      ? team.members
+      : deserializeJson(team.members) || [],
+    $createdAt: team.$createdAt,
+    $updatedAt: team.$updatedAt,
+  });
   
   const loadOrganizations = async () => {
     if (!user?.$id || !user?.email) {
       setOrganizations([]);
       setCurrentOrg(null);
+      setTeams([]);
       return;
     }
 
     try {
-      // ✅ user is in members
-      teams.list()
-      .then(res => res.teams || [])
-      .then(teams => {
-        setOrganizations(teams)
-      })
-      .catch(err => {
-        console.error('Error loading organizations from teams endpoint', err);
-        toast.error('Failed to load organizations');
+      const response = await appwriteTeams.list();
+      const nextOrganizations = (response.teams || []).map((team: any) => ({
+        $id: team.$id,
+        name: team.name,
+        total: team.total || team.membersCount || team.memberships || team.members?.length || 0,
+        $createdAt: team.$createdAt,
+        $updatedAt: team.$updatedAt,
+      }));
+
+      setOrganizations(nextOrganizations as Organization[]);
+      setCurrentOrg((previous) => {
+        if (previous && nextOrganizations.some((org: Organization) => org.$id === previous.$id)) {
+          return previous;
+        }
+
+        return nextOrganizations[0] || null;
       });
     } catch (err) {
       console.error("Error loading organizations", err);
@@ -68,24 +111,20 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const createOrganization = async (payload: CreateOrganizationPayload) => {
     setLoading(true);
     try {
-      teams.create({ teamId: ID.unique(), name: payload.name, roles: ['owner'] })
-      .then((team) => {
-        const newOrg: Organization = {
-          $id: team.$id,
-          name: team.name,
-          total: 1,
-        };
-        
-        setOrganizations(prev => [newOrg, ...prev]);
-        setCurrentOrg(newOrg);
-        toast.success('Organization created');
-        return newOrg;
-      })
-      .catch(err => {
-        console.error('Error creating team in Appwrite:', err);
-        toast.error('Failed to create organization');
-        throw err;
-      });
+      const team = await appwriteTeams.create({ teamId: ID.unique(), name: payload.name, roles: ['owner'] });
+
+      const newOrg: Organization = {
+        $id: team.$id,
+        name: team.name,
+        total: 1,
+        $createdAt: team.$createdAt,
+        $updatedAt: team.$updatedAt,
+      };
+
+      setOrganizations(prev => [newOrg, ...prev]);
+      setCurrentOrg(newOrg);
+      toast.success('Organization created');
+      return newOrg;
     } catch (err) {
       console.error('Error creating organization', err);
       toast.error('Failed to create organization');
@@ -101,12 +140,9 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       // If name is being updated, also update the Appwrite team
       if (data.name) {
         try {
-          await teams.updateName({ teamId: orgId, name: data.name })
-          .then(res => {
-            loadOrganizations();
-            toast.success('Organization updated');
-            return res;
-          })
+          await appwriteTeams.updateName({ teamId: orgId, name: data.name });
+          await loadOrganizations();
+          toast.success('Organization updated');
         } catch (err) {
           console.warn('Could not update team name in Appwrite:', err);
         }
@@ -123,11 +159,12 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const deleteOrganization = async (orgId: string) => {
     setLoading(true);
     try {
-      await teams.delete({ teamId: orgId });
+      await appwriteTeams.delete({ teamId: orgId });
 
       const remainingOrganizations = organizations.filter((org) => org.$id !== orgId);
       setOrganizations(remainingOrganizations);
       setCurrentOrg(remainingOrganizations[0] || null);
+      setTeams((previous) => previous.filter((team) => team.orgId !== orgId));
 
       toast.success('Organization deleted');
       return true;
@@ -145,9 +182,31 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     setCurrentOrg(org);
   };
 
+  const loadTeams = async (orgId: string) => {
+    if (!orgId) {
+      setTeams([]);
+      return [];
+    }
+
+    try {
+      const response = await databases.listDocuments(DATABASE_ID, TEAM_COLLECTION_ID, [
+        Query.equal('orgId', [orgId]),
+        Query.orderDesc('$createdAt'),
+      ]);
+
+      const nextTeams = (response.documents || []).map(normalizeTeam) as Team[];
+      setTeams(nextTeams);
+      return nextTeams;
+    } catch (err) {
+      console.error('Error loading teams', err);
+      toast.error('Failed to load teams');
+      return [];
+    }
+  };
+
   const getAllInvitedMembers = async (orgId: string) => {
     try {
-      const memberships = await teams.listMemberships({ teamId: orgId });
+      const memberships = await appwriteTeams.listMemberships({ teamId: orgId });
 
       setInvitedMembers((memberships.memberships || []).map((membership: any) => ({
         ...membership,
@@ -167,10 +226,22 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
 
 
   const addTeam = async (payload: CreateTeamPayload) => {
-    if (!currentOrg) throw new Error('No organization selected');
+    const orgId = payload.orgId || currentOrg?.$id;
+    if (!orgId) throw new Error('No organization selected');
     setLoading(true);
     try {
-      const newTeam: Team = { $id: ID.unique(), name: payload.name, members: payload.members || [] };
+      const response = await databases.createDocument(DATABASE_ID, TEAM_COLLECTION_ID, ID.unique(), {
+        title: payload.title,
+        description: payload.description || '',
+        userId: payload.userId || user?.$id || '',
+        orgId,
+        userEmail: payload.userEmail || user?.email || '',
+        activities: serializeJson(payload.activities ?? []),
+        members: payload.members?.length ? payload.members : [user?.$id].filter(Boolean),
+      });
+
+      const newTeam = normalizeTeam(response);
+      setTeams((previous) => [newTeam, ...previous.filter((team) => team.$id !== newTeam.$id)]);
       toast.success('Team added');
       return newTeam;
     } catch (err) {
@@ -185,7 +256,8 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const removeTeam = async (orgId: string, teamId: string) => {
     setLoading(true);
     try {
-      const org = organizations.find(o => o.$id === orgId);
+      await databases.deleteDocument(DATABASE_ID, TEAM_COLLECTION_ID, teamId);
+      setTeams((previous) => previous.filter((team) => team.$id !== teamId));
       toast.success('Team removed');
       return true;
     } catch (err) {
@@ -207,7 +279,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       if (!org) return false;      
       
       try {
-        await teams.createMembership({
+        await appwriteTeams.createMembership({
           teamId: orgId,
           roles: invite.roles?.includes('owner') ? ['owner'] : invite.roles?.includes('admin') ? ['admin'] : ['member'],
           email: invite.email,
@@ -230,7 +302,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const removeMemberFromOrg = async (orgId: string, memberId: string) => {
     setLoading(true);
     try {
-      await teams.deleteMembership({ teamId: orgId, membershipId: memberId });
+      await appwriteTeams.deleteMembership({ teamId: orgId, membershipId: memberId });
       getAllInvitedMembers(orgId);
       toast.success('Member removed');
       return true;
@@ -246,7 +318,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const updateTeamMember = async (orgId: string, memberId: string, roles: string[]) => {
     setLoading(true);
     try {
-      await teams.updateMembership({
+      await appwriteTeams.updateMembership({
         teamId: orgId,
         membershipId: memberId,  
         roles: roles
@@ -263,21 +335,45 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateTeam = async (teamId: string, data: Partial<Team>) => {
+    setLoading(true);
+    try {
+      const { $id, $createdAt, $updatedAt, activities, ...updateData } = data as any;
+      const response = await databases.updateDocument(DATABASE_ID, TEAM_COLLECTION_ID, teamId, {
+        ...updateData,
+        ...(activities !== undefined ? { activities: serializeJson(activities) } : {}),
+      });
+      const updatedTeam = normalizeTeam(response);
+      setTeams((previous) => previous.map((team) => team.$id === teamId ? updatedTeam : team));
+      toast.success('Team updated');
+      return updatedTeam;
+    } catch (err) {
+      console.error('Error updating team', err);
+      toast.error('Failed to update team');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <OrganizationContext.Provider 
       value={{ 
         organizations, 
         currentOrg, 
+        teams,
         invitedMembers,
         loading, 
         loadOrganizations,
         createOrganization, 
         selectOrganization, 
+        loadTeams,
         addTeam, 
         removeTeam, 
         getAllInvitedMembers,
         createOrgInvite, 
         updateOrganization, 
+        updateTeam,
         deleteOrganization, 
         removeMemberFromOrg, 
         updateTeamMember, 
