@@ -7,6 +7,7 @@ import { Bell, DollarMinimalistic, Home, IconProps, Logout, Server, Settings, Us
 import ThemeSelector from "../themeSelector/themeSelector";
 import { useUser } from "../../context/authContext";
 import GetAvatar from "../../customHooks/useGetAvatar";
+import { Robot } from "@phosphor-icons/react";
 
 export interface Link {
     id: number; label: string; icon: ReactElement<IconProps>, link: string, subtext?: string
@@ -38,6 +39,7 @@ function Sidebar() {
         { id: 0, label: "Dashboard", icon: <Home size={16} />, link: "/account/dashboard" },
         { id: 1, label: "Tasks", icon: <Server size={16} />, link: "/account/tasks" },
         { id: 2, label: "Organizations", icon: <UsersGroupTwoRounded size={16} />, link: "/account/organizations" },
+        { id: 3, label: "Automations", icon: <Robot size={16} />, link: "/account/automations" },
     ]
     
     const otherLinks: Link[] = [

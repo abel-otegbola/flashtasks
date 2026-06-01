@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Formik } from "formik";
 import Button from "../../../components/button/button";
 import { Upload } from "@solar-icons/react";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState } from "react";
 import { todo } from "../../../interface/todo";
 import { useOrganizations } from "../../../context/organizationContext";
 import toast from 'react-hot-toast';
@@ -10,6 +10,7 @@ import { useTasks } from "../../../context/tasksContext";
 import { useUser } from "../../../context/authContext";
 import { extractTasksFromText } from "../../../helpers/voiceTaskExtractor";
 import { useRealtimeTranscription } from "../../../helpers/audioTranscriber";
+import { transcribeFile } from "../../../helpers/transcribeFile";
 import TaskDetailsModal from "../../../components/modals/taskDetailsModal";
 import {
   mapExtractedToTodo,
@@ -361,36 +362,3 @@ function CreateTask() {
 }
 
 export default CreateTask;
-
-function transcribeFile(file: File) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY as string | undefined;
-
-  if (!apiKey) {
-    throw new Error("Missing transcription API key.");
-  }
-
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append(
-    "model",
-    (import.meta.env.VITE_GROQ_TRANSCRIPTION_MODEL as string | undefined) || "whisper-large-v3"
-  );
-  formData.append("response_format", "json");
-
-  return fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: formData,
-  })
-    .then(async (res) => {
-      if (!res.ok) {
-        const message = await res.text().catch(() => "");
-        throw new Error(message || "Failed to transcribe file.");
-      }
-
-      return res.json();
-    })
-    .then((data: { text?: string }) => data.text?.trim() || "");
-}
