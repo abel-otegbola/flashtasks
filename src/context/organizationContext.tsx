@@ -5,6 +5,7 @@ import { databases, teams as appwriteTeams } from '../appwrite/appwrite';
 import { ID, Query } from 'appwrite';
 import toast from 'react-hot-toast';
 import { useUser } from './authContext';
+import { sendTeamInvitationEmail } from '../services/email';
 
 type OrganizationContextValues = {
   organizations: Organization[];
@@ -351,6 +352,21 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
           email: invite.email,
           url: `https://flashtasks.app/account/notifications?teamId=${encodeURIComponent(orgId)}`,
         });
+
+        const organizationName = org?.name || 'Flashtasks';
+        const inviterName = user?.name || user?.email || 'A teammate';
+        const inviteLink = `https://flashtasks.app/account/notifications?teamId=${encodeURIComponent(orgId)}`;
+
+        sendTeamInvitationEmail({
+          to: invite.email,
+          organizationName,
+          inviterName: String(inviterName),
+          inviteLink,
+          role: String(invite.roles?.[0] || 'member'),
+        }).catch((emailError) => {
+          console.warn('Could not send custom team invitation email:', emailError);
+        });
+
         toast.success('Invite sent');
         getAllInvitedMembers(orgId);
         return true;

@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { indexTask } from '../services/indexer';
 import { useOrganizations } from './organizationContext';
 import { useUser } from './authContext';
+import { sendTaskAssignmentEmail } from '../services/email';
 import {
     createDefaultIntegrationConnectionStore,
     type IntegrationConnectionStore,
@@ -87,6 +88,38 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         }, -1);
 
         return maxOrderIndex + 1;
+    };
+
+    const getAppOrigin = () => {
+        if (typeof window !== 'undefined' && window.location?.origin) {
+            return window.location.origin;
+        }
+
+        return 'https://flashtasks.app';
+    };
+
+    const getOrganizationName = (orgId?: string) => {
+        if (!orgId) return '';
+        return orgCtx.organizations.find((org) => org.$id === orgId)?.name || '';
+    };
+
+    const notifyTaskAssignment = async (task: todo, assignees: string[]) => {
+        const recipients = Array.from(new Set(assignees.filter(Boolean)));
+        if (recipients.length === 0) return;
+
+        try {
+            await sendTaskAssignmentEmail({
+                to: recipients,
+                taskTitle: task.title,
+                taskDescription: task.description,
+                organizationName: getOrganizationName(task.organizationId),
+                assignedBy: task.userEmail || user?.email || 'A teammate',
+                taskLink: `${getAppOrigin()}/account/organizations`,
+                dueDate: task.dueDate,
+            });
+        } catch (error) {
+            console.warn('Failed to send task assignment email', error);
+        }
     };
 
     const normalizeEmail = (value?: string | null) => value?.trim().toLowerCase() || '';
@@ -326,6 +359,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             const newTask = response as unknown as todo;
             setTasks(prev => sortTasksByOrder([newTask, ...prev]));
 
+            await notifyTaskAssignment(newTask, newTask.assignees || task.assignees || []);
+
             // Index the task in Elasticsearch via backend endpoint
             await indexTask('create', newTask);
             return newTask;
@@ -365,7 +400,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
 
                 // Only add optional fields if they exist
                 if (task.dueDate) taskData.dueDate = task.dueDate;
-                if (task.assignees) taskData.assignee = task.assignees;
+                if (task.assignees) taskData.assignees = task.assignees;
                 if (task.invites) taskData.invites = task.invites;
                 if ((task as any).organizationId) taskData.organizationId = (task as any).organizationId;
                 if ((task as any).teamId) taskData.teamId = (task as any).teamId;
@@ -377,7 +412,9 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
                     taskData
                 );
                 
-                createdTasks.push(response as unknown as todo);
+                const createdTask = response as unknown as todo;
+                createdTasks.push(createdTask);
+                await notifyTaskAssignment(createdTask, createdTask.assignees || task.assignees || []);
                 await indexTask('create', response);
             }
             
@@ -409,6 +446,8 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         try {
             // Remove $createdAt and $updatedAt from updates as they're auto-managed by Appwrite
             const { $createdAt, $updatedAt, ...updateData } = updates as any;
+            const nextAssignees = Array.isArray(updateData.assignees) ? updateData.assignees.filter(Boolean) : null;
+            const previousAssignees = Array.isArray(existingTask.assignees) ? existingTask.assignees : [];
 
             const response = await databases.updateDocument(
                 DATABASE_ID,
@@ -419,6 +458,11 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             
             const updatedTask = response as unknown as todo;
             setTasks(prev => sortTasksByOrder(prev.map(task => task.$id === taskId ? updatedTask : task)));
+
+            if (nextAssignees) {
+                const newlyAssigned = nextAssignees.filter((email: string) => !previousAssignees.includes(email));
+                await notifyTaskAssignment(updatedTask, newlyAssigned);
+            }
 
             // update index
             await indexTask('update', updatedTask);
