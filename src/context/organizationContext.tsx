@@ -1,6 +1,6 @@
 'use client'
 import { createContext, useContext, ReactNode, useState } from 'react';
-import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, Organization, OrgInvite, OrgMember, Team, CreateOrganizationPayload, CreateTeamPayload } from '../interface/organization';
+import { ADMIN_PERMISSIONS, MEMBER_PERMISSIONS, Organization, OrgInvite, OrgMember, Team, CreateOrganizationPayload, CreateTeamPayload, ChatMessage } from '../interface/organization';
 import { databases, teams as appwriteTeams } from '../appwrite/appwrite';
 import { ID, Query } from 'appwrite';
 import toast from 'react-hot-toast';
@@ -10,8 +10,12 @@ type OrganizationContextValues = {
   organizations: Organization[];
   currentOrg?: Organization | null;
   teams: Team[];
+  messages: ChatMessage[];
   invitedMembers: OrgInvite[];
   loading: boolean;
+  loadMessages: (orgId: string) => Promise<ChatMessage[]>;
+  sendMessage: (orgId: string, payload: { text?: string; attachments?: string[] }) => Promise<ChatMessage | null>;
+  uploadFile: (file: File) => Promise<{ url: string } | null>;
   loadOrganizations: () => void;
   createOrganization: (payload: CreateOrganizationPayload) => void;
   selectOrganization: (orgId: string) => void;
@@ -44,6 +48,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
 
   const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
   const TEAM_COLLECTION_ID = import.meta.env.VITE_APPWRITE_TEAMS_COLLECTION_ID || 'teams';
+  const MESSAGES_COLLECTION_ID = import.meta.env.VITE_APPWRITE_MESSAGES_COLLECTION_ID || 'chats';
 
   const serializeJson = (value: unknown) => {
     if (typeof value === 'string') return value;
@@ -75,6 +80,67 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     $createdAt: team.$createdAt,
     $updatedAt: team.$updatedAt,
   });
+
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const normalizeMessage = (doc: any): ChatMessage => ({
+    $id: doc.$id,
+    orgId: doc.orgId,
+    userId: doc.userId,
+    userEmail: doc.userEmail,
+    text: doc.text || '',
+    attachments: Array.isArray(deserializeJson(doc.attachments)) ? deserializeJson(doc.attachments) as string[] : [],
+    $createdAt: doc.$createdAt,
+  });
+
+  const loadMessages = async (orgId: string) => {
+    if (!orgId) return [];
+    try {
+      const response = await databases.listDocuments(DATABASE_ID, MESSAGES_COLLECTION_ID, [
+        Query.equal('orgId', [orgId]),
+        Query.orderAsc('$createdAt'),
+      ]);
+      const next = (response.documents || []).map(normalizeMessage) as ChatMessage[];
+      setMessages(next);
+      return next;
+    } catch (err) {
+      console.error('Error loading messages', err);
+      return [];
+    }
+  };
+
+  const sendMessage = async (orgId: string, payload: { text?: string; attachments?: string[] }) => {
+    if (!orgId) return null;
+    try {
+      const response = await databases.createDocument(DATABASE_ID, MESSAGES_COLLECTION_ID, ID.unique(), {
+        orgId,
+        userId: user?.$id || '',
+        userEmail: user?.email || '',
+        text: payload.text || '',
+        attachments: serializeJson(payload.attachments || []),
+      });
+      const message = normalizeMessage(response);
+      setMessages((prev) => [...prev, message]);
+      return message;
+    } catch (err) {
+      console.error('Error sending message', err);
+      return null;
+    }
+  };
+
+  const uploadFile = async (file: File) => {
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch('/api/cloudinary/upload', { method: 'POST', body: form });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return { url: json.secure_url || json.url };
+    } catch (err) {
+      console.error('Upload failed', err);
+      return null;
+    }
+  };
   
   const loadOrganizations = async () => {
     if (!user?.$id || !user?.email) {
@@ -362,6 +428,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         organizations, 
         currentOrg, 
         teams,
+        messages,
         invitedMembers,
         loading, 
         loadOrganizations,
@@ -377,6 +444,9 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         deleteOrganization, 
         removeMemberFromOrg, 
         updateTeamMember, 
+        loadMessages,
+        sendMessage,
+        uploadFile,
       }}>
       {children}
     </OrganizationContext.Provider>

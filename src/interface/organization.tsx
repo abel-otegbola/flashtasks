@@ -90,3 +90,13 @@ export interface CreateTeamPayload {
   userId?: string;
   userEmail?: string;
 }
+
+export interface ChatMessage {
+  $id: string;
+  orgId: string;
+  userId?: string;
+  userEmail?: string;
+  text?: string;
+  attachments?: string[];
+  $createdAt?: string;
+}

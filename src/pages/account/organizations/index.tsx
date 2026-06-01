@@ -8,6 +8,7 @@ import EditOrganizationModal from '../../../components/modals/editOrganizationMo
 import AddMemberModal from '../../../components/modals/addMemberModal';
 import AddTeamModal from '../../../components/modals/addTeamModal';
 import AddTeamMemberModal from '../../../components/modals/addTeamMemberModal';
+import Chat from '../../../components/chat/Chat';
 import { PencilSimpleLineIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { OrganizationSkeletonLoader } from '../../../components/skeletons';
 import Confirmationmessage from '../../../components/modals/confirmation';
@@ -167,7 +168,7 @@ export default function OrganizationsPage() {
               <div className='flex gap-4 justify-between flex-wrap mb-6'>
                 <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1 overflow-x-auto'>
                 {
-                  ["Tasks", "About", "teams", "members", "settings"].map((tab) => {
+                  ["Tasks", "Chat", "teams", "members", "settings"].map((tab) => {
                     if (tab === "settings" && !(isOwner || isAdmin)) return null;
                     else return (
                       <button key={tab} onClick={() => setSelectedTab(tab)} className={`py-2 px-1 text-sm capitalize rounded-tl rounded-tr ${tab === selectedTab ? 'border-b border-primary text-primary' : 'text-gray-500'}`}>
@@ -183,7 +184,6 @@ export default function OrganizationsPage() {
               {
                 selectedTab === "Tasks" && (
                   <div className="mb-4 ">
-                    <h2 className="font-semibold text-lg mb-2">Organization Tasks</h2>
                     {tasks.filter(t => t.organizationId === currentOrg.$id).length === 0 ? (
                       <div className="text-gray-500 mb-8">No tasks in this organization yet.</div>
                     ) : (
@@ -201,10 +201,12 @@ export default function OrganizationsPage() {
                     )}
                     {
                       permissions.includes("create_task") &&
-                      <Button onClick={() => setShowCreateTask(true)} size="small">
-                        <PlusIcon />
-                        Create New Task
-                      </Button>
+                      <div className="flex justify-end">
+                        <Button onClick={() => setShowCreateTask(true)} size="small">
+                          <PlusIcon />
+                          Create New Task
+                        </Button>
+                      </div>
                     }
                     {showCreateTask && (
                       <CreateTaskModal
@@ -217,16 +219,11 @@ export default function OrganizationsPage() {
                 )
               }
               {
-                selectedTab === "About" && (
+                selectedTab === "Chat" && (
                   <div className="mb-4">
-                    <h2 className="font-semibold text-lg mb-2">{currentOrg.name}</h2>
-                    <div className="my-4">
-                      <p>{currentOrg.total || 0} members</p>
-                    </div>
-                    <div>
-                      <Button variant='secondary' size="small" className='p-2 border border-gray-500/[0.1] rounded' onClick={() => { setSelectedOrg(currentOrg); setShowEdit(true); }}>
-                        Edit Organization <PencilSimpleLineIcon size={14} />
-                      </Button>
+                    <h2 className="font-semibold text-lg mb-2">Chat Messages</h2>
+                    <div className="mb-4">
+                      <Chat orgId={currentOrg.$id} />
                     </div>
                   </div>
                 )
@@ -448,9 +445,11 @@ export default function OrganizationsPage() {
                         <Button variant="secondary" size="small" onClick={handleCopyOrganizationId}>
                           Copy Org ID
                         </Button>
-                        <Button variant="secondary" size="small" onClick={() => { setSelectedOrg(currentOrg); setShowEdit(true); }}>
-                          Open Editor
-                        </Button>
+                        <div>
+                          <Button variant='secondary' size="small" className='p-2 border border-gray-500/[0.1] rounded' onClick={() => { setSelectedOrg(currentOrg); setShowEdit(true); }}>
+                            Edit Organization <PencilSimpleLineIcon size={14} />
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
