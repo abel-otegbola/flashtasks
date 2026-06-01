@@ -11,7 +11,8 @@ import Tasks from "./tasks/page";
 import Organizations from "./organizations";
 import SearchBar from "../../components/search/searchBar";
 import CreateTask from "./create-task/createTask";
-import AutomationPage from "./automation";
+import AutomationsPage from "./automations";
+import CreateAutomationPage from "./automations/create";
 import SettingsPage from "./settings";
 import Pricing from "./pricing";
 import Notifications from "./notifications";
@@ -75,7 +76,9 @@ function AccountPages() {
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/tasks/new" element={<CreateTask />} />
-                <Route path="/automations" element={<AutomationPage />} />
+                <Route path="/automation" element={<Navigate to="/account/automations" replace />} />
+                <Route path="/automations" element={<AutomationsPage />} />
+                <Route path="/automations/create" element={<CreateAutomationPage />} />
                 <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
             
