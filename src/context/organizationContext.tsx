@@ -350,12 +350,12 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
           teamId: orgId,
           roles: invite.roles?.includes('owner') ? ['owner'] : invite.roles?.includes('admin') ? ['admin'] : ['member'],
           email: invite.email,
-          url: `https://flashtasks.app/account/notifications?teamId=${encodeURIComponent(orgId)}`,
+          url: `https://flashtasks.app/account/invitation/accept?teamId=${encodeURIComponent(orgId)}`,
         });
 
         const organizationName = org?.name || 'Flashtasks';
         const inviterName = user?.name || user?.email || 'A teammate';
-        const inviteLink = `https://flashtasks.app/account/notifications?teamId=${encodeURIComponent(orgId)}`;
+        const inviteLink = `https://flashtasks.app/account/invitation/accept?teamId=${encodeURIComponent(orgId)}`;
 
         sendTeamInvitationEmail({
           to: invite.email,

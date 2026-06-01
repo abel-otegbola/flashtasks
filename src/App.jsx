@@ -7,6 +7,7 @@ import TasksProvider from "./context/tasksContext"
 import { OrganizationProvider } from "./context/organizationContext"
 import AccountPages from "./pages/account"
 import LoadingScreen from "./components/loaders/loadingScreen"
+import InvitationAcceptPage from "./pages/invitation/accept"
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +39,7 @@ function App() {
             <TasksProvider>
             <Routes>
               <Route path="/auth/*" element={<AuthPages />} />
+              <Route path="/invitation/accept" element={<InvitationAcceptPage />} />
               <Route path="/*" element={<StaticPages />} />
               <Route path="/account/*" element={<AccountPages />} />
             </Routes>
