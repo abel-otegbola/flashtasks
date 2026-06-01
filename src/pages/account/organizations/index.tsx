@@ -133,7 +133,7 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <div className="flex flex-col md:p-0 px-4 h-full">
+    <div className="flex flex-col md:p-0 px-2 h-full">
       <div className="flex flex-wrap gap-4 items-center justify-between mb-4 bg-white dark:bg-dark-bg p-4 rounded-lg border border-gray-500/[0.1] dark:border-gray-500/[0.2]">
         <h1 className="text-2xl font-semibold">Organizations</h1>
         <Button onClick={() => setShowCreate(true)} size="small">Create Organization</Button>

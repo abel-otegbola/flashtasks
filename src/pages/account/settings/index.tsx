@@ -115,7 +115,7 @@ export default function SettingsPage() {
   const initials = String(user?.name || user?.email || 'U').charAt(0).toUpperCase();
 
   return (
-    <div className="bg-white dark:bg-dark-bg p-4 md:m-0 mx-4 rounded-lg border border-gray-200 dark:border-gray-500/[0.2]">
+    <div className="bg-white dark:bg-dark-bg p-4 md:m-0 mx-2 rounded-lg border border-gray-200 dark:border-gray-500/[0.2]">
       <h1 className="text-2xl font-semibold mb-4">Settings</h1>
 
       <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1'>

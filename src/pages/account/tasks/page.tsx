@@ -130,7 +130,7 @@ function Tasks() {
 
     return (
         <>
-        <div className="flex flex-col gap-6 md:m-0 mx-4 pb-6 h-full">
+        <div className="flex flex-col gap-4 md:m-0 mx-2 pb-6 h-full">
             <div className="flex justify-between gap-4 items-start rounded-[10px] border border-gray-500/[0.1] flex-wrap md:p-6 p-4 bg-white dark:bg-dark-bg">
                 <div className="flex gap-4 items-center">
                     <h1 className="font-medium md:text-[24px] text-[18px] leading-[120%]">

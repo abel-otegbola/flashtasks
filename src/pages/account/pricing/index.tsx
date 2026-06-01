@@ -146,7 +146,7 @@ function Pricing() {
     <div className="min-h-screen">
 
       {/* Pricing Cards */}
-       <section className="flex flex-col gap-6 md:rounded-[10px] h-full md:m-0 mx-4 mb-4">
+       <section className="flex flex-col gap-6 md:rounded-[10px] h-full md:m-0 mx-2 mb-4">
             <div className="flex justify-between gap-6 items-start flex-wrap bg-white dark:bg-dark-bg p-4 rounded-lg border border-gray-500/[0.1] dark:border-gray-500/[0.2]">
                 <div className="flex flex-col gap-3">
                 <h1 className="font-medium md:text-[24px] text-[18px] leading-[120%]">
