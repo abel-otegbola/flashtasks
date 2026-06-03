@@ -14,6 +14,7 @@ const TaskListView = lazy(() => import('../../../components/cards/taskListView')
 import HeroArrowIcon from '../../../assets/icons/heroArrow';
 import TaskCheckbox from '../../../components/ui/taskCheckbox'
 import { formatDeliveredTime } from '../../../helpers/messageTime'
+import CreateTask from '../../../components/createtask/createTask'
 
 function Home() {
   const { user } = useUser();
@@ -25,7 +26,7 @@ function Home() {
       <div className="absolute left-[-8rem] top-[-6rem] h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
       <div className="absolute bottom-[-8rem] right-[-6rem] h-72 w-72 rounded-full bg-black/5 blur-3xl dark:bg-white/10" />
         
-        <div className="flex flex-col text-center items-center justify-center gap-4 px-6">
+        <div className="flex flex-col text-center items-center justify-center gap-4 px-6 z-3">
           <div className=" px-4 py-2 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] animate-bounce">
             <LogoIcon className="w-[14px] h-[28px]"  />
           </div>
@@ -60,13 +61,10 @@ function Home() {
           </div>
         </div>
         
-        <div className="flex flex-col justify-center items-center py-[60px] p-4 md:w-[65%] w-full">
-          <Animate preset="zoomIn" duration={2} className='shadow-lg md:rounded-[24px] rounded w-full flex items-center justify-center bg-[#F6F6F6]/[0.4] dark:bg-dark/[0.7] md:p-4 p-1'>
-            <video preload="none" autoPlay loop muted playsInline className="w-full h-full md:rounded-[16px] rounded-[8px] border border-gray-500/[0.07]">
-              <source src={`/hero-video-${theme === 'dark' ? 'dark' : 'light'}.webm`} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </Animate>
+        <div className="flex flex-col justify-center items-center py-[60px] p-4 md:w-[65%] w-full z-3">
+          <div className="w-full rounded-lg bg-white dark:bg-dark/[0.4] space-y-2">
+            <CreateTask />
+          </div>
           <BlurReveal preset="slide-up"><h2 className="font-medium mt-20 mb-4 text-center">Join 500+ teams saving 10+ hours/week of quality time</h2></BlurReveal>
           <img src="/users.png" alt="users" width={240} height={64} loading="lazy" className="" />
         </div>
