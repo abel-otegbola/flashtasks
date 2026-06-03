@@ -1,8 +1,9 @@
-import { CheckCircleIcon, ClockIcon, WarningCircleIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon, ClockIcon, SlackLogoIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import Button from "../button/button";
 import type { HermesProvider } from "../../hermes/types";
 import type { IntegrationConnectionRecord, IntegrationConnectionStatus } from "../../helpers/hermesIntegrationState";
 import type { JSX } from "react";
+import { GoogleLogoIcon } from "@phosphor-icons/react";
 
 type IntegrationStatusCardProps = {
   provider: HermesProvider;
@@ -46,30 +47,24 @@ function IntegrationStatusCard({ provider, title, description, status, isConnect
   const connectionLabel = status.status === "connected" ? "Connected" : "Not connected";
 
   return (
-    <section className="flex h-full flex-col gap-6 rounded border border-gray-500/15 bg-white p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] dark:bg-dark-bg">
-      <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white dark:bg-white dark:text-slate-900">
-          {title.slice(0, 1).toUpperCase()}
+    <section className="flex h-fit flex-col gap-3 rounded-lg border border-gray-500/15 bg-white p-6 dark:bg-dark-bg">
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-gray-500/[0.2]">
+          {title === "Slack" ? <SlackLogoIcon size={24} /> : title === "Gmail" ? <GoogleLogoIcon size={24} /> : null  }
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{title}</h3>
-            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[status.status]}`}>
-              {statusIcons[status.status]}
-              {status.status}
-            </span>
-          </div>
-          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-300">{description}</p>
+        <div className="flex-1 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{title}</h3>
+          <span className={`inline-flex items-center gap-1 capitalize rounded-full pr-3 p-1 text-xs font-semibold ${statusStyles[status.status]}`}>
+            {statusIcons[status.status]}
+            {status.status}
+          </span>
         </div>
       </div>
+      
+      <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-300">{description}</p>
 
       <div className="flex flex-col gap-3 rounded border border-gray-500/10 bg-slate-50 p-4 text-sm dark:border-gray-500/20 dark:bg-white/5 sm:grid-cols-2">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-slate-500 dark:text-slate-400">Connection</span>
-          <span className="font-medium text-slate-900 dark:text-white">{connectionLabel}</span>
-        </div>
-
         <div className="flex items-center justify-between gap-3">
           <span className="text-slate-500 dark:text-slate-400">Last connected</span>
           <span className="font-medium text-slate-900 dark:text-white">{connectedAt || "Not yet connected"}</span>

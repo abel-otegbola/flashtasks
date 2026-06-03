@@ -3,6 +3,8 @@ import { useEffect, useState, useMemo } from "react";
 import Button from "../../../components/button/button";
 import { useOrganizations } from "../../../context/organizationContext";
 import { useUser } from "../../../context/authContext";
+import { PencilLineIcon } from "@phosphor-icons/react";
+import { TrashBinMinimalistic } from "@solar-icons/react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -225,14 +227,14 @@ function AutomationsPage() {
                         onClick={() => updateAutomation(run.$id, {})}
                         className="p-1 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors"
                       >
-                        ✏️
+                        <PencilLineIcon />
                       </button>
                       <button
                         title="Delete"
                         onClick={() => deleteAutomation(run.$id)}
                         className="p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
-                        🗑
+                        <TrashBinMinimalistic />
                       </button>
                     </div>
                   </div>
@@ -306,14 +308,14 @@ function AutomationsPage() {
                         onClick={() => updateReminder(reminder.$id, {})}
                         className="p-1 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors"
                       >
-                        ✏️
+                        <PencilLineIcon />
                       </button>
                       <button
                         title="Delete"
                         onClick={() => deleteReminder(reminder.$id)}
                         className="p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
-                        🗑
+                        <TrashBinMinimalistic />
                       </button>
                     </div>
                   </div>

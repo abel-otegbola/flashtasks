@@ -29,14 +29,14 @@ export default function IntegrationsPage() {
 
   const platforms = useMemo<PlatformCard[]>(() => ([
     {
-      id: 'slack',
-      name: 'Slack',
-      description: 'Connect Slack to track conversations, detect follow-ups, and send reminders automatically.',
-    },
-    {
       id: 'gmail',
       name: 'Gmail',
       description: 'Connect Gmail to monitor threads, schedule reminders, and draft follow-up replies.',
+    },
+    {
+      id: 'slack',
+      name: 'Slack',
+      description: 'Connect Slack to track conversations, detect follow-ups, and send reminders automatically.',
     },
   ]), []);
 
@@ -119,13 +119,12 @@ export default function IntegrationsPage() {
   };
 
   return (
-    <div className="mx-4 rounded border border-gray-200 bg-white p-4 shadow-[0_10px_50px_rgba(15,23,42,0.04)] dark:border-gray-500/[0.2] dark:bg-dark-bg md:m-0">
+    <div className="mx-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-500/[0.2] dark:bg-dark-bg md:m-0">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">Hermes integration layer</p>
           <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">Integrations</h1>
           <p className="mt-2 max-w-2xl text-sm text-gray-500 dark:text-gray-300">
-            Connect channels Hermes can monitor and act on.
+            Connect channels Flashtasks can monitor and act on.
           </p>
         </div>
       </div>
@@ -136,7 +135,7 @@ export default function IntegrationsPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2 min-h-[520px]">
         {platforms.map((platform) => (
           <IntegrationStatusCard
             key={platform.id}
