@@ -6,6 +6,7 @@ import { ID, Query } from 'appwrite';
 import toast from 'react-hot-toast';
 import { useUser } from './authContext';
 import { sendTeamInvitationEmail } from '../services/email';
+import { AutomationReminderRecord, AutomationRunRecord } from '../services/automation';
 
 type OrganizationContextValues = {
   organizations: Organization[];
@@ -13,6 +14,8 @@ type OrganizationContextValues = {
   teams: Team[];
   messages: ChatMessage[];
   invitedMembers: OrgInvite[];
+  automations: AutomationRunRecord[];
+  reminders: AutomationReminderRecord[];
   loading: boolean;
   loadMessages: (orgId: string) => Promise<ChatMessage[]>;
   sendMessage: (orgId: string, payload: { text?: string; attachments?: string[] }) => Promise<ChatMessage | null>;
@@ -31,6 +34,8 @@ type OrganizationContextValues = {
   removeMemberFromOrg: (orgId: string, memberId: string) => Promise<boolean>;
   updateTeamMember: (orgId: string, memberId: string, roles: string[]) => Promise<boolean>;
   hasPermission?: (permission: string, orgId?: string) => boolean;
+  getAutomations: (userId: string) => Promise<AutomationRunRecord[]>;
+  getReminders: (userId: string) => Promise<AutomationReminderRecord[]>;
 }
 
 const OrganizationContext = createContext({} as OrganizationContextValues);
@@ -44,6 +49,8 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [invitedMembers, setInvitedMembers] = useState<OrgInvite[]>([]);
+  const [automations, setAutomations] = useState<AutomationRunRecord[]>([]);
+  const [reminders, setReminders] = useState<AutomationReminderRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
 
@@ -438,6 +445,39 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const getAutomations = async (userId: string) => {
+    if (!userId) return [];
+    try {
+      const response = await databases.listDocuments(DATABASE_ID, "task_runs", [
+        Query.equal('userId', [userId]),
+        Query.orderAsc('$createdAt'),
+      ]);
+      const next = (response.documents || []) as unknown as AutomationRunRecord[];
+      setAutomations(next);
+      return next;
+    } catch (err) {
+      console.error('Error loading automations', err);
+      return [];
+    }
+  };
+
+  const getReminders = async (userId: string) => {
+    if (!userId) return [];
+    try {
+      const response = await databases.listDocuments(DATABASE_ID, "reminders", [
+        Query.equal('userId', [userId]),
+        Query.orderAsc('$createdAt'),
+      ]);
+      const next = (response.documents || []) as unknown as AutomationReminderRecord[];
+      setReminders(next);
+      console.log(next)
+      return next;
+    } catch (err) {
+      console.error('Error loading reminders', err);
+      return [];
+    }
+  };
+
   return (
     <OrganizationContext.Provider 
       value={{ 
@@ -446,6 +486,8 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         teams,
         messages,
         invitedMembers,
+        automations,
+        reminders,
         loading, 
         loadOrganizations,
         createOrganization, 
@@ -462,6 +504,8 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         updateTeamMember, 
         loadMessages,
         sendMessage,
+        getAutomations,
+        getReminders,
         uploadFile,
       }}>
       {children}
