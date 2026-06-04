@@ -1,81 +1,95 @@
 'use client'
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import Button from '../button/button';
 import { loadDodo, openDodoCheckout } from '../../services/dodo';
 import { useUser } from '../../context/authContext';
 
 interface Props {
-  planId?: string;
-  label?: string;
+  /** Override the product ID resolved from role. Prefer setting role instead. */
+  productId?: string;
+  label?: string; 
   className?: string;
   role?: 'pro' | 'enterprise';
 }
 
-export default function DodoSubscription({ planId, label = 'Subscribe', className = '', role }: Props) {
+export default function DodoSubscription({ productId, label = 'Subscribe', className = '', role }: Props) {
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
   const { user } = useUser();
 
   const publicKey = import.meta.env.VITE_DODO_PUBLIC_KEY;
-  const defaultPlanId = role === 'enterprise' 
-    ? import.meta.env.VITE_DODO_ENTERPRISE_PLAN_ID 
-    : import.meta.env.VITE_DODO_PRO_PLAN_ID;
-  const pid = planId || defaultPlanId;
+
+  const resolvedProductId =
+    productId ||
+    (role === 'enterprise'
+      ? import.meta.env.VITE_DODO_ENTERPRISE_PRODUCT_ID
+      : import.meta.env.VITE_DODO_PRO_PRODUCT_ID);
 
   useEffect(() => {
     if (!publicKey) return;
-    loadDodo(publicKey).then(() => setReady(true)).catch(() => setReady(false));
+    loadDodo(publicKey)
+      .then(() => setReady(true))
+      .catch(() => setReady(false));
   }, [publicKey]);
 
   const handleClick = async () => {
-    if (!pid) {
-      alert('Plan ID not configured');
+    if (!resolvedProductId) {
+      toast.error('Payment not configured. Please contact support.');
       return;
     }
 
+    const userId = (user as any)?.$id ?? null;
+    const userEmail = (user as any)?.email;
+    const userName = (user as any)?.name;
+    const effectiveRole = role ?? 'pro';
+
     setLoading(true);
     try {
-      const paymentData = await openDodoCheckout(pid, {
-        email: (user as any)?.email,
-        name: (user as any)?.name,
-        metadata: { 
-          userId: (user as any)?.$id || null,
-          planId: pid,
-          role: role || 'pro'
+      const paymentData = await openDodoCheckout(resolvedProductId, {
+        email: userEmail,
+        name: userName,
+        metadata: {
+          userId,
+          productId: resolvedProductId,
+          role: effectiveRole,
         },
       });
 
-      // Notify backend to provision subscription
-      try {
-        const response = await fetch('/api/dodo/activate', { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            userId: (user as any)?.$id || null,
-            planId: pid,
-            role: role || 'pro',
-            transactionId: paymentData?.transaction_id,
-            subscriptionId: paymentData?.subscription_id
-          }) 
+      // paymentData comes from DodoPayments.checkout onSuccess(data)
+      const subscriptionId: string | undefined = paymentData?.subscription_id;
+      const transactionId: string | undefined = paymentData?.transaction_id ?? paymentData?.payment_id;
+
+      const activateRes = await fetch('/api/dodo/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          productId: resolvedProductId,
+          role: effectiveRole,
+          transactionId: transactionId ?? null,
+          subscriptionId: subscriptionId ?? null,
+        }),
+      });
+
+      if (activateRes.ok) {
+        toast.success('Subscription activated! Reloading…', { duration: 3000 });
+        setTimeout(() => window.location.reload(), 2500);
+      } else {
+        const body = await activateRes.json().catch(() => ({}));
+        console.error('[DodoSubscription] Activation error:', body);
+        // Payment went through but backend activation failed — don't alarm the user
+        toast('Payment received. Your plan will be updated shortly.', {
+          icon: '⏳',
+          duration: 6000,
         });
-        
-        if (response.ok) {
-          alert('Thank you! Your subscription is now active. Please refresh the page to see your updated plan.');
-          // Refresh page to update user context
-          setTimeout(() => window.location.reload(), 2000);
-        } else {
-          throw new Error('Activation failed');
-        }
-      } catch (e) {
-        console.warn('activation call failed', e);
-        alert('Payment successful, but activation is pending. Please contact support if your plan is not updated within 5 minutes.');
       }
     } catch (e: any) {
       if (e?.message === 'checkout-closed') {
-        // user closed checkout
+        // user dismissed — no toast needed
       } else {
-        console.error('Dodo checkout error', e);
-        alert('Payment failed. Please try again.');
+        console.error('[DodoSubscription] Checkout error:', e);
+        toast.error('Payment failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -85,11 +99,13 @@ export default function DodoSubscription({ planId, label = 'Subscribe', classNam
   return (
     <div className={className}>
       <Button onClick={handleClick} disabled={!ready || loading} variant="primary">
-        {loading ? 'Processing...' : label}
+        {loading ? 'Processing…' : label}
       </Button>
       {!publicKey && (
-        <div className="text-xs text-red-500 mt-2">Dodo public key not configured (VITE_DODO_PUBLIC_KEY)</div>
+        <p className="text-xs text-red-500 mt-2">
+          Dodo public key not configured (VITE_DODO_PUBLIC_KEY)
+        </p>
       )}
     </div>
-  )
+  );
 }

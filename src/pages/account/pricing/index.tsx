@@ -1,21 +1,21 @@
 import { CheckCircleIcon } from "@phosphor-icons/react";
 import Button from "../../../components/button/button";
-import PaddleSubscription from "../../../components/payment/PaddleSubscription";
 import { useUser } from "../../../context/authContext";
+import DodoSubscription from "../../../components/payment/DodoSubscription";
 
 function Pricing() {
   const { user } = useUser();
 
   const pricingPlans = [
     {
-        id: 'starter',
+        id: 'free',
         name: 'Starter',
         price: '$0',
         cadence: 'Forever free',
         accent: 'bg-slate-100 text-slate-700',
         purpose: 'Perfect for students and individuals getting started with AI-powered productivity and task management.',
         features: [
-            'Up to 3 workspaces',
+            '1 organization',
             'Unlimited personal tasks',
             'AI task organization',
             'Natural language task input',
@@ -26,7 +26,7 @@ function Pricing() {
     {
         id: 'pro',
         name: 'Pro',
-        price: '$6',
+        price: '$5',
         cadence: 'Per month',
         accent: 'bg-sky-100 text-sky-700',
         purpose: 'For freelancers, creators, and professionals who want smarter planning and faster execution.',
@@ -44,8 +44,8 @@ function Pricing() {
         ],
     },
     {
-        id: 'team',
-        name: 'Team',
+        id: 'Enterprise',
+        name: 'Enterprise',
         price: '$15',
         cadence: 'Per month',
         accent: 'bg-violet-100 text-violet-700',
@@ -62,30 +62,13 @@ function Pricing() {
             'Advanced permissions',
         ],
     },
-    {
-        id: 'lifetime',
-        name: 'Lifetime',
-        price: '$79',
-        cadence: 'One-time payment',
-        accent: 'bg-amber-100 text-amber-800',
-        purpose: 'One payment. Lifetime access for early adopters who want to grow with Flashtasks.',
-        badge: 'Limited Offer',
-        features: [
-            'All Pro features',
-            'Unlimited personal workspaces',
-            'Future AI upgrades included',
-            'Early adopter badge',
-            'Priority feature access',
-            'Lifetime updates',
-        ],
-    },
   ];
 
-  const currentRole = (user as any)?.prefs?.role || 'starter';
+  const currentRole = (user as any)?.prefs?.role || 'free';
   const isCurrentPlan = (planId: string) => currentRole === planId;
 
   const renderCta = (plan: any) => {
-    if (plan.id === 'starter') {
+    if (plan.id === 'free') {
       return (
         <Button
           href={user ? undefined : "/signup"}
@@ -93,18 +76,6 @@ function Pricing() {
           className="w-full justify-center"
         >
           Start Free
-        </Button>
-      );
-    }
-
-    if (plan.id === 'lifetime') {
-      return (
-        <Button
-          href={user ? undefined : "/signup"}
-          variant={plan.featured ? 'primary' : 'secondary'}
-          className="w-full justify-center"
-        >
-          {user ? 'Get Lifetime Access' : 'Sign up to unlock'}
         </Button>
       );
     }
@@ -134,8 +105,8 @@ function Pricing() {
     }
 
     return (
-      <PaddleSubscription
-        role={plan.role as 'pro' | 'team'}
+      <DodoSubscription
+        role={plan.role as 'pro' | 'enterprise'}
         label={`Upgrade to ${plan.name}`}
         className="w-full"
       />
@@ -165,9 +136,6 @@ function Pricing() {
                     >
                         <div className="flex items-start justify-between gap-2">
                             <span className={`text-xs font-semibold px-3 py-1 rounded-full ${plan.accent}`}>{plan.name}</span>
-                            {plan.badge ? (
-                                <span className="text-[11px] uppercase tracking-wide text-amber-700 bg-amber-100 px-2 py-1 rounded-full">{plan.badge}</span>
-                            ) : null}
                             {isCurrentPlan(plan.id) && (
                                 <span className="text-[11px] uppercase tracking-wide text-green-700 bg-green-100 px-2 py-1 rounded-full">Active</span>
                             )}

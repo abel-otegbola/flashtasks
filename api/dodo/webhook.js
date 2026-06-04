@@ -7,46 +7,71 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method not allowed');
 
   try {
-    // Read raw body
+    // Read raw body for signature verification (must happen before JSON.parse)
     const raw = await new Promise((resolve) => {
       let data = '';
       req.on('data', chunk => data += chunk);
       req.on('end', () => resolve(data));
     });
 
-    const payload = JSON.parse(raw);
-    
-    // Verify webhook signature
+    // Verify webhook signature using DODO_WEBHOOK_SECRET
     const signature = req.headers['x-dodo-signature'];
     const webhookSecret = process.env.DODO_WEBHOOK_SECRET;
-    
-    if (webhookSecret && signature) {
+
+    if (webhookSecret) {
+      if (!signature) {
+        console.warn('[dodo/webhook] Missing signature header');
+        return res.status(401).send('Missing signature');
+      }
+
       const expectedSignature = crypto
         .createHmac('sha256', webhookSecret)
         .update(raw)
         .digest('hex');
-      
+
       if (signature !== expectedSignature) {
         console.warn('[dodo/webhook] Invalid signature');
         return res.status(401).send('Invalid signature');
       }
+    } else {
+      console.warn('[dodo/webhook] DODO_WEBHOOK_SECRET not set — skipping signature check');
     }
 
-    // Extract event data
+    const payload = JSON.parse(raw);
+
     const event = payload.event;
     const data = payload.data;
 
     console.log('[dodo/webhook] Received event:', event);
 
-    // Handle subscription events
-    if (event === 'subscription.created' || event === 'subscription.activated' || event === 'payment.success') {
-      const subscriptionId = data.subscription_id;
-      const customerId = data.customer_id;
-      const metadata = data.metadata || {};
-      const userId = metadata.userId;
-      const role = metadata.role || 'pro';
+    // Relevant subscription/payment events
+    const handledEvents = [
+      'subscription.created',
+      'subscription.activated',
+      'subscription.renewed',
+      'payment.succeeded',
+      'payment.success'
+    ];
 
-      // Store in Appwrite
+    if (handledEvents.includes(event)) {
+      const subscriptionId = data.subscription_id || data.id || '';
+      const customerId = data.customer_id || '';
+      const metadata = data.metadata || {};
+      const userId = metadata.userId || '';
+
+      // Resolve role from product ID using env-configured product IDs
+      const productId = data.product_id || metadata.productId || '';
+      const proProductId = process.env.DODO_PRO_PRODUCT_ID;
+      const enterpriseProductId = process.env.DODO_ENTERPRISE_PRODUCT_ID;
+
+      let role =
+        productId === enterpriseProductId ? 'enterprise'
+        : productId === proProductId ? 'pro'
+        : metadata.role || 'pro'; // fall back to metadata, then default to 'pro'
+
+      console.log(`[dodo/webhook] Resolved role "${role}" from productId "${productId}"`);
+
+      // Appwrite configuration
       const appwriteEndpoint = process.env.APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
       const projectId = process.env.APPWRITE_PROJECT_ID;
       const apiKey = process.env.APPWRITE_API_KEY;
@@ -54,72 +79,73 @@ export default async function handler(req, res) {
       const collectionId = process.env.DODO_SUBSCRIPTION_COLLECTION_ID;
 
       if (!apiKey || !projectId || !databaseId || !collectionId) {
-        console.warn('[dodo/webhook] Missing Appwrite configuration');
+        console.warn('[dodo/webhook] Missing Appwrite configuration — skipping storage');
         return res.status(200).json({ received: true, stored: false });
       }
 
-      // Create or update subscription record
       const docId = subscriptionId || `${userId}_${Date.now()}`;
       const subscriptionData = {
         event,
-        subscriptionId: subscriptionId || '',
-        customerId: customerId || '',
-        userId: userId || '',
-        role: role,
+        subscriptionId,
+        customerId,
+        userId,
+        productId,
+        role,
         status: data.status || 'active',
         verified: true,
         raw: JSON.stringify(data),
         createdAt: new Date().toISOString()
       };
 
+      const appwriteHeaders = {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': projectId,
+        'X-Appwrite-Key': apiKey
+      };
+
+      const baseUrl = `${appwriteEndpoint}/databases/${databaseId}/collections/${collectionId}/documents`;
+
+      // Try to create first; fall back to PATCH update if the document already exists
       try {
-        const response = await fetch(
-          `${appwriteEndpoint}/databases/${databaseId}/collections/${collectionId}/documents/${docId}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Appwrite-Project': projectId,
-              'X-Appwrite-Key': apiKey
-            },
-            body: JSON.stringify({
-              documentId: docId,
-              data: subscriptionData
-            })
-          }
-        );
+        const createRes = await fetch(baseUrl, {
+          method: 'POST',
+          headers: appwriteHeaders,
+          body: JSON.stringify({
+            documentId: docId,
+            data: subscriptionData
+          })
+        });
 
-        if (!response.ok) {
-          // Try to update instead
-          const updateResponse = await fetch(
-            `${appwriteEndpoint}/databases/${databaseId}/collections/${collectionId}/documents/${docId}`,
-            {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Appwrite-Project': projectId,
-                'X-Appwrite-Key': apiKey
-              },
-              body: JSON.stringify({
-                data: subscriptionData
-              })
-            }
-          );
+        if (!createRes.ok) {
+          const createErr = await createRes.text();
+          console.warn('[dodo/webhook] Create failed, attempting update:', createErr);
 
-          if (!updateResponse.ok) {
-            console.error('[dodo/webhook] Failed to store subscription:', await updateResponse.text());
+          const updateRes = await fetch(`${baseUrl}/${docId}`, {
+            method: 'PATCH',
+            headers: appwriteHeaders,
+            body: JSON.stringify({ data: subscriptionData })
+          });
+
+          if (!updateRes.ok) {
+            const updateErr = await updateRes.text();
+            console.error('[dodo/webhook] Update also failed:', updateErr);
+            // Still return 200 so Dodo does not keep retrying for a storage error
+            return res.status(200).json({ received: true, stored: false });
           }
         }
 
-        console.log('[dodo/webhook] Subscription stored successfully');
-      } catch (error) {
-        console.error('[dodo/webhook] Error storing subscription:', error);
+        console.log('[dodo/webhook] Subscription record stored for docId:', docId);
+      } catch (storeErr) {
+        console.error('[dodo/webhook] Error storing subscription:', storeErr);
+        return res.status(200).json({ received: true, stored: false });
       }
+    } else {
+      console.log('[dodo/webhook] Unhandled event type, ignoring:', event);
     }
 
-    res.status(200).json({ received: true });
+    return res.status(200).json({ received: true });
   } catch (error) {
     console.error('[dodo/webhook] Error processing webhook:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
