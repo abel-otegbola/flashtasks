@@ -1,8 +1,8 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Button from '../button/button';
-import { loadDodo, openDodoCheckout } from '../../services/dodo';
+import { openDodoCheckout } from '../../services/dodo';
 import { useUser } from '../../context/authContext';
 
 interface Props {
