@@ -127,7 +127,7 @@ function Pricing() {
                 </div>
             </div>
 
-            <div className="grid lg:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-5 w-full rounded-lg">
+            <div className="grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-5 w-full rounded-lg">
                 {pricingPlans.map((plan) => (
                     <article
                         key={plan.id}
