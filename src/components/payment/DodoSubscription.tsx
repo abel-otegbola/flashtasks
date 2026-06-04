@@ -15,7 +15,6 @@ interface Props {
 
 export default function DodoSubscription({ productId, label = 'Subscribe', className = '', role }: Props) {
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
   const { user } = useUser();
 
   const publicKey = import.meta.env.VITE_DODO_PUBLIC_KEY;
@@ -25,13 +24,6 @@ export default function DodoSubscription({ productId, label = 'Subscribe', class
     (role === 'enterprise'
       ? import.meta.env.VITE_DODO_ENTERPRISE_PRODUCT_ID
       : import.meta.env.VITE_DODO_PRO_PRODUCT_ID);
-
-  useEffect(() => {
-    if (!publicKey) return;
-    loadDodo(publicKey)
-      .then(() => setReady(true))
-      .catch(() => setReady(false));
-  }, [publicKey]);
 
   const handleClick = async () => {
     if (!resolvedProductId) {
@@ -98,7 +90,7 @@ export default function DodoSubscription({ productId, label = 'Subscribe', class
 
   return (
     <div className={className}>
-      <Button onClick={handleClick} disabled={!ready || loading} variant="primary">
+      <Button onClick={handleClick} disabled={loading} variant="primary">
         {loading ? 'Processing…' : label}
       </Button>
       {!publicKey && (
