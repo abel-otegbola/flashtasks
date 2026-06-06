@@ -1,23 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { searchTasks, SearchTask } from "../../services/search";
-import { useUser } from "../../context/authContext";
-import LoadingIcon from "../../assets/icons/loading";
 import { Magnifer } from "@solar-icons/react";
 import TaskDetailsModal from "../modals/taskDetailsModal";
 import { todo } from "../../interface/todo";
-import { databases } from '../../appwrite/appwrite';
 import { useTasks } from "../../context/tasksContext";
-import { useOrganizations } from "../../context/organizationContext";
 
 interface Props {
-  onResults?: (results: SearchTask[], query: string) => void;
+  onResults?: (results: todo[], query: string) => void;
   placeholder?: string;
 }
 
 export default function SearchBar({ onResults, placeholder = "Search tasks..." }: Props) {
-  const { user } = useUser();
   const { tasks } = useTasks();
-  const { organizations } = useOrganizations();
   const [query, setQuery] = useState("");
   const [selectedTask, setSelectedTask] = useState<todo | null>(null);
 

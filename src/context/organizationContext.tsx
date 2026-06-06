@@ -34,12 +34,6 @@ type OrganizationContextValues = {
   removeMemberFromOrg: (orgId: string, memberId: string) => Promise<boolean>;
   updateTeamMember: (orgId: string, memberId: string, roles: string[]) => Promise<boolean>;
   hasPermission?: (permission: string, orgId?: string) => boolean;
-  getAutomations: (userId: string) => Promise<AutomationRunRecord[]>;
-  updateAutomation: (id: string, data: Partial<AutomationRunRecord>) => Promise<AutomationRunRecord | null>;
-  deleteAutomation: (id: string) => Promise<boolean>;
-  getReminders: (userId: string) => Promise<AutomationReminderRecord[]>;
-  updateReminder: (id: string, data: Partial<AutomationReminderRecord>) => Promise<AutomationReminderRecord | null>;
-  deleteReminder: (id: string) => Promise<boolean>;
 }
 
 const OrganizationContext = createContext({} as OrganizationContextValues);
@@ -449,97 +443,6 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const getAutomations = async (userId: string) => {
-    if (!userId) return [];
-    try {
-      const response = await databases.listDocuments(DATABASE_ID, "task_runs", [
-        Query.equal('userId', [userId]),
-        Query.orderAsc('$createdAt'),
-      ]);
-      const next = (response.documents || []) as unknown as AutomationRunRecord[];
-      setAutomations(next);
-      return next;
-    } catch (err) {
-      console.error('Error loading automations', err);
-      return [];
-    }
-  };
-
-  const updateAutomation = async (id: string, data: Partial<AutomationRunRecord>) => {
-    setLoading(true);
-    try {
-      const response = await databases.updateDocument(DATABASE_ID, "task_runs", id, data);
-      const updated = response as unknown as AutomationRunRecord;
-      setAutomations((previous) => previous.map((run) => run.$id === id ? updated : run));
-      return updated;
-    } catch (err) {
-      console.error('Error updating automation', err);
-      return null;
-    } finally {      
-      setLoading(false);
-    }  
-  };
-
-  const deleteAutomation = async (id: string) => {
-    setLoading(true);
-    try {      
-      await databases.deleteDocument(DATABASE_ID, "task_runs", id);
-      setAutomations((previous) => previous.filter((run) => run.$id !== id));
-      return true;
-    } catch (err) {
-      console.error('Error deleting automation', err);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getReminders = async (userId: string) => {
-    if (!userId) return [];
-    try {
-      const response = await databases.listDocuments(DATABASE_ID, "reminders", [
-        Query.equal('userId', [userId]),
-        Query.orderAsc('$createdAt'),
-      ]);
-      const next = (response.documents || []) as unknown as AutomationReminderRecord[];
-      setReminders(next);
-      console.log(next)
-      return next;
-    } catch (err) {
-      console.error('Error loading reminders', err);
-      return [];
-    }
-  };
-
-  const updateReminder = async (id: string, data: Partial<AutomationReminderRecord>) => {
-    setLoading(true);
-    try {
-      const response = await databases.updateDocument(DATABASE_ID, "reminders", id, data);
-      const updated = response as unknown as AutomationReminderRecord;
-      setReminders((previous) => previous.map((reminder) => reminder.$id === id ? updated : reminder));
-      return updated;
-    } catch (err) {
-      console.error('Error updating reminder', err);
-      return null;
-    } finally {      
-      setLoading(false);
-    }
-  };
-
-  const deleteReminder = async (id: string) => {
-    setLoading(true);
-    try {      
-      await databases.deleteDocument(DATABASE_ID, "reminders", id);
-      setReminders((previous) => previous.filter((reminder) => reminder.$id !== id));
-      return true;
-    } catch (err) {
-      console.error('Error deleting reminder', err);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <OrganizationContext.Provider 
       value={{ 
@@ -566,12 +469,6 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
         updateTeamMember, 
         loadMessages,
         sendMessage,
-        getAutomations,
-        updateAutomation,
-        deleteAutomation,
-        getReminders,
-        updateReminder,
-        deleteReminder,
         uploadFile,
       }}>
       {children}

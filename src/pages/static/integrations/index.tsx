@@ -16,7 +16,7 @@ const platforms = [
   },
   {
     name: "WhatsApp",
-    text: "Planned next. Hermes will support more channels soon.",
+    text: "Planned next. Flashtasks will support more channels soon.",
     status: "Coming soon",
   },
 ];
@@ -40,7 +40,7 @@ function IntegrationsPage() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-base text-gray-500 dark:text-gray-300 sm:text-lg">
-            Hermes brings Slack, email, and future channels into the same workflow so follow-ups never slip.
+            Flashtasks brings Slack, email, and future channels into the same workflow so follow-ups never slip.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">

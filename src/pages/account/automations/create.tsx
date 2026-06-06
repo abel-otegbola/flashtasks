@@ -1,69 +1,24 @@
 import { Link } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Button from "../../../components/button/button";
 import { Upload } from "@solar-icons/react";
 import { useOrganizations } from "../../../context/organizationContext";
 import { useUser } from "../../../context/authContext";
 import { useRealtimeTranscription } from "../../../helpers/audioTranscriber";
-import { getMaxRecordingTime } from "../../../helpers/createTaskHelpers";
 import { transcribeFile } from "../../../helpers/transcribeFile";
-import {
-  AutomationReminderRecord,
-  AutomationRunRecord,
-  AutomationRunResponse,
-  listAutomationReminders,
-  listAutomationRuns,
-  runAutomation,
-} from "../../../services/automation";
+import { useAutomations } from "../../../context/automationContext";
 
 function CreateAutomationPage() {
   const { user } = useUser();
   const { currentOrg } = useOrganizations();
+  const { createAutomation, loading } = useAutomations();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   const [finalText, setFinalText] = useState("");
   const [interimText, setInterimText] = useState("");
-  const [context, setContext] = useState("");
-  const [automationRun, setAutomationRun] = useState<AutomationRunResponse | null>(null);
-  const [automationRuns, setAutomationRuns] = useState<AutomationRunRecord[]>([]);
-  const [automationReminders, setAutomationReminders] = useState<AutomationReminderRecord[]>([]);
-  const [loading, setLoading] = useState(false);
   const [isTranscribingFile, setIsTranscribingFile] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "recording" | "Listening..." | "processing" | "error">("idle");
 
   const userRole = ((user as any)?.prefs?.role as string) || "free";
-  const maxRecordingTime = getMaxRecordingTime(userRole);
-
-  useEffect(() => {
-    const loadHistory = async () => {
-      if (!user?.$id || !currentOrg?.$id) {
-        setAutomationRuns([]);
-        setAutomationReminders([]);
-        return;
-      }
-
-      setHistoryLoading(true);
-      setHistoryError(null);
-
-      try {
-        const [runsResponse, remindersResponse] = await Promise.all([
-          listAutomationRuns({ limit: 10, userId: user.$id, workspaceId: currentOrg.$id }),
-          listAutomationReminders({ limit: 10, userId: user.$id, workspaceId: currentOrg.$id }),
-        ]);
-
-        setAutomationRuns(runsResponse.runs || []);
-        setAutomationReminders(remindersResponse.reminders || []);
-      } catch (err) {
-        setHistoryError(err instanceof Error ? err.message : "Failed to load automation history.");
-      } finally {
-        setHistoryLoading(false);
-      }
-    };
-
-    loadHistory();
-  }, [currentOrg?.$id, user?.$id]);
 
   const {
     status: transcriptionStatus,
@@ -89,20 +44,12 @@ function CreateAutomationPage() {
   const isRecording = transcriptionStatus === "recording";
   const isSupported = transcriptionStatus !== "error";
   const displayText = interimText ? `${finalText} ${interimText}`.trim() : finalText;
-  const displayError = error;
 
   const handleMicToggle = () => {
     if (isRecording) {
       stopRecording();
       return;
     }
-
-    if (recordingTime >= maxRecordingTime) {
-      setHistoryError("Recording limit reached. Upgrade your plan for more time.");
-      return;
-    }
-
-    setHistoryError(null);
     startRecording();
   };
 
@@ -115,48 +62,32 @@ function CreateAutomationPage() {
       const text = await transcribeFile(file);
       if (text) setFinalText((prev) => (prev ? `${prev} ${text}` : text));
     } catch (err) {
-      setHistoryError(err instanceof Error ? err.message : "Failed to transcribe file.");
+      console.error(err instanceof Error ? err.message : "Failed to transcribe file.");
     } finally {
       setIsTranscribingFile(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const handleRunAutomation = async () => {
-    const nextTask = displayText.trim();
-
-    if (!nextTask) {
-      setHistoryError("Please enter a task first.");
-      return;
-    }
-
-    setLoading(true);
-    setHistoryError(null);
-
-    try {
-      const response = await runAutomation({
-        task: nextTask,
-        context: context.trim() || null,
-        userId: user?.$id ?? null,
-        workspaceId: currentOrg?.$id ?? null,
+  const handleCreateAutomation = async () => {
+    if (!displayText.trim()) return;
+    setStatus("processing");
+    createAutomation({
+      title: displayText.trim(),
+      userId: user!.$id,
+      status: "active",
+      schedule: "daily", 
+      instruction: displayText.trim(),
+      actions: [],
+    })
+      .then(() => {
+        setStatus("idle");
+        setFinalText("");
+      })
+      .catch((err) => {
+        console.error(err instanceof Error ? err.message : "Failed to create automation.");
+        setStatus("error");
       });
-
-      setAutomationRun(response);
-
-      if (user?.$id && currentOrg?.$id) {
-        const [runsResponse, remindersResponse] = await Promise.all([
-          listAutomationRuns({ limit: 10, userId: user.$id, workspaceId: currentOrg.$id }),
-          listAutomationReminders({ limit: 10, userId: user.$id, workspaceId: currentOrg.$id }),
-        ]);
-
-        setAutomationRuns(runsResponse.runs || []);
-        setAutomationReminders(remindersResponse.reminders || []);
-      }
-    } catch (err) {
-      setHistoryError(err instanceof Error ? err.message : "Failed to run automation.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -170,7 +101,7 @@ function CreateAutomationPage() {
             Create automation
           </h1>
           <p className="text-gray-400 mt-2">
-            Describe the workflow you want, then record or upload audio to generate the automation.
+            Describe the workflow you want, record or upload audio to generate the automation.
           </p>
         </div>
       </div>
@@ -248,16 +179,6 @@ function CreateAutomationPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <label className="text-sm font-medium">Context</label>
-          <textarea
-            value={context}
-            onChange={(e) => setContext(e.target.value)}
-            placeholder="Optional extra context"
-            className="w-full min-h-[88px] resize-none rounded-[10px] border border-gray-500/[0.15] bg-white dark:bg-dark-bg px-4 py-3 outline-none dark:text-white dark:placeholder-gray-400"
-          />
-        </div>
-
         <div className="flex justify-between flex-wrap gap-4 items-end">
           <p className="text-gray-400 text-sm">
             {userRole === "free" && (
@@ -267,7 +188,7 @@ function CreateAutomationPage() {
             )}
           </p>
 
-          <Button className="max-[450px]:w-full" size="small" onClick={handleRunAutomation} disabled={loading || !displayText.trim()}>
+          <Button className="max-[450px]:w-full" size="small" onClick={handleCreateAutomation} disabled={loading || !displayText.trim()}>
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
@@ -279,81 +200,7 @@ function CreateAutomationPage() {
           </Button>
         </div>
       </div>
-
-      {displayError && (
-        <div className="p-4 rounded-lg bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300">
-          {displayError}
-        </div>
-      )}
-
-      {automationRun && (
-        <div className="rounded-[10px] border border-gray-500/[0.12] bg-white dark:bg-dark-bg p-4 text-sm">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className="font-semibold">Last run</span>
-            <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs">
-              {automationRun.status}
-            </span>
-          </div>
-          {automationRun.analysis?.summary && (
-            <p className="text-gray-600 dark:text-gray-300">{automationRun.analysis.summary as string}</p>
-          )}
-          {automationRun.analysis?.nextStep && (
-            <p className="mt-2 text-xs text-gray-400">Next step: {automationRun.analysis.nextStep as string}</p>
-          )}
-        </div>
-      )}
-
-      {historyError && (
-        <div className="rounded-[10px] border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-          {historyError}
-        </div>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-[10px] border border-gray-500/[0.12] bg-white dark:bg-dark-bg p-4">
-          <h3 className="font-semibold text-sm mb-3">Recent runs</h3>
-          {historyLoading ? (
-            <div className="text-sm text-gray-400">Loading recent runs…</div>
-          ) : automationRuns.length > 0 ? (
-            <div className="space-y-3">
-              {automationRuns.map((run) => (
-                <div key={run.$id} className="rounded-[10px] border border-gray-500/[0.08] bg-bg-gray-100/40 dark:bg-dark-bg/60 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium line-clamp-1">{run.task}</p>
-                    <span className="text-[11px] text-gray-400">{run.status}</span>
-                  </div>
-                  {run.summary && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{run.summary}</p>}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400">No automation runs yet.</p>
-          )}
-        </div>
-
-        <div className="rounded-[10px] border border-gray-500/[0.12] bg-white dark:bg-dark-bg p-4">
-          <h3 className="font-semibold text-sm mb-3">Reminders</h3>
-          {historyLoading ? (
-            <div className="text-sm text-gray-400">Loading reminders…</div>
-          ) : automationReminders.length > 0 ? (
-            <div className="space-y-3">
-              {automationReminders.map((reminder) => (
-                <div key={reminder.$id} className="rounded-[10px] border border-gray-500/[0.08] bg-bg-gray-100/40 dark:bg-dark-bg/60 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium line-clamp-1">{reminder.task}</p>
-                    <span className="text-[11px] text-gray-400">{reminder.status}</span>
-                  </div>
-                  {reminder.note && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{reminder.note}</p>}
-                  {reminder.dueAt && <p className="mt-1 text-[11px] text-gray-400">Due {new Date(reminder.dueAt).toLocaleString()}</p>}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400">No reminders scheduled.</p>
-          )}
-        </div>
-      </div>
-    </div>
+    </div> 
   );
 }
 

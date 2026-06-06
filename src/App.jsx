@@ -4,6 +4,7 @@ import AuthPages from "./pages/auth"
 import StaticPages from "./pages/static"
 import AuthProvider from "./context/authContext"
 import TasksProvider from "./context/tasksContext"
+import AutomationProvider from "./context/automationContext"
 import { OrganizationProvider } from "./context/organizationContext"
 import AccountPages from "./pages/account"
 import LoadingScreen from "./components/loaders/loadingScreen"
@@ -37,12 +38,14 @@ function App() {
         <AuthProvider>
           <OrganizationProvider>
             <TasksProvider>
+            <AutomationProvider>
             <Routes>
               <Route path="/auth/*" element={<AuthPages />} />
               <Route path="/invitation/accept" element={<InvitationAcceptPage />} />
               <Route path="/*" element={<StaticPages />} />
               <Route path="/account/*" element={<AccountPages />} />
             </Routes>
+            </AutomationProvider>
             </TasksProvider>
           </OrganizationProvider>
         </AuthProvider>

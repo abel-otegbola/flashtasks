@@ -5,6 +5,7 @@ import { useOrganizations } from "../../../context/organizationContext";
 import { useUser } from "../../../context/authContext";
 import { PencilLineIcon } from "@phosphor-icons/react";
 import { TrashBinMinimalistic } from "@solar-icons/react";
+import { useAutomations } from "../../../context/automationContext";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -133,22 +134,17 @@ function AutomationsPage() {
   const {
     automations,
     getAutomations,
-    reminders,
-    getReminders,
     loading,
     updateAutomation,
     deleteAutomation,
-    updateReminder,
-    deleteReminder,
-  } = useOrganizations();
+  } = useAutomations();
 
   const [autoFilter, setAutoFilter] = useState<AutomationStatus | "all">("all");
   const [remFilter, setRemFilter] = useState<ReminderStatus | "all">("all");
 
   useEffect(() => {
-    getAutomations(user!.$id);
-    getReminders(user!.$id);
-  }, [user?.$id]);
+    getAutomations();
+  }, []);
 
   const filteredAutomations = useMemo(
     () =>
@@ -156,14 +152,6 @@ function AutomationsPage() {
         ? automations
         : automations.filter((a) => a.status === autoFilter),
     [automations, autoFilter]
-  );
-
-  const filteredReminders = useMemo(
-    () =>
-      remFilter === "all"
-        ? reminders
-        : reminders.filter((r) => r.status === remFilter),
-    [reminders, remFilter]
   );
 
   return (
@@ -185,7 +173,7 @@ function AutomationsPage() {
       </div>
 
       {/* Two-column grid */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4">
 
         {/* ── Automations ── */}
         <section className="rounded-[10px] border border-gray-500/[0.12] bg-white dark:bg-dark-bg p-4">
@@ -218,39 +206,10 @@ function AutomationsPage() {
                   key={run.$id}
                   className="rounded-[8px] border border-gray-500/[0.08] bg-gray-100/40 dark:bg-dark-bg/60 p-3"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium line-clamp-1 flex-1 min-w-0">{run.task}</p>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <StatusBadge status={run.status} />
-                      <button
-                        title="Edit"
-                        onClick={() => updateAutomation(run.$id, {})}
-                        className="p-1 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors"
-                      >
-                        <PencilLineIcon />
-                      </button>
-                      <button
-                        title="Delete"
-                        onClick={() => deleteAutomation(run.$id)}
-                        className="p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      >
-                        <TrashBinMinimalistic />
-                      </button>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="text-sm font-medium">{run.title}</h4>
                     </div>
-                  </div>
-
-                  {run.summary && (
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-                      {run.summary}
-                    </p>
-                  )}
-
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-400">
-                    {run.nextStep && (
-                      <span>→ {run.nextStep}</span>
-                    )}
-                    {run.nextStep && run.$createdAt && <span>·</span>}
-                    {run.$createdAt && <span>{formatDate(run.$createdAt)}</span>}
                   </div>
                 </div>
               ))}
@@ -265,94 +224,6 @@ function AutomationsPage() {
               }
               cta="+ Create automation"
               ctaHref="/account/automations/create"
-            />
-          )}
-        </section>
-
-        {/* ── Reminders ── */}
-        <section className="rounded-[10px] border border-gray-500/[0.12] bg-white dark:bg-dark-bg p-4">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div>
-              <h3 className="font-semibold text-sm">Reminders</h3>
-              <p className="text-xs text-gray-500 mt-1">Follow-ups and deadlines created by automation.</p>
-            </div>
-            <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs">
-              {filteredReminders.length}
-            </span>
-          </div>
-
-          <FilterTabs
-            options={REM_FILTERS}
-            active={remFilter}
-            onChange={setRemFilter}
-          />
-
-          {loading ? (
-            <div className="space-y-3">
-              <SkeletonCard />
-              <SkeletonCard />
-            </div>
-          ) : filteredReminders.length > 0 ? (
-            <div className="space-y-2 max-h-[340px] overflow-y-auto pr-0.5">
-              {filteredReminders.map((reminder) => (
-                <div
-                  key={reminder.$id}
-                  className="rounded-[8px] border border-gray-500/[0.08] bg-gray-100/40 dark:bg-dark-bg/60 p-3"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium line-clamp-1 flex-1 min-w-0">{reminder.task}</p>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <StatusBadge status={reminder.status} />
-                      <button
-                        title="Edit"
-                        onClick={() => updateReminder(reminder.$id, {})}
-                        className="p-1 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors"
-                      >
-                        <PencilLineIcon />
-                      </button>
-                      <button
-                        title="Delete"
-                        onClick={() => deleteReminder(reminder.$id)}
-                        className="p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      >
-                        <TrashBinMinimalistic />
-                      </button>
-                    </div>
-                  </div>
-
-                  {reminder.note && (
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-                      {reminder.note}
-                    </p>
-                  )}
-
-                  {reminder.dueAt && (
-                    <p
-                      className={`mt-1.5 text-[11px] flex items-center gap-1 ${
-                        isDueSoon(reminder.dueAt)
-                          ? "text-amber-600 dark:text-amber-400 font-medium"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      🕐 Due {formatDate(reminder.dueAt)}
-                      {isDueSoon(reminder.dueAt) && (
-                        <span className="rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-1.5 py-0 text-[10px]">
-                          soon
-                        </span>
-                      )}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon="🔔"
-              message={
-                remFilter === "all"
-                  ? "No reminders scheduled."
-                  : `No ${remFilter} reminders found.`
-              }
             />
           )}
         </section>

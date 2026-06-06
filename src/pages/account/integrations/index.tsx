@@ -2,18 +2,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import IntegrationStatusCard from "../../../components/integrations/integrationStatusCard";
-import { startIntegration } from "../../../services/hermes";
+import { startIntegration } from "../../../services/integration";
 import { useUser } from "../../../context/authContext";
-import { useTasks } from "../../../context/tasksContext";
-import {
-  createDefaultIntegrationConnectionStore,
-  type IntegrationConnectionStore,
-  writeIntegrationConnectionStore,
-} from "../../../helpers/hermesIntegrationState";
-import type { HermesProvider } from "../../../hermes/types";
+import { IntegrationRecord, useTasks } from "../../../context/tasksContext";
+import type { IntegrationConnectionStore, Provider } from "../../../interface/integration";
 
 type PlatformCard = {
-  id: HermesProvider;
+  id: Provider;
   name: string;
   description: string;
 };
@@ -21,9 +16,9 @@ type PlatformCard = {
 export default function IntegrationsPage() {
   const { user } = useUser();
   const { getIntegrations } = useTasks();
-  const [connecting, setConnecting] = useState<HermesProvider | null>(null);
+  const [connecting, setConnecting] = useState<Provider | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [connectionStore, setConnectionStore] = useState<IntegrationConnectionStore>(createDefaultIntegrationConnectionStore());
+  const [connectionStore, setConnectionStore] = useState<IntegrationRecord[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const resolvedCurrentUserId = currentUserId || (user as any)?.$id || (user as any)?.userId || "";
 
@@ -43,6 +38,7 @@ export default function IntegrationsPage() {
   useEffect(() => {
     getIntegrations(user?.$id)
     .then((store) => {
+      console.log(store)
       setConnectionStore(store);
     })
     .catch((error) => {
@@ -55,30 +51,7 @@ export default function IntegrationsPage() {
     setCurrentUserId((user as any)?.$id || (user as any)?.userId || "");
   }, [user]);
 
-  const persistConnectionStore = (nextStore: IntegrationConnectionStore) => {
-    setConnectionStore(nextStore);
-    writeIntegrationConnectionStore(nextStore);
-  };
-
-  const patchConnectionStore = (
-    provider: HermesProvider,
-    patch: Partial<IntegrationConnectionStore[HermesProvider]>
-  ) => {
-    const nextStore = {
-      ...connectionStore,
-      [provider]: {
-        ...connectionStore[provider],
-        ...patch,
-        provider,
-        updatedAt: new Date().toISOString(),
-      },
-    } as IntegrationConnectionStore;
-
-    persistConnectionStore(nextStore);
-    return nextStore;
-  };
-
-  const startConnect = async (platformId: HermesProvider) => {
+  const startConnect = async (platformId: Provider) => {
     if (!resolvedCurrentUserId) {
       toast.error('Sign in to connect an integration');
       setErrorMessage('Sign in to connect an integration');
@@ -87,13 +60,6 @@ export default function IntegrationsPage() {
 
     setConnecting(platformId);
     setErrorMessage(null);
-
-    const pendingStore = patchConnectionStore(platformId, {
-      status: 'pending',
-      userId: resolvedCurrentUserId,
-      workspaceId: null,
-      error: null,
-    });
 
     try {
       const result = await startIntegration(platformId, {
@@ -106,13 +72,6 @@ export default function IntegrationsPage() {
       const message = error?.message || 'Failed to start connection';
       toast.error(message);
       setErrorMessage(message);
-
-      const failedStore = patchConnectionStore(platformId, {
-        status: 'failed',
-        userId: resolvedCurrentUserId,
-        workspaceId: null,
-        error: message,
-      });
     } finally {
       setConnecting(null);
     }
@@ -139,10 +98,10 @@ export default function IntegrationsPage() {
         {platforms.map((platform) => (
           <IntegrationStatusCard
             key={platform.id}
-            provider={platform.id}
+            integration={connectionStore.find(Integration => Integration.provider === platform.id)}
             title={platform.name}
             description={platform.description}
-            status={connectionStore[platform.id] || createDefaultIntegrationConnectionStore()[platform.id]}
+            status={connectionStore.find(Integration => Integration.provider === platform.id) ? "connected" : "pending"}
             isConnecting={connecting === platform.id}
             onConnect={() => startConnect(platform.id)}
           />

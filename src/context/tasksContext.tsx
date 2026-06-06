@@ -8,10 +8,7 @@ import { indexTask } from '../services/indexer';
 import { useOrganizations } from './organizationContext';
 import { useUser } from './authContext';
 import { sendTaskAssignmentEmail } from '../services/email';
-import {
-    createDefaultIntegrationConnectionStore,
-    type IntegrationConnectionStore,
-} from '../helpers/hermesIntegrationState';
+import { IntegrationConnectionRecord, IntegrationConnectionStore } from '../interface/integration';
 
 export type IntegrationRecord = {
     $id: string;
@@ -35,7 +32,7 @@ type TasksContextValues = {
     deleteTask: (taskId: string) => Promise<void>;
     getTasks: (userEmail: string) => Promise<void>;
     getOrganizationTasks: (orgId: string) => Promise<void>;
-    getIntegrations: (userId: string) => Promise<IntegrationConnectionStore>;
+    getIntegrations: (userId: string) => Promise<IntegrationRecord[]>;
     getTaskById: (taskId: string) => todo | undefined;
     filterTasksByStatus: (status: todo['status']) => todo[];
     filterTasksByCategory: (category: string) => todo[];
@@ -261,7 +258,7 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
         }
     };
 
-    const getIntegrations = async (userId: string): Promise<IntegrationConnectionStore> => {
+    const getIntegrations = async (userId: string): Promise<IntegrationRecord[]> => {
         setLoading(true);
         setError(null);
 
@@ -278,45 +275,16 @@ const TasksProvider = ({ children }: { children: ReactNode}) => {
             );
 
             const documents = (response.documents || []) as unknown as IntegrationRecord[];
-            const store = createDefaultIntegrationConnectionStore();
 
-            for (const document of documents) {
-                const provider = document.provider === 'gmail' || document.provider === 'slack' ? document.provider : null;
-
-                if (!provider) {
-                    continue;
-                }
-
-                const existing = store[provider];
-                const currentTime = new Date(String(document.$updatedAt || document.$createdAt || 0)).getTime();
-                const existingTime = new Date(String(existing.updatedAt || existing.lastConnectedAt || 0)).getTime();
-
-                if (existing.status === 'connected' && currentTime <= existingTime) {
-                    continue;
-                }
-
-                const connectedAt = String(document.$updatedAt || document.$createdAt || '');
-                const isConnected = Boolean(document.accessToken);
-
-                store[provider] = {
-                    provider,
-                    status: isConnected ? 'connected' : 'disconnected',
-                    lastConnectedAt: connectedAt || null,
-                    accountId: String(document.$id || '') || null,
-                    userId: String(document.userId || user?.$id || '') || null,
-                    workspaceId: null,
-                    error: null,
-                    updatedAt: String(document.$updatedAt || document.$createdAt || new Date().toISOString()),
-                };
-            }
-
-            return store;
+            console.log(documents)
+            
+            return documents;
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch integrations';
             setError(errorMessage);
             toast.error(errorMessage);
             console.error('Error fetching integrations:', err);
-            return createDefaultIntegrationConnectionStore();
+            return [] ;
         } finally {
             setLoading(false);
         }

@@ -1,27 +1,27 @@
 import { CheckCircleIcon, ClockIcon, SlackLogoIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import Button from "../button/button";
-import type { HermesProvider } from "../../hermes/types";
-import type { IntegrationConnectionRecord, IntegrationConnectionStatus } from "../../helpers/hermesIntegrationState";
+import type { IntegrationStatus } from "../../interface/integration";
 import type { JSX } from "react";
 import { GoogleLogoIcon } from "@phosphor-icons/react";
+import { IntegrationRecord } from "../../context/tasksContext";
 
 type IntegrationStatusCardProps = {
-  provider: HermesProvider;
+  integration?: IntegrationRecord;
   title: string;
   description: string;
-  status: IntegrationConnectionRecord;
+  status: IntegrationStatus;
   isConnecting?: boolean;
   onConnect: () => void;
 };
 
-const statusStyles: Record<IntegrationConnectionStatus, string> = {
+const statusStyles: Record<IntegrationStatus, string> = {
   connected: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
   pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
   failed: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
   disconnected: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
 };
 
-const statusIcons: Record<IntegrationConnectionStatus, JSX.Element> = {
+const statusIcons: Record<IntegrationStatus, JSX.Element> = {
   connected: <CheckCircleIcon size={18} weight="bold" />,
   pending: <ClockIcon size={18} weight="bold" />,
   failed: <WarningCircleIcon size={18} weight="bold" />,
@@ -41,10 +41,9 @@ const formatTimestamp = (value: string | null) => {
   }
 };
 
-function IntegrationStatusCard({ provider, title, description, status, isConnecting, onConnect }: IntegrationStatusCardProps) {
-  const connectedAt = formatTimestamp(status.lastConnectedAt);
-  const actionLabel = isConnecting ? "Connecting..." : status.status === "connected" ? "Reconnect" : `Connect ${title}`;
-  const connectionLabel = status.status === "connected" ? "Connected" : "Not connected";
+function IntegrationStatusCard({ integration, title, description, status, isConnecting, onConnect }: IntegrationStatusCardProps) {
+  const connectedAt = formatTimestamp(integration?.$updatedAt || "");
+  const actionLabel = isConnecting ? "Connecting..." : integration?.status === "connected" ? "Reconnect" : `Connect ${title}`;
 
   return (
     <section className="flex h-fit flex-col gap-3 rounded-lg border border-gray-500/15 bg-white p-6 dark:bg-dark-bg">
@@ -55,9 +54,9 @@ function IntegrationStatusCard({ provider, title, description, status, isConnect
 
         <div className="flex-1 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{title}</h3>
-          <span className={`inline-flex items-center gap-1 capitalize rounded-full pr-3 p-1 text-xs font-semibold ${statusStyles[status.status]}`}>
-            {statusIcons[status.status]}
-            {status.status}
+          <span className={`inline-flex items-center gap-1 capitalize rounded-full pr-3 p-1 text-xs font-semibold ${statusStyles[status]}`}>
+            {statusIcons[status]}
+            {status}
           </span>
         </div>
       </div>
@@ -71,11 +70,8 @@ function IntegrationStatusCard({ provider, title, description, status, isConnect
         </div>
       </div>
 
-      {status.error ? <p className="text-sm text-rose-600 dark:text-rose-300">{status.error}</p> : null}
-
-      <div className="mt-auto flex items-center justify-between gap-3">
-        <p className="text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">Provider: {provider}</p>
-        <Button size="small" variant={status.status === "connected" ? "secondary" : "primary"} onClick={onConnect} disabled={isConnecting}>
+      <div className="mt-auto flex items-center justify-end gap-3">
+        <Button size="small" variant={status === "connected" ? "secondary" : "primary"} onClick={onConnect} disabled={isConnecting}>
           {actionLabel}
         </Button>
       </div>

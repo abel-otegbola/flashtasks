@@ -1,39 +1,39 @@
 import { Query } from 'appwrite';
 import { databases } from '../appwrite/appwrite';
-import type { HermesProvider, HermesTenant } from '../hermes/types';
+import type { Provider, IntegrationTenant } from '../interface/integration';
 
 export type ApiBaseResponse = {
   ok: boolean;
 };
 
 export type StartConnectResponse = ApiBaseResponse & {
-  provider: HermesProvider;
+  provider: Provider;
   authUrl: string;
 };
 
 export type CallbackConnectResponse = ApiBaseResponse & {
-  provider: HermesProvider;
+  provider: Provider;
   userId: string;
   accountId: string;
   expiresAt: string | null;
   authUrl: string;
 };
 
-export type HermesRunStatus = 'pending_approval' | 'ready_to_execute';
+export type IntegrationRunStatus = 'pending_approval' | 'ready_to_execute';
 
-export type HermesRunResponse = ApiBaseResponse & {
+export type IntegrationRunResponse = ApiBaseResponse & {
   runId: string;
-  status: HermesRunStatus;
+  status: IntegrationRunStatus;
   analysis: Record<string, unknown>;
   result: Record<string, unknown>;
 };
 
-export type HermesRunsResponse = ApiBaseResponse & {
+export type IntegrationRunsResponse = ApiBaseResponse & {
   runs: Array<Record<string, unknown>>;
 };
 
 export type ConnectedAccountRecord = Record<string, unknown> & {
-  provider?: HermesProvider;
+  provider?: Provider;
   status?: string;
   connectedAt?: string;
   updatedAt?: string;
@@ -46,7 +46,7 @@ export type ConnectedIntegrationsResponse = ApiBaseResponse & {
   configured?: boolean;
 };
 
-export type HermesRunRequest = {
+export type IntegrationRunRequest = {
   task: string;
   context?: string | null;
   userId?: string | null;
@@ -97,7 +97,7 @@ const toQueryString = (params: Record<string, string | number | null | undefined
   return searchParams.toString();
 };
 
-export async function startIntegration(provider: HermesProvider, tenant: HermesTenant): Promise<StartConnectResponse> {
+export async function startIntegration(provider: Provider, tenant: IntegrationTenant): Promise<StartConnectResponse> {
   const query = toQueryString({ userId: tenant.userId || '', workspaceId: tenant.workspaceId || '' });
   return requestJson<StartConnectResponse>(`/connect/${provider}/start${query ? `?${query}` : ''}`, {
     method: 'GET',
@@ -105,7 +105,7 @@ export async function startIntegration(provider: HermesProvider, tenant: HermesT
 }
 
 export async function completeIntegrationCallback(
-  provider: HermesProvider,
+  provider: Provider,
   payload: { code: string; state: string },
   method: 'GET' | 'POST' = 'GET'
 ): Promise<CallbackConnectResponse> {
@@ -120,18 +120,18 @@ export async function completeIntegrationCallback(
   });
 }
 
-export async function runHermesTask(payload: HermesRunRequest): Promise<HermesRunResponse> {
-  return requestJson<HermesRunResponse>('/hermes/run', {
+export async function runIntegrationTask(payload: IntegrationRunRequest): Promise<IntegrationRunResponse> {
+  return requestJson<IntegrationRunResponse>('/Integration/run', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
-export async function listHermesRuns(): Promise<HermesRunsResponse> {
-  return requestJson<HermesRunsResponse>('/hermes/runs', { method: 'GET' });
+export async function listIntegrationRuns(): Promise<IntegrationRunsResponse> {
+  return requestJson<IntegrationRunsResponse>('/Integration/runs', { method: 'GET' });
 }
 
-export async function listConnectedIntegrations(tenant: HermesTenant): Promise<ConnectedIntegrationsResponse> {
+export async function listConnectedIntegrations(tenant: IntegrationTenant): Promise<ConnectedIntegrationsResponse> {
   const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || '';
 
   if (!databaseId) {
@@ -169,8 +169,8 @@ export async function getHealth(): Promise<ApiBaseResponse> {
   return requestJson<ApiBaseResponse>('/health', { method: 'GET' });
 }
 
-export const connectSlack = (tenant: HermesTenant) => startIntegration('slack', tenant);
+export const connectSlack = (tenant: IntegrationTenant) => startIntegration('slack', tenant);
 
-export const connectGmail = (tenant: HermesTenant) => startIntegration('gmail', tenant);
+export const connectGmail = (tenant: IntegrationTenant) => startIntegration('gmail', tenant);
 
 export const connectEmail = connectGmail;

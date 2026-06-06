@@ -18,7 +18,7 @@ export interface todo {
   dueDate?: string;
   scheduledAt?: string;
   scheduleStatus?: 'unscheduled' | 'scheduled' | 'drafted' | 'sent' | 'failed';
-  scheduleSource?: 'hermes' | 'user' | 'integration';
+  scheduleSource?: 'user' | 'integration';
   schedulePayload?: string;
   subtasks?: string;
   $createdAt: string;
