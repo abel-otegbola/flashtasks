@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "../../../components/button/button";
 import { Upload } from "@solar-icons/react";
 import { useOrganizations } from "../../../context/organizationContext";
@@ -7,18 +7,28 @@ import { useUser } from "../../../context/authContext";
 import { useRealtimeTranscription } from "../../../helpers/audioTranscriber";
 import { transcribeFile } from "../../../helpers/transcribeFile";
 import { useAutomations } from "../../../context/automationContext";
+import { extractAutomationFromText } from "../../../helpers/textToAutomation";
+import { Automation } from "../../../interface/automation";
+import TagInput from "../../../components/input/tagInput";
 
 function CreateAutomationPage() {
   const { user } = useUser();
-  const { currentOrg } = useOrganizations();
+  const { currentOrg, invitedMembers, getAllInvitedMembers } = useOrganizations();
   const { createAutomation, loading } = useAutomations();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [finalText, setFinalText] = useState("");
   const [interimText, setInterimText] = useState("");
   const [isTranscribingFile, setIsTranscribingFile] = useState(false);
   const [status, setStatus] = useState<"idle" | "recording" | "Listening..." | "processing" | "error">("idle");
+  const [automation, setAutomation] = useState<Automation | null>(null);
 
   const userRole = ((user as any)?.prefs?.role as string) || "free";
+
+  useEffect(() => {
+    if (currentOrg) {
+      getAllInvitedMembers(currentOrg.$id);
+    }
+  }, [currentOrg]);
 
   const {
     status: transcriptionStatus,
@@ -72,22 +82,37 @@ function CreateAutomationPage() {
   const handleCreateAutomation = async () => {
     if (!displayText.trim()) return;
     setStatus("processing");
-    createAutomation({
-      title: displayText.trim(),
-      userId: user!.$id,
-      status: "active",
-      schedule: "daily", 
-      instruction: displayText.trim(),
-      actions: [],
+    const automation = await extractAutomationFromText(
+      displayText.trim(),
+      {
+        userId: user!.$id,
+        teamId: currentOrg?.$id || "",
+        teamMembers: invitedMembers.map((m) => m.$id),
+      }
+    )
+    .then((automation) => {      
+      if (!automation) {
+        throw new Error("Failed to parse automation from text.");
+      }
+      setAutomation(automation);
     })
-      .then(() => {
-        setStatus("idle");
-        setFinalText("");
-      })
-      .catch((err) => {
-        console.error(err instanceof Error ? err.message : "Failed to create automation.");
-        setStatus("error");
-      });
+    .catch((err) => {
+      console.error(err instanceof Error ? err.message : "Failed to create automation.");
+      setStatus("error");
+    });
+  };
+
+  const handleSaveAutomation = async () => {
+    if (!automation) return;
+    try {
+      await createAutomation(automation);
+      setStatus("idle");
+      setFinalText("");
+      setAutomation(null);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : "Failed to save automation.");
+      setStatus("error");
+    }
   };
 
   return (
@@ -200,6 +225,23 @@ function CreateAutomationPage() {
           </Button>
         </div>
       </div>
+
+      {automation && (
+        <div className="flex flex-col gap-4 p-4 rounded-[10px] border border-green-500/[0.2]">
+          <h2 className="text-lg font-medium text-green-700">Automation preview</h2>
+          <p><strong>Title:</strong> {automation.title}</p>
+          <p><strong>Instruction:</strong> {automation.instruction}</p>
+          <p><strong>Actions:</strong> {automation.actions?.length || 0}</p>
+          <div className="flex flex-wrap gap-2">
+            <TagInput tags={automation.actions?.map((a) => a.type) || []} onChange={(tags) => setAutomation({...automation, actions: automation.actions?.filter(action => tags.includes(action.type))})} />
+          </div>
+          <div className="flex justify-end">
+            <Button size="small" variant="primary" onClick={handleSaveAutomation} disabled={loading}>
+              {loading ? "Saving…" : "Save automation"}
+            </Button> 
+          </div>
+        </div>
+      )}
     </div> 
   );
 }

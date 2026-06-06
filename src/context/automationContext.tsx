@@ -3,6 +3,7 @@ import { Automation } from "../interface/automation";
 import { databases } from "../appwrite/appwrite";
 import { useUser } from "./authContext";
 import { ID, Query } from "appwrite";
+import toast from "react-hot-toast";
 
 type values = {
     automations: Automation[];
@@ -51,15 +52,18 @@ const AutomationProvider = ({ children }: { children: ReactNode}) => {
     const createAutomation = async (automation: Omit<Automation, '$id' | '$createdAt' | '$updatedAt'>) => {
         if (!user) throw new Error('User not authenticated');
         setLoading(true);
+        console.log(
+            { ...automation, userId: user.$id, actions: JSON.stringify(automation?.actions) })
         try {
           const response = await databases.createDocument(
             DATABASE_ID,
             AUTOMATION_COLLECTION_ID,
             ID.unique(),
-            { ...automation, userId: user.$id }
+            { ...automation, userId: user.$id, actions: JSON.stringify(automation?.actions) }
           );
           const created = response as unknown as Automation;
-          setAutomations(prev => [...prev, created]);
+          getAutomations();
+          toast.success('Automation created successfully');
           return created;
         } catch (err) {
           console.error('Error creating automation', err);

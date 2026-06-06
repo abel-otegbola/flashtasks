@@ -11,13 +11,13 @@ export interface action {
     type: "daily" | "weekly" | "monthly";
     interval?: number;
   };
-  data: actionData; // original data for the action, useful for retries
+  data: ActionData; // original data for the action, useful for retries
   executedAt?: string;
   error?: string;
 }
 
 export interface Automation {
-  $id: string;
+  $id?: string;
   title: string;
   instruction: string;
   status: "active" | "inactive" | "paused" | "failed";
@@ -30,8 +30,8 @@ export interface Automation {
   organizationId?: string;
   teamId?: string;
   description?: string;
-  $createdAt: string;
-  $updatedAt: string;
+  $createdAt?: string;
+  $updatedAt?: string;
 }
 
 export interface GmailAuthParams {
@@ -64,18 +64,16 @@ export interface ReplyEmailParams extends GmailAuthParams {
   body: string;
 }
 
-export interface actionData {
-    userId?: string;
-    [key: string]: any;
-    title?: string;
-    description?: string;
-    dueDate?: string;
-    taskId?: string;
-    taskIds?: string[];
-    query?: string;
-    to?: string;
-    subject?: string;
-    body?: string;
-    summary?: string;
-    teamMembers?: string[];
-}
+export type ActionData =
+  | { type: "create_task";          data: { userId: string; title: string; description: string } }
+  | { type: "update_task";          data: { taskId: string; data: Record<string, unknown> } }
+  | { type: "complete_task";        data: { taskId: string } }
+  | { type: "review_tasks";         data: { userId: string } }
+  | { type: "generate_followups";   data: { userId: string } }
+  | { type: "prioritize_tasks";     data: { taskIds: string[] } }
+  | { type: "send_email";           data: { to: string; subject: string; body: string } }
+  | { type: "send_summary_email";   data: { to: string; subject: string; body: string } }
+  | { type: "send_reminder";        data: { to: string; subject: string; body: string } }
+  | { type: "notify_team";          data: { teamMembers?: string[]; body: string } }
+  | { type: "searchEmails";         data: { query: string; maxResults: number } }
+  | { type: "createDraft";          data: { to: string; subject: string; body: string } };
