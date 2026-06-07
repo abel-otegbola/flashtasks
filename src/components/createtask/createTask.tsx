@@ -137,7 +137,7 @@ function CreateTask() {
     }
     if (!user) {
       toast.error('Sign in to save tasks');
-      router('/signin');
+      router('/auth/login');
       return;
     }
 
