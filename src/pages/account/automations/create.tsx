@@ -10,6 +10,7 @@ import { useAutomations } from "../../../context/automationContext";
 import { extractAutomationFromText } from "../../../helpers/textToAutomation";
 import { Automation } from "../../../interface/automation";
 import TagInput from "../../../components/input/tagInput";
+import { TrashIcon } from "@phosphor-icons/react";
 
 function CreateAutomationPage() {
   const { user } = useUser();
@@ -227,9 +228,13 @@ function CreateAutomationPage() {
       </div>
 
       {automation && (
-        <div className="flex flex-col gap-4 p-4 rounded-[10px] border border-green-500/[0.2]">
-          <h2 className="text-lg font-medium text-green-700">Automation preview</h2>
-          <p><strong>Title:</strong> {automation.title}</p>
+        <div className="flex flex-col gap-4 p-4 rounded-[10px] border border-green-500/[0.2] text-sm">
+          <div className="flex items-center justify-between gap-2">
+            <p><strong>Title:</strong> {automation.title}</p>
+            <button onClick={() => setAutomation(null)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+              <TrashIcon size={16} />
+            </button>
+          </div>
           <p><strong>Instruction:</strong> {automation.instruction}</p>
           <p><strong>Actions:</strong> {automation.actions?.length || 0}</p>
           <div className="flex flex-wrap gap-2">

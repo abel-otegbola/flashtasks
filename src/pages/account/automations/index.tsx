@@ -190,12 +190,12 @@ function AutomationsPage() {
           ) : filteredAutomations.length > 0 ? (
             <div className="space-y-2 max-h-[340px] overflow-y-auto pr-0.5">
               
-                    <div className="grid md:grid-cols-6 gap-3 flex-1">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider md:col-span-2 p-2 px-4 ">Title & description</p>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider p-2 px-4">Workspace</p>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider p-2 px-4">Schedule</p>
-                      <div className="w-3" /> {/* for status and actions */}
-                    </div>
+              <div className="md:grid md:grid-cols-6 gap-3 flex-1 hidden">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider md:col-span-2 p-2 px-4 ">Title & description</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider p-2 px-4">Workspace</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider p-2 px-4">Schedule</p>
+                <div className="w-3" /> {/* for status and actions */}
+              </div>
               {filteredAutomations.map((run) => (
                 <div
                   key={run.$id}
