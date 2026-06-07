@@ -6,6 +6,8 @@ import { useUser } from "../../../context/authContext";
 import { PencilLineIcon } from "@phosphor-icons/react";
 import { TrashBinMinimalistic } from "@solar-icons/react";
 import { useAutomations } from "../../../context/automationContext";
+import { Automation } from "../../../interface/automation";
+import EditAutomationModal from "../../../components/modals/editAutomation";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -130,7 +132,7 @@ const REM_FILTERS: { label: string; value: ReminderStatus | "all" }[] = [
 ];
 
 function AutomationsPage() {
-  const { user } = useUser();
+  const { organizations } = useOrganizations();
   const {
     automations,
     getAutomations,
@@ -138,6 +140,7 @@ function AutomationsPage() {
     updateAutomation,
     deleteAutomation,
   } = useAutomations();
+  const [openEdit, setOpenEdit] = useState<Automation | null>(null);
 
   const [autoFilter, setAutoFilter] = useState<AutomationStatus | "all">("all");
   const [remFilter, setRemFilter] = useState<ReminderStatus | "all">("all");
@@ -177,21 +180,6 @@ function AutomationsPage() {
 
         {/* ── Automations ── */}
         <section className="rounded-[10px] border border-gray-500/[0.12] bg-white dark:bg-dark-bg p-4">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div>
-              <h3 className="font-semibold text-sm">Current automations</h3>
-              <p className="text-xs text-gray-500 mt-1">Latest runs for this workspace.</p>
-            </div>
-            <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs">
-              {filteredAutomations.length}
-            </span>
-          </div>
-
-          <FilterTabs
-            options={AUTO_FILTERS}
-            active={autoFilter}
-            onChange={setAutoFilter}
-          />
 
           {loading ? (
             <div className="space-y-3">
@@ -201,14 +189,35 @@ function AutomationsPage() {
             </div>
           ) : filteredAutomations.length > 0 ? (
             <div className="space-y-2 max-h-[340px] overflow-y-auto pr-0.5">
+              
+                    <div className="grid md:grid-cols-6 gap-3 flex-1">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider md:col-span-2 p-2 px-4 ">Title & description</p>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider p-2 px-4">Workspace</p>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider p-2 px-4">Schedule</p>
+                      <div className="w-3" /> {/* for status and actions */}
+                    </div>
               {filteredAutomations.map((run) => (
                 <div
                   key={run.$id}
                   className="rounded-[8px] border border-gray-500/[0.08] bg-gray-100/40 dark:bg-dark-bg/60 p-3"
                 >
                   <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium">{run.title}</h4>
+                    <div className="grid md:grid-cols-5 gap-3 flex-1">
+                      <div className="md:col-span-2 space-y-0.5">
+                        <h4 className="text-sm font-medium">{run.title}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{run.description}</p>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{organizations.find((org) => org.$id === run.organizationId)?.name || "Individual"}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{run.schedule}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={run.status} />
+                      <button onClick={() => setOpenEdit(run)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                        <PencilLineIcon size={16} />
+                      </button>
+                      <button onClick={() => deleteAutomation(run.$id!)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                        <TrashBinMinimalistic size={16} />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -228,6 +237,20 @@ function AutomationsPage() {
           )}
         </section>
       </div>
+
+      {
+        openEdit && (
+          <EditAutomationModal
+            isOpen={openEdit !== null}
+            onClose={() => setOpenEdit(null)}
+            automation={openEdit}
+            onSave={async (updated) => {
+              await updateAutomation(updated.$id!, updated);
+            }}
+            loading={loading}
+          />
+        ) 
+      }
     </div>
   );
 }

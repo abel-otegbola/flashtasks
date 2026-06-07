@@ -11,6 +11,7 @@ interface TagInputProps {
   placeholder?: string
   error?: string
   required?: boolean
+  readonly?: boolean
   disabled?: boolean
 }
 
@@ -22,6 +23,7 @@ export default function TagInput({
   placeholder,
   error,
   required,
+  readonly,
   disabled,
 }: TagInputProps) {
   const [focus, setFocus] = useState(false)
@@ -116,7 +118,7 @@ export default function TagInput({
               }
             }}
             className="min-w-[140px] flex-1 bg-transparent outline-none py-1 text-[13px]"
-            disabled={disabled}
+            disabled={disabled || readonly}
           />
         </div>
       </div>

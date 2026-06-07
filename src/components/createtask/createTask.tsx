@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Formik } from "formik";
 import { Upload } from "@solar-icons/react";
 import { useRef, useState } from "react";
@@ -31,6 +31,7 @@ function CreateTask() {
   const orgCtx = useOrganizations();
   const { currentOrg } = orgCtx;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const router = useNavigate();
 
   const userRole = ((user as any)?.prefs?.role as string) || "free";
   const maxRecordingTime = getMaxRecordingTime(userRole);
@@ -132,6 +133,11 @@ function CreateTask() {
     const canCreate =  true;
     if (!canCreate) {
       toast.error('You do not have permission to create tasks in this organization');
+      return;
+    }
+    if (!user) {
+      toast.error('Sign in to save tasks');
+      router('/signin');
       return;
     }
 
