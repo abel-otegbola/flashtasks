@@ -233,7 +233,7 @@ function CreateAutomationPage() {
           <p><strong>Instruction:</strong> {automation.instruction}</p>
           <p><strong>Actions:</strong> {automation.actions?.length || 0}</p>
           <div className="flex flex-wrap gap-2">
-            <TagInput tags={automation.actions?.map((a) => a.type) || []} onChange={(tags) => setAutomation({...automation, actions: automation.actions?.filter(action => tags.includes(action.type))})} />
+            <TagInput readonly tags={automation.actions?.map((a) => a.type) || []} onChange={(tags) => setAutomation({...automation, actions: automation.actions?.filter(action => tags.includes(action.type))})} />
           </div>
           <div className="flex justify-end">
             <Button size="small" variant="primary" onClick={handleSaveAutomation} disabled={loading}>
