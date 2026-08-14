@@ -15,7 +15,12 @@ function Footer() {
         <div className="flex flex-col gap-4">
           <h3 className="font-semibold mb-2 text-lg">Products</h3>
           {
-            ["Features", "Integrations", "Pricing", "For teams"].map(item => (
+            [
+              "Features", 
+              // "Integrations", 
+              // "Pricing", 
+              "For teams"
+            ].map(item => (
               <Link to={"/" + item} key={item} className="text-gray-500 hover:text-primary cursor-pointer">
                 {item}
               </Link>

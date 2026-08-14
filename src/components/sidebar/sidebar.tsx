@@ -39,12 +39,12 @@ function Sidebar() {
         { id: 0, label: "Dashboard", icon: <Home size={16} />, link: "/account/dashboard" },
         { id: 1, label: "Tasks", icon: <Server size={16} />, link: "/account/tasks" },
         { id: 2, label: "Organizations", icon: <UsersGroupTwoRounded size={16} />, link: "/account/organizations" },
-        { id: 3, label: "Automations", icon: <Robot size={16} />, link: "/account/automations" },
+        // { id: 3, label: "Automations", icon: <Robot size={16} />, link: "/account/automations" },
     ]
     
     const otherLinks: Link[] = [
-        { id: 0, label: "Pricing", icon: <DollarMinimalistic size={16} />, link: "/account/pricing" },
-        { id: 1, label: "Integrations", icon: <Server size={16} />, link: "/account/integrations" },
+        // { id: 0, label: "Pricing", icon: <DollarMinimalistic size={16} />, link: "/account/pricing" },
+        // { id: 1, label: "Integrations", icon: <Server size={16} />, link: "/account/integrations" },
         { id: 2, label: "Notifications", icon: <Bell size={16} />, link: "/account/notifications" },
         { id: 3, label: "Settings", icon: <Settings size={16} />, link: "/account/settings" },
         // Logout is handled specially to run the logout effect

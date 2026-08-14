@@ -30,7 +30,7 @@ function AccountPages() {
     }
 
   return (
-    <div className="flex justify-between bg-bg-gray-100 dark:bg-dark/[0.4]">
+    <div className="flex justify-between bg-bg-gray-100 dark:bg-gray-500/[0.1]">
         <Sidebar />
         <div className="flex flex-col flex-1 gap-4  md:mt-4 md:mr-4 ml-0">
             <div className="flex p-4 sm:pr-4 pr-18 md:rounded-[10px] items-center justify-between bg-white dark:bg-dark-bg border border-gray-500/[0.1] md:static sticky top-0 z-[3]">
@@ -55,10 +55,10 @@ function AccountPages() {
                 <div className="flex gap-6 max-[360px]:gap-2 items-center">
                     <Button href="/account/tasks/new" size="small" className="max-[360px]:hidden"><AddCircle /> Voice to tasks</Button>
                     <Button href="/account/tasks/new" size="small" className="max-[300px]:hidden max-[360px]:flex hidden"><AddCircle /> New</Button>
-                    <button className="relative p-2">
+                    <Link to="/account/notifications" className="relative p-2">
                         <Bell size={16}/> 
                         <span className="absolute top-1 right-3 p-[2px] w-[2px] h-[2px] rounded-lg bg-red-500"></span>
-                    </button>
+                    </Link>
                     <Link to="/account" className="outline outline-offset-2 outline-primary/[0.2] rounded-full">
                     <GetAvatar email={user?.email || ""} className="w-10 h-10" />
                     </Link>

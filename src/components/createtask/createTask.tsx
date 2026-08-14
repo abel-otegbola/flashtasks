@@ -236,19 +236,7 @@ function CreateTask() {
           </div>
         </div>
 
-        <div className="flex justify-between flex-wrap gap-4 items-end">
-          <p className="text-gray-400 text-sm">
-            5 mins
-            {isRecording && (
-              <span className="ml-2 text-red-400 text-xs font-medium">● Recording</span>
-            )}
-            {userRole === "free" && (
-              <Link to="/account/pricing" className="ml-2 text-primary text-xs">
-                (Upgrade)
-              </Link>
-            )}
-          </p>
-
+        <div className="flex justify-end flex-wrap gap-4 items-end">
           <Button
             className="max-[450px]:w-full"
             size="small"
