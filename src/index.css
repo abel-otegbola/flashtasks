@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Elsie+Swash+Caps:wght@400;900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap');
 @import "tailwindcss";
 
 @variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
@@ -45,7 +45,7 @@
 }
 
 html {
-	font-family: "Montserrat", sans-serif;
+	font-family: "Mona Sans", sans-serif;
 	font-optical-sizing: auto;
 	font-weight: 400;
 	font-style: normal;
