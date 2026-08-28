@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { FAQ_ITEMS } from "../../data/faqs";
 import BlurReveal from "../animations/blurReveal";
 import Animate from "../animations/animate";
+import ScrollTextReveal from "../animations/scroll-text-reveal";
 
 interface FaqSectionProps {
   title?: string;
@@ -24,8 +25,8 @@ function FaqSection({
     <section className={`px-4 sm:px-6 lg:px-16 max-w-7xl mx-auto ${sectionClassName}`}>
       <div className="rounded-3xl bg-background px-4 sm:px-8 py-10 sm:py-12">
         <div className="text-center max-w-2xl mx-auto">
-          <BlurReveal preset="slide-right" duration={3}><h2 className="xl:text-4xl sm:text-3xl text-2xl font-semibold">{title}</h2></BlurReveal>
-          <BlurReveal preset="slide-right" duration={3}>
+          <ScrollTextReveal><h2 className="xl:text-4xl sm:text-3xl text-2xl font-semibold">{title}</h2></ScrollTextReveal>
+          <ScrollTextReveal>
             <p className="mt-3 text-sm sm:text-base opacity-[0.75] leading-6">
               {subtitle} {" "}
             <Link to="/contact" className="hover:text-primary transition-colors">
@@ -33,7 +34,7 @@ function FaqSection({
             </Link>
             .
             </p>
-          </BlurReveal>
+          </ScrollTextReveal>
         </div>
 
         <div className="mt-8 space-y-3">
@@ -41,7 +42,7 @@ function FaqSection({
             const isOpen = openItemId === item.id;
 
             return (
-              <Animate key={item.id} preset="scaleUp" duration={2} delay={index * 0.1}>
+              <Animate key={item.id} preset="scaleUp" duration={0.5} delay={index * 0.1}>
               <article key={item.id} className="rounded-2xl border border-gray-500/[0.2] bg-background overflow-hidden">
                 <button
                   type="button"
