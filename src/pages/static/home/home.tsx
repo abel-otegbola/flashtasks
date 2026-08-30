@@ -22,16 +22,13 @@ function Home() {
   const theme = useTheme();
   return (
     <main className="w-full dark:bg-dark-bg dark:text-gray-100 pb-20">
-      <header className="relative flex flex-col justify-center items-center w-full dark:bg-dark/[0.4] py-20">
+      <header className="relative flex flex-col justify-center items-center w-full dark:bg-[url('/bg.webp')] bg-top bg-cover py-20">
         
         <div className="flex flex-col text-center items-center justify-center gap-4 px-6 z-3">
-          <div className=" px-4 py-2 rounded-lg shadow-[0px_2px_5px_0px_#20202020] border border-gray-500/[0.2] ">
-            <LogoIcon className="w-[14px] h-[28px]"  />
-          </div>
           <div className="relative flex flex-col text-[48px] md:w-[60%] max-[400px]:text-[40px] font-semibold md:leading-[60px] leading-[56px] max-[400px]:leading-[50px]">
             
             <ScrollTextReveal  >Get tasks done Faster and more <span className="underline decoration-primary">Efficiently</span> </ScrollTextReveal>
-            <HeroArrowIcon className="text-primary md:block hidden absolute top-0 -right-24" />
+            {/* <HeroArrowIcon className="text-primary md:block hidden absolute top-0 -right-24" /> */}
           </div>
           <div className="text-gray dark:text-gray-300 mb-6">
             <ScrollTextReveal>Efficiently manage your tasks and boost productivity</ScrollTextReveal>
@@ -56,9 +53,13 @@ function Home() {
         </div>
         
         <div className="flex flex-col justify-center items-center py-[60px] p-4 md:w-[75%] w-full z-3">
-          <div className="w-full rounded-lg bg-white dark:bg-dark/[0.4] space-y-2">
-            {/* <CreateTask /> */}
-            <video src="/hero-video-dark.webm" autoPlay loop muted playsInline className="w-full h-full object-cover rounded-lg" />
+          <div className="w-full rounded-[20px] bg-white dark:bg-dark/[0.4] space-y-2">
+          {
+            theme === 'light' ?
+            <video src="/hero-video-light.webm" autoPlay loop muted playsInline className="w-full h-full object-cover rounded-[20px]" />
+            :
+            <video src="/hero-video-dark.webm" autoPlay loop muted playsInline className="w-full h-full object-cover rounded-[20px]" />
+          }
           </div>
           <ScrollTextReveal><h2 className="font-medium mt-20 mb-4 text-center">Join 500+ teams saving 10+ hours/week of quality time</h2></ScrollTextReveal>
           <img src="/users.png" alt="users" width={240} height={64} loading="lazy" className="" />

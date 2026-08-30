@@ -23,7 +23,7 @@ const accentOptions = [
   { label: 'Blue', value: '#3b82f6' },
   { label: 'Amber', value: '#f59e0b' },
   { label: 'Rose', value: '#f43f5e' },
-  { label: 'Violet', value: '#8b5cf6' },
+  { label: 'Violet', value: '#8019FF' },
 ];
 
 export default function SettingsPage() {
@@ -120,7 +120,7 @@ export default function SettingsPage() {
 
       <div className='flex gap-6 border-b border-gray-500/[0.1] flex-1'>
         {
-          ["Profile", "Notifications", "Appearance" ].map((tab) => (
+          ["Profile", "Appearance" ].map((tab) => (
               <button key={tab} onClick={() => setSelectedTab(tab)} className={`py-2 px-1 text-sm capitalize rounded-tl rounded-tr ${tab === selectedTab ? 'border-b border-primary text-primary' : 'text-gray-500'}`}>
                 {tab}
               </button>
@@ -253,7 +253,6 @@ export default function SettingsPage() {
             </div>
           </div>
         }
-        {selectedTab === "Notifications" && null}
         {
           selectedTab === "Appearance" && 
           

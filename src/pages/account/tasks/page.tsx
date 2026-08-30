@@ -142,34 +142,8 @@ function Tasks() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">
-                    <Button
-                        variant="secondary"
-                        size="small"
-                        onClick={() => setShowMoveConfirm(true)}
-                        className=""
-                    >
-                        Move pending → today
-                    </Button>
-                    {showMoveConfirm && (
-                        <Confirmationmessage
-                            title="Move pending tasks to today?"
-                            text="This will set the due date of all tasks with status 'pending' to today."
-                            buttonText="Move"
-                            setOpen={setShowMoveConfirm}
-                            onConfirm={async () => { await movePendingToToday(); setShowMoveConfirm(false); }}
-                        />
-                    )}
-                    {taskToDelete && (
-                        <Confirmationmessage
-                            title={`Delete task: ${taskToDelete.title}?`}
-                            text="This action cannot be undone."
-                            buttonText="Delete"
-                            setOpen={(open) => !open && setTaskToDelete(null)}
-                            onConfirm={handleDeleteTask}
-                        />
-                    )}
                     {/* Filter by status */}
-                    <div className="flex items-center gap-2">
+                    <div className="md:flex hidden items-center gap-2">
                         <Dropdown
                             options={[
                                 { id: 'all', title: 'All' },
